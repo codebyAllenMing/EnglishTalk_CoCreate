@@ -1,0 +1,55 @@
+# 相依套件
+node_modules/
+.pnp
+.pnp.js
+.yarn/cache/
+.yarn/install-state.gz
+
+# 建置輸出
+dist/
+build/
+out/
+.next/
+.nuxt/
+.output/
+.vite/
+*.tsbuildinfo
+
+# 環境變數
+.env
+.env.*
+!.env.example
+
+# 日誌
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# 測試 / 快取
+coverage/
+.nyc_output/
+.cache/
+.eslintcache
+
+# 編輯器與 IDE
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+
+# 作業系統
+.DS_Store
+Thumbs.db
+
+# 注意：_dev/ 為開發者工作區，內容要進版控，勿於此處 ignore。
+
+# 素材中間檔（去背/調色的過渡產物，跑 assets/tools/build_icons.py 就有）
+assets/build/
+*-cutout.png
+
+# Python
+__pycache__/
+*.py[cod]

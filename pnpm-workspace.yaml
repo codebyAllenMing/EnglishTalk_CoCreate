@@ -1,0 +1,6 @@
+packages:
+  - "apps/*"
+
+# eslint-config-next 的傳遞依賴，需執行 build script 取得原生二進位檔
+onlyBuiltDependencies:
+  - unrs-resolver

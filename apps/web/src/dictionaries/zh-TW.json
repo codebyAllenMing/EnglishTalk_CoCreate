@@ -1,0 +1,112 @@
+{
+    "meta": {
+        "title": "MonsterTalk — 輕鬆聊，認真學",
+        "description": "找到母語者，進行真實對話，一起把語言練起來。"
+    },
+    "nav": {
+        "howItWorks": "怎麼運作",
+        "features": "功能",
+        "community": "社群",
+        "blog": "部落格",
+        "login": "登入",
+        "signup": "註冊"
+    },
+    "hero": {
+        "eyebrow": "一個語言交換社群",
+        "line1Pre": "",
+        "line1Accent": "輕鬆",
+        "line1Post": "聊。",
+        "line2Pre": "",
+        "line2Accent": "認真",
+        "line2Post": "學。",
+        "subtitle": "找到母語者，進行真實對話，一起把語言練起來。",
+        "subtitleCasual": "隨性，",
+        "subtitleNot": "但不",
+        "subtitleCareless": "隨便。",
+        "ctaPrimary": "找一場對話",
+        "ctaSecondary": "怎麼運作",
+        "imageAlt": "四隻怪獸圍著桌子進行語言交換對話"
+    },
+    "features": {
+        "availability": {
+            "title": "開放你的時段",
+            "body": "設定你的時間。你可以開房，也可以加入適合你行程的對話。"
+        },
+        "groupChats": {
+            "title": "加入小組對話",
+            "body": "視訊房間最多 4 人。真實的對話，真實的連結。"
+        },
+        "reputation": {
+            "title": "累積你的評價",
+            "body": "準時出席、互相尊重，就會收到正面回饋。信任讓對話更好。"
+        },
+        "together": {
+            "title": "一起學，也一起教",
+            "body": "每個人都有機會說、聽，然後一起成長。"
+        }
+    },
+    "howItWorks": {
+        "title": "怎麼運作",
+        "step1": {
+            "title": "選一隻你的怪獸",
+            "body": "挑一隻專屬於你的怪獸頭像。"
+        },
+        "step2": {
+            "title": "設定你的時間",
+            "body": "加上你方便練習的時段。"
+        },
+        "step3": {
+            "title": "找一間房加入",
+            "body": "挑一個時段，看看有誰在，然後提出加入申請。"
+        },
+        "step4": {
+            "title": "開口聊，一起進步",
+            "body": "享受對話、切換語言，互相支持。"
+        }
+    },
+    "stats": {
+        "learners": "快樂的學習者",
+        "conversations": "完成的對話",
+        "countries": "個國家參與",
+        "rating": "使用者平均評分",
+        "monsterQuip": "這裡大家\n都是怪獸！"
+    },
+    "testimonials": {
+        "title": "語言學習者都愛",
+        "sophie": {
+            "name": "Sophie",
+            "country": "台灣",
+            "quote": "我以前很怕開口說英文。現在我有固定的對話夥伴，聊的都是真的話題。這個社群很溫暖！"
+        },
+        "lucas": {
+            "name": "Lucas",
+            "country": "巴西",
+            "quote": "終於找到一個不尷尬也不會太正式的地方。我可以學中文，也能幫別人練葡萄牙文，剛剛好。"
+        },
+        "minji": {
+            "name": "Minji",
+            "country": "韓國",
+            "quote": "小組對話真的很棒。每個人都有機會說話，而且我們真的變成朋友了！"
+        }
+    },
+    "closing": {
+        "title": "準備好認識下一位對話夥伴了嗎？",
+        "cta": "免費開始使用"
+    },
+    "login": {
+        "title": "歡迎回來",
+        "subtitle": "登入後繼續你的語言交換",
+        "email": "Email",
+        "emailPlaceholder": "you@example.com",
+        "password": "密碼",
+        "submit": "登入",
+        "divider": "或",
+        "google": "使用 Google 繼續",
+        "noAccount": "還沒有帳號？",
+        "signupLink": "註冊",
+        "backHome": "回到首頁"
+    },
+    "footer": {
+        "tagline": "輕鬆聊，認真學。"
+    }
+}

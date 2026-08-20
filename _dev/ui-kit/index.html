@@ -1,0 +1,751 @@
+<title>MonsterTalk UI Kit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Poppins:wght@400;600;700&family=Fredoka:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<style>
+	:root {
+		/* ── 主色 base #6948DC ── */
+		--primary-50: #f7f6fb;
+		--primary-100: #eeebf6;
+		--primary-200: #d9d3ee;
+		--primary-300: #bcb0e5;
+		--primary-400: #9783de;
+		--primary-500: #6948dc;
+		--primary-600: #4a23d2;
+		--primary-700: #3c1daa;
+		--primary-800: #2e1682;
+		--primary-900: #22105f;
+
+		/* ── 副色 base #359F95 ── */
+		--secondary-50: #f4f8f8;
+		--secondary-100: #e6f1f0;
+		--secondary-200: #c8e3e0;
+		--secondary-300: #9dd2cd;
+		--secondary-400: #66c2b9;
+		--secondary-500: #359f95;
+		--secondary-600: #2a887f;
+		--secondary-700: #226e67;
+		--secondary-800: #1a544f;
+		--secondary-900: #133d39;
+
+		/* ── 語言語意色 ── */
+		--lang-en: #7353e1;
+		--lang-zh: #fd6078;
+
+		/* ── 強調 ── */
+		--accent-token: #f4d15e;
+		--accent-coral: #fc8978;
+
+		/* ── 中性（帶藍紫調，非純灰）── */
+		--ink: #0d1852;
+		--ink-600: #373f6c;
+		--ink-500: #4d5998;
+		--ink-400: #717cb7;
+		--ink-300: #99a1cc;
+		--ink-200: #c9cde4;
+		--ink-100: #e4e6f1;
+
+		/* ── 底色 ── */
+		--bg-cream: #fcf7f1;
+		--bg-app: #f6f6f8;
+		--surface: #ffffff;
+
+		--radius: 14px;
+		--radius-sm: 9px;
+		--shadow: 0 1px 2px rgba(13, 24, 82, .06), 0 8px 24px rgba(13, 24, 82, .06);
+		--font-body: "Nunito", ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", sans-serif;
+		--font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+	}
+
+	* { box-sizing: border-box; }
+
+	body {
+		margin: 0;
+		background: var(--bg-app);
+		color: var(--ink);
+		font-family: var(--font-body);
+		font-size: 16px;
+		line-height: 1.6;
+		-webkit-font-smoothing: antialiased;
+	}
+
+	.wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+	/* ───── nav ───── */
+	.topbar {
+		position: sticky; top: 0; z-index: 20;
+		background: rgba(246, 246, 248, .88);
+		backdrop-filter: blur(10px);
+		border-bottom: 1px solid var(--ink-100);
+	}
+	.topbar-inner { display: flex; align-items: center; gap: 20px; height: 56px; flex-wrap: wrap; }
+	.mark { display: flex; align-items: center; gap: 9px; font-weight: 800; letter-spacing: -.02em; }
+	.mark-dot {
+		width: 26px; height: 26px; border-radius: 8px;
+		background: linear-gradient(140deg, var(--primary-500), var(--lang-zh));
+	}
+	.topbar nav { display: flex; gap: 16px; flex-wrap: wrap; }
+	.topbar nav a {
+		color: var(--ink-500); text-decoration: none; font-size: 13.5px; font-weight: 600;
+		padding: 4px 2px; border-bottom: 2px solid transparent;
+	}
+	.topbar nav a:hover { color: var(--primary-600); border-bottom-color: var(--primary-300); }
+	.topbar nav a:focus-visible { outline: 2px solid var(--primary-500); outline-offset: 3px; border-radius: 3px; }
+
+	/* ───── header ───── */
+	header.page { padding: 56px 0 40px; }
+	h1 {
+		font-size: clamp(34px, 5vw, 50px); line-height: 1.08; margin: 0 0 16px;
+		font-weight: 800; letter-spacing: -.03em; text-wrap: balance;
+	}
+	.lede { font-size: 17px; color: var(--ink-500); max-width: 62ch; margin: 0 0 22px; }
+	.meta-row { display: flex; gap: 10px; flex-wrap: wrap; }
+	.pill {
+		display: inline-flex; align-items: center; gap: 6px;
+		background: var(--surface); border: 1px solid var(--ink-200);
+		border-radius: 999px; padding: 5px 13px; font-size: 12.5px; font-weight: 600; color: var(--ink-600);
+	}
+	.pill b { color: var(--ink); font-family: var(--font-mono); font-weight: 500; }
+
+	/* ───── section ───── */
+	section { padding: 40px 0; border-top: 1px solid var(--ink-100); }
+	.sec-head { margin-bottom: 24px; }
+	h2 {
+		font-size: 12px; text-transform: uppercase; letter-spacing: .14em;
+		color: var(--ink-400); margin: 0 0 8px; font-weight: 700;
+	}
+	.sec-head p { margin: 0; font-size: 21px; font-weight: 700; letter-spacing: -.015em; }
+	.sec-head .note { font-size: 14.5px; font-weight: 400; color: var(--ink-500); margin-top: 7px; max-width: 68ch; }
+
+	/* ───── 主色卡 ───── */
+	.core { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
+	.core-card {
+		background: var(--surface); border-radius: var(--radius);
+		box-shadow: var(--shadow); overflow: hidden;
+	}
+	.core-chip { height: 128px; display: flex; align-items: flex-end; padding: 16px; }
+	.core-chip span {
+		font-family: var(--font-mono); font-size: 19px; font-weight: 500;
+		color: #fff; letter-spacing: -.01em;
+	}
+	.core-body { padding: 16px 18px 18px; }
+	.core-body h3 { margin: 0 0 5px; font-size: 16px; font-weight: 800; }
+	.core-body p { margin: 0; font-size: 13.5px; color: var(--ink-500); }
+
+	/* ───── 色階 ───── */
+	.scale { display: grid; grid-template-columns: repeat(10, 1fr); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+	.scale + .scale { margin-top: 16px; }
+	.swatch {
+		aspect-ratio: 1 / 1.5; min-height: 74px; border: 0; padding: 8px 6px; cursor: pointer;
+		display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 2px;
+		font-family: var(--font-mono); font-size: 10px; letter-spacing: -.02em; transition: transform .12s ease;
+	}
+	.swatch:hover { transform: translateY(-3px); }
+	.swatch:focus-visible { outline: 2px solid var(--ink); outline-offset: -4px; }
+	.swatch b { font-size: 11px; font-weight: 500; opacity: .95; }
+	.scale-label { font-size: 12.5px; font-weight: 700; color: var(--ink-500); margin: 0 0 8px; letter-spacing: .04em; }
+
+	/* ───── 表格 ───── */
+	.table-scroll { overflow-x: auto; border-radius: var(--radius); box-shadow: var(--shadow); background: var(--surface); }
+	table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 520px; }
+	th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--ink-100); }
+	th { font-size: 11.5px; text-transform: uppercase; letter-spacing: .1em; color: var(--ink-400); font-weight: 700; }
+	tbody tr:last-child td { border-bottom: 0; }
+	td.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 13px; }
+	.dot { display: inline-block; width: 13px; height: 13px; border-radius: 4px; vertical-align: -2px; margin-right: 8px; border: 1px solid rgba(13,24,82,.1); }
+	.tag { font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+	.tag.ok { background: var(--secondary-100); color: var(--secondary-800); }
+	.tag.warn { background: #fdf1dc; color: #7a5410; }
+	.tag.no { background: #ffe6ea; color: #8f1d33; }
+
+	/* ───── 語言色 ───── */
+	.timer {
+		display: flex; border-radius: 999px; overflow: hidden;
+		box-shadow: var(--shadow); font-weight: 800; color: #fff;
+	}
+	.timer > div { flex: 1; padding: 16px 22px; display: flex; align-items: center; gap: 11px; }
+	.timer .en { background: var(--lang-en); }
+	.timer .zh { background: var(--lang-zh); justify-content: flex-end; }
+	.timer .clock { font-family: var(--font-mono); font-size: 21px; font-weight: 500; font-variant-numeric: tabular-nums; }
+	.timer small { font-size: 12.5px; opacity: .9; font-weight: 700; }
+	.badge-lang {
+		display: inline-flex; align-items: center; justify-content: center;
+		min-width: 30px; height: 22px; padding: 0 8px; border-radius: 999px;
+		font-size: 11.5px; font-weight: 800; color: #fff;
+	}
+
+	/* ───── 字體候選 ───── */
+	.fonts { display: grid; gap: 14px; }
+	.font-card {
+		background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
+		padding: 22px 24px; display: grid; grid-template-columns: 108px 1fr; gap: 22px; align-items: center;
+	}
+	.font-name { font-size: 12.5px; font-weight: 800; color: var(--ink-400); letter-spacing: .06em; }
+	.font-name em { display: block; font-style: normal; font-weight: 600; font-size: 11.5px; color: var(--ink-300); margin-top: 3px; letter-spacing: 0; }
+	.font-demo-h { font-size: clamp(24px, 3.4vw, 33px); line-height: 1.12; letter-spacing: -.025em; margin: 0 0 6px; }
+	.font-demo-h .a { color: var(--primary-500); }
+	.font-demo-h .b { color: var(--secondary-500); }
+	.font-demo-p { margin: 0; font-size: 14px; color: var(--ink-500); }
+	.f-nunito { font-family: "Nunito", sans-serif; font-weight: 800; }
+	.f-poppins { font-family: "Poppins", sans-serif; font-weight: 700; }
+	.f-fredoka { font-family: "Fredoka", sans-serif; font-weight: 600; }
+
+	/* ───── wordmark ───── */
+	.wm-row {
+		display: grid; grid-template-columns: 132px 1fr; gap: 20px; align-items: center;
+		background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
+		padding: 18px 22px;
+	}
+	.wm-row + .wm-row { margin-top: 12px; }
+	.wm-meta { font-size: 12px; font-weight: 800; color: var(--ink-400); letter-spacing: .05em; }
+	.wm-meta em { display: block; font-style: normal; font-weight: 600; font-size: 11px; color: var(--ink-300); margin-top: 3px; letter-spacing: 0; }
+	.wm-lockup { display: flex; align-items: center; gap: 11px; }
+	.wm-dot { width: 38px; height: 38px; border-radius: 11px; background: linear-gradient(140deg, var(--primary-500), var(--lang-zh)); flex-shrink: 0; }
+	.wm-text { font-size: 27px; color: var(--ink); line-height: 1; }
+
+	/* ───── 元件 ───── */
+	.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; }
+	.panel { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 22px 24px; }
+	.panel h3 { margin: 0 0 4px; font-size: 14px; font-weight: 800; }
+	.panel .hint { margin: 0 0 16px; font-size: 13px; color: var(--ink-500); }
+	.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+	.row + .row { margin-top: 12px; }
+
+	.btn {
+		font-family: inherit; font-size: 14.5px; font-weight: 800; border-radius: 999px;
+		padding: 11px 22px; border: 2px solid transparent; cursor: pointer;
+		display: inline-flex; align-items: center; gap: 8px; transition: background .14s ease, transform .1s ease;
+	}
+	.btn:focus-visible { outline: 2px solid var(--primary-700); outline-offset: 3px; }
+	.btn:active { transform: translateY(1px); }
+	.btn-primary { background: var(--primary-500); color: #fff; }
+	.btn-primary:hover { background: var(--primary-600); }
+	.btn-secondary { background: var(--secondary-700); color: #fff; }
+	.btn-secondary:hover { background: var(--secondary-800); }
+	.btn-outline { background: var(--surface); color: var(--ink); border-color: var(--ink-200); }
+	.btn-outline:hover { border-color: var(--primary-400); color: var(--primary-600); }
+	.btn-ghost { background: transparent; color: var(--primary-600); }
+	.btn-ghost:hover { background: var(--primary-50); }
+	.btn:disabled { background: var(--ink-100); color: var(--ink-300); cursor: not-allowed; }
+	.btn:disabled:hover { background: var(--ink-100); }
+
+	label.field { display: block; font-size: 12.5px; font-weight: 800; color: var(--ink-600); margin-bottom: 6px; letter-spacing: .02em; }
+	.input {
+		width: 100%; font-family: inherit; font-size: 15px; color: var(--ink);
+		background: var(--surface); border: 2px solid var(--ink-200);
+		border-radius: var(--radius-sm); padding: 11px 14px;
+	}
+	.input::placeholder { color: var(--ink-300); }
+	.input:focus { outline: none; border-color: var(--primary-500); box-shadow: 0 0 0 4px var(--primary-100); }
+	.input.err { border-color: var(--lang-zh); }
+	.err-text { font-size: 12.5px; color: #c02c48; margin: 6px 0 0; font-weight: 600; }
+	.field-group + .field-group { margin-top: 14px; }
+
+	.chip {
+		display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700;
+		padding: 5px 12px; border-radius: 999px; background: var(--primary-50); color: var(--primary-700);
+	}
+	.chip.level { background: var(--secondary-100); color: var(--secondary-800); }
+	.chip.online { background: #e8f7ec; color: #1c6b32; }
+	.chip.online::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #2aa14a; }
+	.chip.token { background: #fdf5da; color: #7a5410; }
+
+	/* 語伴卡 */
+	.monster-card {
+		background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
+		padding: 18px; text-align: center; border: 2px solid transparent;
+	}
+	.monster-card.sel { border-color: var(--primary-400); }
+	.avatar-ph {
+		width: 74px; height: 74px; border-radius: 50%; margin: 0 auto 12px;
+		display: grid; place-items: center; font-size: 11px; font-weight: 800; color: rgba(255,255,255,.85);
+		background: repeating-linear-gradient(45deg, var(--ink-200) 0 7px, var(--ink-100) 7px 14px);
+		color: var(--ink-400); border: 2px dashed var(--ink-300);
+	}
+	.monster-card h4 { margin: 0 0 8px; font-size: 15px; font-weight: 800; }
+	.monster-card .langs { display: flex; gap: 5px; justify-content: center; margin-bottom: 9px; }
+	.monster-card .slot { font-size: 12px; color: var(--ink-500); font-weight: 600; }
+
+	/* ───── 預覽 ───── */
+	.preview {
+		background: var(--bg-cream); border-radius: 20px; padding: 44px 40px;
+		box-shadow: var(--shadow); border: 1px solid #efe6d4;
+	}
+	.preview-h {
+		font-size: clamp(30px, 4.6vw, 46px); font-weight: 800; line-height: 1.06;
+		letter-spacing: -.03em; margin: 0 0 14px; text-wrap: balance;
+	}
+	.preview-h .chill { color: var(--primary-500); }
+	.preview-h .srs { color: var(--secondary-500); }
+	.preview-sub { font-size: 16px; color: var(--ink-600); max-width: 46ch; margin: 0 0 22px; }
+	.preview-sub .not { color: var(--lang-zh); font-weight: 800; }
+	.eyebrow {
+		display: inline-flex; align-items: center; gap: 7px; background: var(--surface);
+		border: 1px solid var(--ink-200); border-radius: 999px; padding: 5px 14px;
+		font-size: 12.5px; font-weight: 700; color: var(--ink-600); margin-bottom: 18px;
+	}
+	.login-card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 28px; max-width: 380px; }
+	.login-card h3 { margin: 0 0 6px; font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
+	.login-card .sub { margin: 0 0 20px; font-size: 14px; color: var(--ink-500); }
+	.divider { display: flex; align-items: center; gap: 12px; margin: 18px 0; color: var(--ink-300); font-size: 12px; font-weight: 700; }
+	.divider::before, .divider::after { content: ""; height: 1px; background: var(--ink-100); flex: 1; }
+
+	.todo {
+		background: #fff8ec; border: 1px solid #f2dcb4; border-radius: var(--radius);
+		padding: 18px 22px; margin-top: 18px;
+	}
+	.todo h3 { margin: 0 0 10px; font-size: 13px; font-weight: 800; color: #7a5410; letter-spacing: .04em; text-transform: uppercase; }
+	.todo ul { margin: 0; padding-left: 18px; font-size: 14px; color: var(--ink-600); }
+	.todo li + li { margin-top: 6px; }
+
+	footer.page { padding: 40px 0 64px; border-top: 1px solid var(--ink-100); color: var(--ink-400); font-size: 13px; }
+
+	.toast {
+		position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%) translateY(80px);
+		background: var(--ink); color: #fff; padding: 10px 20px; border-radius: 999px;
+		font-size: 13.5px; font-weight: 700; opacity: 0; transition: transform .22s ease, opacity .22s ease;
+		pointer-events: none; z-index: 40;
+	}
+	.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+	@media (max-width: 720px) {
+		.scale { grid-template-columns: repeat(5, 1fr); }
+		.font-card { grid-template-columns: 1fr; gap: 12px; }
+		.timer { flex-direction: column; border-radius: var(--radius); }
+		.timer .zh { justify-content: flex-start; }
+	}
+	@media (prefers-reduced-motion: reduce) {
+		* { transition: none !important; }
+	}
+</style>
+
+<div class="topbar">
+	<div class="wrap topbar-inner">
+		<div class="mark"><span class="mark-dot"></span>MonsterTalk</div>
+		<nav>
+			<a href="#core">主色</a>
+			<a href="#scales">色階</a>
+			<a href="#contrast">對比度</a>
+			<a href="#lang">語言色</a>
+			<a href="#type">字體</a>
+			<a href="#wordmark">Wordmark</a>
+			<a href="#components">元件</a>
+			<a href="#preview">預覽</a>
+		</nav>
+	</div>
+</div>
+
+<div class="wrap">
+
+	<header class="page">
+		<h1>語言交換平台<br>色彩與元件對照</h1>
+		<p class="lede">
+			所有色值以程式從 <code>asset/</code> 視覺稿量測而得——過濾高飽和像素後，再針對個別 UI 元件取區域中位數，
+			不是目測。變數命名與 <code>design-tokens.md</code> 一致，可直接複製使用。
+		</p>
+		<div class="meta-row">
+			<span class="pill">主色 <b>#6948DC</b></span>
+			<span class="pill">副色 <b>#359F95</b></span>
+			<span class="pill">文字 <b>#0D1852</b></span>
+			<span class="pill">底色 <b>#FCF7F1</b></span>
+			<span class="pill">v1.1 · 2026-08-20</span>
+		</div>
+	</header>
+
+	<section id="core">
+		<div class="sec-head">
+			<h2>Core</h2>
+			<p>主色與副色</p>
+			<div class="note">
+				主色的可信度來自收斂：五個彼此獨立的 UI 元件都落在同一個紫，代表它是品牌色，
+				而不是插圖顏色被平均出來的結果。
+			</div>
+		</div>
+		<div class="core">
+			<div class="core-card">
+				<div class="core-chip" style="background:#6948dc"><span>#6948DC</span></div>
+				<div class="core-body">
+					<h3>Primary · 紫</h3>
+					<p>Sign up 按鈕、Find a conversation、chill. 標題、底部 CTA、Open a time slot——五處量測值 #6540dd ~ #6b4bde。</p>
+				</div>
+			</div>
+			<div class="core-card">
+				<div class="core-chip" style="background:#359f95"><span>#359F95</span></div>
+				<div class="core-body">
+					<h3>Secondary · 青綠</h3>
+					<p>取自 hero 的「seriously.」標題字。對比度僅 3.21:1，<b>只能用在大字</b>，內文要降到 700 階。</p>
+				</div>
+			</div>
+			<div class="core-card">
+				<div class="core-chip" style="background:#0d1852"><span>#0D1852</span></div>
+				<div class="core-body">
+					<h3>Ink · 文字</h3>
+					<p>取自 Logo 的「ME」字。是很深的藍紫，<b>不是純黑</b>——中性階全部由它衍生，所以不用純灰。</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section id="scales">
+		<div class="sec-head">
+			<h2>Scales</h2>
+			<p>十階色票</p>
+			<div class="note">點任一色塊複製色值。50–400 為淡階（用於底色、hover 底），500 為品牌基準，600–900 為深階（用於文字與 hover）。</div>
+		</div>
+
+		<p class="scale-label">PRIMARY</p>
+		<div class="scale" id="scale-primary"></div>
+		<p class="scale-label" style="margin-top:22px">SECONDARY</p>
+		<div class="scale" id="scale-secondary"></div>
+	</section>
+
+	<section id="contrast">
+		<div class="sec-head">
+			<h2>Contrast</h2>
+			<p>可讀性限制</p>
+			<div class="note">這幾條會直接影響實作。三個顏色不能當文字色——違反了就是可讀性缺陷，不是風格問題。</div>
+		</div>
+		<div class="table-scroll">
+			<table>
+				<thead>
+					<tr><th>組合</th><th>比值</th><th>判定</th><th>用途</th></tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td><span class="dot" style="background:#0d1852"></span>ink 於白 / 米底</td>
+						<td class="num">16.54:1</td>
+						<td><span class="tag ok">AAA</span></td>
+						<td>內文首選</td>
+					</tr>
+					<tr>
+						<td><span class="dot" style="background:#4a23d2"></span>primary-600 於白</td>
+						<td class="num">8.53:1</td>
+						<td><span class="tag ok">AAA</span></td>
+						<td>紫色文字用這階</td>
+					</tr>
+					<tr>
+						<td><span class="dot" style="background:#226e67"></span>secondary-700 於白</td>
+						<td class="num">6.01:1</td>
+						<td><span class="tag ok">AA</span></td>
+						<td>青綠文字用這階</td>
+					</tr>
+					<tr>
+						<td><span class="dot" style="background:#6948dc"></span>primary-500 於白 / 白字於其上</td>
+						<td class="num">5.90:1</td>
+						<td><span class="tag ok">AA</span></td>
+						<td>按鈕填色 + 白字</td>
+					</tr>
+					<tr>
+						<td><span class="dot" style="background:#7353e1"></span>lang-en 於白</td>
+						<td class="num">5.18:1</td>
+						<td><span class="tag ok">AA</span></td>
+						<td>可作文字</td>
+					</tr>
+					<tr>
+						<td><span class="dot" style="background:#359f95"></span>secondary-500 於白</td>
+						<td class="num">3.21:1</td>
+						<td><span class="tag warn">僅大字</span></td>
+						<td>hero 標題可，內文不可</td>
+					</tr>
+					<tr>
+						<td><span class="dot" style="background:#fd6078"></span>lang-zh 於白</td>
+						<td class="num">2.95:1</td>
+						<td><span class="tag no">不合格</span></td>
+						<td>只能填色／背景</td>
+					</tr>
+					<tr>
+						<td><span class="dot" style="background:#f4d15e"></span>accent-token 於白</td>
+						<td class="num">1.49:1</td>
+						<td><span class="tag no">不合格</span></td>
+						<td>僅圖示填色</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</section>
+
+	<section id="lang">
+		<div class="sec-head">
+			<h2>Semantic</h2>
+			<p>語言語意色</p>
+			<div class="note">
+				這兩色只用於語言標示，不要挪作一般裝飾，否則語意會被稀釋。
+				下方是語言輪替計時器的樣子——該機制已決議延後，色彩先定下來。
+			</div>
+		</div>
+		<div class="timer">
+			<div class="en">
+				<span class="badge-lang" style="background:rgba(255,255,255,.22)">EN</span>
+				<span>English Time</span>
+				<span class="clock" style="margin-left:auto">08:24</span>
+			</div>
+			<div class="zh">
+				<span class="clock">07:12</span>
+				<span>Mandarin Time</span>
+				<span class="badge-lang" style="background:rgba(255,255,255,.22)">中</span>
+			</div>
+		</div>
+		<div class="row" style="margin-top:18px">
+			<span class="pill">lang-en <b>#7353E1</b></span>
+			<span class="pill">lang-zh <b>#FD6078</b></span>
+			<span class="badge-lang" style="background:var(--lang-en)">EN</span>
+			<span class="badge-lang" style="background:var(--lang-zh)">中</span>
+		</div>
+	</section>
+
+	<section id="type">
+		<div class="sec-head">
+			<h2>Typeface</h2>
+			<p>字體候選 — 尚未定案</p>
+			<div class="note">
+				視覺稿的標題是圓潤、偏幾何的粗體 sans。三個候選由圓潤到幾何排列，同一句 slogan 對照。
+				本頁目前使用 Nunito。
+			</div>
+		</div>
+		<div class="fonts">
+			<div class="font-card">
+				<div class="font-name">NUNITO<em>圓潤 · 溫和</em></div>
+				<div>
+					<p class="font-demo-h f-nunito">Keep it <span class="a">chill.</span> Take it <span class="b">seriously.</span></p>
+					<p class="font-demo-p f-nunito" style="font-weight:400">Find native speakers, have real conversations.</p>
+				</div>
+			</div>
+			<div class="font-card">
+				<div class="font-name">POPPINS<em>幾何 · 中性</em></div>
+				<div>
+					<p class="font-demo-h f-poppins">Keep it <span class="a">chill.</span> Take it <span class="b">seriously.</span></p>
+					<p class="font-demo-p f-poppins" style="font-weight:400">Find native speakers, have real conversations.</p>
+				</div>
+			</div>
+			<div class="font-card">
+				<div class="font-name">FREDOKA<em>最圓 · 玩味</em></div>
+				<div>
+					<p class="font-demo-h f-fredoka">Keep it <span class="a">chill.</span> Take it <span class="b">seriously.</span></p>
+					<p class="font-demo-p f-fredoka" style="font-weight:400">Find native speakers, have real conversations.</p>
+				</div>
+			</div>
+		</div>
+		<div class="todo">
+			<h3>選字體時要一起考慮</h3>
+			<ul>
+				<li>中文字重——三個候選都<b>沒有中文字符</b>，中文會 fallback 到系統字體。若 Landing 要做 i18n，中文字體需另外指定（思源黑體 / Noto Sans TC）</li>
+				<li>Fredoka 沒有 800 字重，最粗到 600；Nunito 有 1000</li>
+			</ul>
+		</div>
+	</section>
+
+	<section id="wordmark">
+		<div class="sec-head">
+			<h2>Wordmark</h2>
+			<p>「MonsterTalk」字重與字距</p>
+			<div class="note">
+				目前 Nav 使用的是 <b>Nunito 800 / -0.02em</b>。拿你原本那張 logo 圖對照，
+				看哪一組最接近 —— 差異主要在字重和字母間距，不一定要換字體。
+				左側方塊是怪獸 icon 的位置示意。
+			</div>
+		</div>
+
+		<div class="wm-row">
+			<div class="wm-meta">700 · -0.02em<em>Bold</em></div>
+			<div class="wm-lockup"><span class="wm-dot"></span><span class="wm-text" style="font-weight:700;letter-spacing:-.02em">MonsterTalk</span></div>
+		</div>
+		<div class="wm-row">
+			<div class="wm-meta">800 · -0.02em<em>目前使用中</em></div>
+			<div class="wm-lockup"><span class="wm-dot"></span><span class="wm-text" style="font-weight:800;letter-spacing:-.02em">MonsterTalk</span></div>
+		</div>
+		<div class="wm-row">
+			<div class="wm-meta">900 · -0.02em<em>Black</em></div>
+			<div class="wm-lockup"><span class="wm-dot"></span><span class="wm-text" style="font-weight:900;letter-spacing:-.02em">MonsterTalk</span></div>
+		</div>
+		<div class="wm-row">
+			<div class="wm-meta">900 · -0.035em<em>更緊的字距</em></div>
+			<div class="wm-lockup"><span class="wm-dot"></span><span class="wm-text" style="font-weight:900;letter-spacing:-.035em">MonsterTalk</span></div>
+		</div>
+		<div class="wm-row">
+			<div class="wm-meta">900 · 0<em>不收字距</em></div>
+			<div class="wm-lockup"><span class="wm-dot"></span><span class="wm-text" style="font-weight:900;letter-spacing:0">MonsterTalk</span></div>
+		</div>
+	</section>
+
+	<section id="components">
+		<div class="sec-head">
+			<h2>Components</h2>
+			<p>基本元件</p>
+			<div class="note">登入頁會用到的最小集合。圓角 14px、按鈕全圓角——沿用視覺稿的形狀語言。</div>
+		</div>
+
+		<div class="grid-2">
+			<div class="panel">
+				<h3>按鈕</h3>
+				<p class="hint">主要動作用 primary-500；青綠按鈕要用 700 階，500 階配白字不合格。</p>
+				<div class="row">
+					<button class="btn btn-primary">Get started for free</button>
+					<button class="btn btn-outline">How it works</button>
+				</div>
+				<div class="row">
+					<button class="btn btn-secondary">Secondary</button>
+					<button class="btn btn-ghost">Ghost</button>
+					<button class="btn btn-primary" disabled>Disabled</button>
+				</div>
+			</div>
+
+			<div class="panel">
+				<h3>標記</h3>
+				<p class="hint">語言標記、程度、狀態、token 餘額。</p>
+				<div class="row">
+					<span class="badge-lang" style="background:var(--lang-en)">EN</span>
+					<span class="badge-lang" style="background:var(--lang-zh)">中</span>
+					<span class="chip level">Intermediate</span>
+					<span class="chip online">Online now</span>
+				</div>
+				<div class="row">
+					<span class="chip token">◎ 320 tokens</span>
+					<span class="chip">2 slots open</span>
+					<span class="chip">3 / 4 人</span>
+				</div>
+			</div>
+
+			<div class="panel">
+				<h3>輸入</h3>
+				<p class="hint">focus 用 primary-500 加 4px 光暈；錯誤狀態用 lang-zh 描邊，但錯誤<b>文字</b>要更深的紅才夠對比。</p>
+				<div class="field-group">
+					<label class="field" for="d-email">Email</label>
+					<input class="input" id="d-email" type="email" placeholder="you@example.com">
+				</div>
+				<div class="field-group">
+					<label class="field" for="d-err">Email</label>
+					<input class="input err" id="d-err" type="email" value="not-an-email">
+					<p class="err-text">請輸入有效的 email 地址</p>
+				</div>
+			</div>
+
+			<div class="panel">
+				<h3>語伴卡</h3>
+				<p class="hint">avatar 位置目前是佔位——插圖素材尚未確認。</p>
+				<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+					<div class="monster-card sel">
+						<div class="avatar-ph">素材<br>待補</div>
+						<h4>Alex</h4>
+						<div class="langs">
+							<span class="badge-lang" style="background:var(--lang-zh)">中</span>
+							<span class="badge-lang" style="background:var(--lang-en)">EN</span>
+						</div>
+						<div class="slot">Free at 8 PM</div>
+					</div>
+					<div class="monster-card">
+						<div class="avatar-ph">素材<br>待補</div>
+						<h4>Luna</h4>
+						<div class="langs">
+							<span class="badge-lang" style="background:var(--lang-en)">EN</span>
+							<span class="badge-lang" style="background:var(--lang-zh)">中</span>
+						</div>
+						<div class="slot">2 slots open</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section id="preview">
+		<div class="sec-head">
+			<h2>Preview</h2>
+			<p>組合起來的樣子</p>
+			<div class="note">Landing hero 與登入卡，用來跟 <code>LandingPage.jpg</code> 對照。底色刻意用 bg-cream，與 app 的 bg-app 區隔。</div>
+		</div>
+
+		<div class="preview">
+			<span class="eyebrow">★ A language exchange community</span>
+			<h1 class="preview-h">Keep it <span class="chill">chill.</span><br>Take it <span class="srs">seriously.</span></h1>
+			<p class="preview-sub">
+				Find native speakers, have real conversations, and level up your language skills—together.
+				Casual, <span class="not">not</span> careless.
+			</p>
+			<div class="row">
+				<button class="btn btn-primary">Find a conversation →</button>
+				<button class="btn btn-outline">▶ How it works</button>
+			</div>
+		</div>
+
+		<div style="margin-top:18px">
+			<div class="login-card">
+				<h3>歡迎回來</h3>
+				<p class="sub">登入後繼續你的語言交換</p>
+				<div class="field-group">
+					<label class="field" for="p-email">Email</label>
+					<input class="input" id="p-email" type="email" placeholder="you@example.com">
+				</div>
+				<div class="field-group">
+					<label class="field" for="p-pw">密碼</label>
+					<input class="input" id="p-pw" type="password" placeholder="••••••••">
+				</div>
+				<div style="margin-top:18px">
+					<button class="btn btn-primary" style="width:100%;justify-content:center">登入</button>
+				</div>
+				<div class="divider">或</div>
+				<button class="btn btn-outline" style="width:100%;justify-content:center">使用 Google 繼續</button>
+			</div>
+		</div>
+
+		<div class="todo">
+			<h3>這頁還沒定的事</h3>
+			<ul>
+				<li><b>產品命名</b>——暫定 <b>MonsterTalk</b>（2026-08-20）。但 Logo 檔案是 ME（Mandarin × English）識別，兩者不相容，logo 需重新確認</li>
+				<li><b>插圖素材</b>——hero 怪獸圖、四步驟圖示、avatar 全部待確認是否有底稿</li>
+				<li><b>字體</b>——上方三個候選待選，中文字體需另外指定</li>
+				<li><b>登入範圍</b>——只做 UI，還是含完整 auth 流程</li>
+				<li>間距 / 陰影 scale 尚未系統化，本頁用的是暫定值</li>
+			</ul>
+		</div>
+	</section>
+
+	<footer class="page">
+		色值量測自 asset/ 視覺稿 · 變數命名同步 design-tokens.md · 2026-08-20
+	</footer>
+</div>
+
+<div class="toast" id="toast">已複製</div>
+
+<script>
+	const SCALES = {
+		primary: ["#f7f6fb","#eeebf6","#d9d3ee","#bcb0e5","#9783de","#6948dc","#4a23d2","#3c1daa","#2e1682","#22105f"],
+		secondary: ["#f4f8f8","#e6f1f0","#c8e3e0","#9dd2cd","#66c2b9","#359f95","#2a887f","#226e67","#1a544f","#133d39"]
+	};
+	const STEPS = [50,100,200,300,400,500,600,700,800,900];
+
+	function luminance(hex) {
+		const c = [1,3,5].map(i => parseInt(hex.substr(i,2),16)/255)
+			.map(v => v <= 0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4));
+		return 0.2126*c[0] + 0.7152*c[1] + 0.0722*c[2];
+	}
+
+	for (const [name, colors] of Object.entries(SCALES)) {
+		const host = document.getElementById("scale-" + name);
+		colors.forEach((hex, i) => {
+			const b = document.createElement("button");
+			b.className = "swatch";
+			b.style.background = hex;
+			b.style.color = luminance(hex) > 0.42 ? "#0d1852" : "#ffffff";
+			b.innerHTML = "<b>" + STEPS[i] + "</b><span>" + hex.slice(1).toUpperCase() + "</span>";
+			b.setAttribute("aria-label", "複製 " + name + "-" + STEPS[i] + " " + hex);
+			b.addEventListener("click", () => copy(hex));
+			host.appendChild(b);
+		});
+	}
+
+	let timer;
+	function copy(text) {
+		const done = () => {
+			const t = document.getElementById("toast");
+			t.textContent = "已複製 " + text.toUpperCase();
+			t.classList.add("show");
+			clearTimeout(timer);
+			timer = setTimeout(() => t.classList.remove("show"), 1400);
+		};
+		if (navigator.clipboard && navigator.clipboard.writeText) {
+			navigator.clipboard.writeText(text).then(done).catch(done);
+		} else {
+			done();
+		}
+	}
+</script>

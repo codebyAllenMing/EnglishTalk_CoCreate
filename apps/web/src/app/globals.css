@@ -1,0 +1,107 @@
+@import "tailwindcss";
+
+/*
+ * MonsterTalk design tokens
+ * 色值量測自 asset/ 視覺稿，來源與對比度限制見 vault 的 design-tokens.md
+ * Tailwind v4 的 @theme 會依 --color-* 前綴自動生成 utility（bg-primary-500、text-ink…）
+ */
+@theme {
+	/* ── 主色 base #6948DC ── */
+	--color-primary-50: #f7f6fb;
+	--color-primary-100: #eeebf6;
+	--color-primary-200: #d9d3ee;
+	--color-primary-300: #bcb0e5;
+	--color-primary-400: #9783de;
+	--color-primary-500: #6948dc;
+	--color-primary-600: #4a23d2;
+	--color-primary-700: #3c1daa;
+	--color-primary-800: #2e1682;
+	--color-primary-900: #22105f;
+
+	/* ── 副色 base #359F95 ── */
+	--color-secondary-50: #f4f8f8;
+	--color-secondary-100: #e6f1f0;
+	--color-secondary-200: #c8e3e0;
+	--color-secondary-300: #9dd2cd;
+	--color-secondary-400: #66c2b9;
+	--color-secondary-500: #359f95;
+	--color-secondary-600: #2a887f;
+	--color-secondary-700: #226e67;
+	--color-secondary-800: #1a544f;
+	--color-secondary-900: #133d39;
+
+	/* ── 語言語意色：只用於語言標示，勿挪作裝飾 ── */
+	--color-lang-en: #7353e1;
+	--color-lang-zh: #fd6078;
+
+	/* ── 強調 ── */
+	--color-token: #f4d15e;
+	--color-coral: #fc8978;
+
+	/* ── 錯誤：lang-zh 對比度僅 2.95:1 不可當文字，故另立 ── */
+	--color-danger: #c02c48;
+	--color-danger-border: #fd6078;
+
+	/* ── 中性：由 ink 衍生帶藍紫調，不用純灰 ── */
+	--color-ink: #0d1852;
+	--color-ink-600: #373f6c;
+	--color-ink-500: #4d5998;
+	--color-ink-400: #717cb7;
+	--color-ink-300: #99a1cc;
+	--color-ink-200: #c9cde4;
+	--color-ink-100: #e4e6f1;
+
+	/* ── 底色 ── */
+	--color-cream: #fcf7f1;
+	--color-app: #f6f6f8;
+	--color-surface: #ffffff;
+
+	/* ── 字體：Nunito 無中文字符，CJK fallback 到 Noto Sans TC ── */
+	--font-sans: var(--font-nunito), var(--font-noto-tc), ui-sans-serif, system-ui,
+		-apple-system, "Helvetica Neue", sans-serif;
+
+	--radius-card: 14px;
+}
+
+@layer components {
+	/*
+	 * 頂部弧線。水平半徑用 50% → 弧線永遠跨滿整個寬度；
+	 * 垂直半徑用 clamp → 弧高隨螢幕在 14–44px 之間縮放。
+	 * 1.9vw 取自設計稿：2172px 寬對應弧高約 40px（= 1.84%）。
+	 * 切圖無法做到這件事：寬度一變，圖裡的弧度就會被拉扁或壓陡。
+	 */
+	.arc-top {
+		border-radius: 50% 50% 0 0 / clamp(14px, 1.9vw, 44px) clamp(14px, 1.9vw, 44px) 0 0;
+	}
+}
+
+@layer base {
+	html {
+		scroll-behavior: smooth;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		html {
+			scroll-behavior: auto;
+		}
+	}
+
+	body {
+		background-color: var(--color-cream);
+		color: var(--color-ink);
+		-webkit-font-smoothing: antialiased;
+	}
+
+	:focus-visible {
+		outline: 2px solid var(--color-primary-500);
+		outline-offset: 3px;
+		border-radius: 3px;
+	}
+
+	h1,
+	h2,
+	h3 {
+		text-wrap: balance;
+		letter-spacing: -0.025em;
+	}
+}

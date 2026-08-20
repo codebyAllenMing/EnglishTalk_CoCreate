@@ -1,0 +1,112 @@
+{
+    "meta": {
+        "title": "MonsterTalk — Keep it chill. Take it seriously.",
+        "description": "Find native speakers, have real conversations, and level up your language skills together."
+    },
+    "nav": {
+        "howItWorks": "How it works",
+        "features": "Features",
+        "community": "Community",
+        "blog": "Blog",
+        "login": "Log in",
+        "signup": "Sign up"
+    },
+    "hero": {
+        "eyebrow": "A language exchange community",
+        "line1Pre": "Keep it ",
+        "line1Accent": "chill.",
+        "line1Post": "",
+        "line2Pre": "Take it ",
+        "line2Accent": "seriously.",
+        "line2Post": "",
+        "subtitle": "Find native speakers, have real conversations, and level up your language skills—together.",
+        "subtitleCasual": "Casual, ",
+        "subtitleNot": "not",
+        "subtitleCareless": " careless.",
+        "ctaPrimary": "Find a conversation",
+        "ctaSecondary": "How it works",
+        "imageAlt": "Four monsters having a language exchange conversation around a table"
+    },
+    "features": {
+        "availability": {
+            "title": "Share your availability",
+            "body": "Set your time. You can host or join a conversation that fits your schedule."
+        },
+        "groupChats": {
+            "title": "Join small group chats",
+            "body": "Up to 4 people in a video room. Real conversations, real connections."
+        },
+        "reputation": {
+            "title": "Build your reputation",
+            "body": "Show up, be respectful, and get positive feedback. Trust makes better talks."
+        },
+        "together": {
+            "title": "Learn and teach together",
+            "body": "Everyone gets a chance to speak, listen, and grow."
+        }
+    },
+    "howItWorks": {
+        "title": "How it works",
+        "step1": {
+            "title": "Create your monster",
+            "body": "Choose your own monster avatar."
+        },
+        "step2": {
+            "title": "Set your time",
+            "body": "Add the times you're available for practice."
+        },
+        "step3": {
+            "title": "Find or join a room",
+            "body": "Pick a time, see who's in, and request to join."
+        },
+        "step4": {
+            "title": "Talk, learn, and grow",
+            "body": "Have fun conversations, switch languages, and support each other."
+        }
+    },
+    "stats": {
+        "learners": "Happy learners",
+        "conversations": "Conversations completed",
+        "countries": "Countries represented",
+        "rating": "Average rating from users",
+        "monsterQuip": "We're all\nmonsters here!"
+    },
+    "testimonials": {
+        "title": "Loved by language learners",
+        "sophie": {
+            "name": "Sophie",
+            "country": "Taiwan",
+            "quote": "I used to be so shy to speak English. Now I have regular partners and real conversations. This community is so warm!"
+        },
+        "lucas": {
+            "name": "Lucas",
+            "country": "Brazil",
+            "quote": "Finally a place that's not weird and not too formal. I can learn Chinese and help others with Portuguese. Perfect!"
+        },
+        "minji": {
+            "name": "Minji",
+            "country": "Korea",
+            "quote": "The small group chat is amazing. Everyone gets to speak and we actually become friends!"
+        }
+    },
+    "closing": {
+        "title": "Ready to meet your next conversation buddy?",
+        "cta": "Get started for free"
+    },
+    "login": {
+        "title": "Welcome back",
+        "subtitle": "Log in to continue your language exchange",
+        "email": "Email",
+        "emailPlaceholder": "you@example.com",
+        "password": "Password",
+        "submit": "Log in",
+        "divider": "or",
+        "google": "Continue with Google",
+        "noAccount": "Don't have an account?",
+        "signupLink": "Sign up",
+        "backHome": "Back to home"
+    },
+    "footer": {
+        "tagline": "Keep it chill. Take it seriously."
+    }
+}
