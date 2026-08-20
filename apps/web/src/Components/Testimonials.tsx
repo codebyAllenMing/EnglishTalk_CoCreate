@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { asset } from "@/asset";
 import { getDictionary } from "@/dictionaries";
 
 /**
@@ -47,7 +48,7 @@ export default async function Testimonials() {
 									className={`flex size-14 shrink-0 items-center justify-center rounded-full ${person.tone}`}
 								>
 									<Image
-										src={`/images/${person.avatar}.webp`}
+										src={asset(`/images/${person.avatar}.webp`)}
 										alt=""
 										width={256}
 										height={256}

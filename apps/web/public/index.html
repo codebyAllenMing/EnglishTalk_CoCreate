@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>MonsterTalk</title>
+		<!--
+			根路徑的語言分流。
+
+			正常部署（Cloudflare 等）由 src/proxy.ts 讀 Accept-Language 在伺服器端處理，
+			但靜態匯出沒有伺服器，proxy 不會執行 —— 訪問 / 會直接 404。
+			這裡在瀏覽器端補上，用相對路徑所以不必知道 basePath 是什麼。
+		-->
+		<script>
+			var lang = (navigator.language || "en").toLowerCase();
+			location.replace(lang.indexOf("zh") === 0 ? "zh-TW/" : "en/");
+		</script>
+		<noscript><meta http-equiv="refresh" content="0; url=en/" /></noscript>
+	</head>
+	<body>
+		<p>Redirecting to <a href="en/">MonsterTalk</a>…</p>
+	</body>
+</html>

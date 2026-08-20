@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { asset } from "@/asset";
 import { getDictionary } from "@/dictionaries";
 
 /**
@@ -28,7 +29,7 @@ export default async function Features() {
 				{items.map((item) => (
 					<div key={item.title} className="text-center lg:px-5">
 						<Image
-							src={`/images/${item.icon}.webp`}
+							src={asset(`/images/${item.icon}.webp`)}
 							alt=""
 							width={256}
 							height={256}

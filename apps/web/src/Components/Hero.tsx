@@ -1,3 +1,4 @@
+import { asset } from "@/asset";
 import { getDictionary } from "@/dictionaries";
 
 export default async function Hero() {
@@ -56,12 +57,12 @@ export default async function Hero() {
 				<picture>
 					<source
 						media="(min-width: 1024px)"
-						srcSet="/images/banner-cutout.webp"
+						srcSet={asset("/images/banner-cutout.webp")}
 						width={998}
 						height={867}
 					/>
 					<img
-						src="/images/banner-mb-cutout.webp"
+						src={asset("/images/banner-mb-cutout.webp")}
 						alt={hero.imageAlt}
 						width={1164}
 						height={944}

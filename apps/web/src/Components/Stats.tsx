@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { asset } from "@/asset";
 import { getDictionary } from "@/dictionaries";
 
 /**
@@ -53,7 +54,7 @@ export default async function Stats() {
 							className={`flex size-20 shrink-0 items-center justify-center rounded-full ring-4 ${stat.tone}`}
 						>
 							<Image
-								src={`/images/${stat.icon}.webp`}
+								src={asset(`/images/${stat.icon}.webp`)}
 								alt=""
 								width={256}
 								height={256}
@@ -101,7 +102,7 @@ export default async function Stats() {
 					/>
 				</div>
 				<Image
-					src="/images/monster-peek.webp"
+					src={asset("/images/monster-peek.webp")}
 					alt=""
 					width={256}
 					height={256}

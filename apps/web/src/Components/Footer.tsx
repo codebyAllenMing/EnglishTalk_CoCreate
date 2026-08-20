@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { asset } from "@/asset";
 import { getDictionary } from "@/dictionaries";
 
 export default async function Footer() {
@@ -9,7 +10,7 @@ export default async function Footer() {
 			<div className="mx-auto flex max-w-6xl flex-col items-center gap-3 px-5 py-10 text-center sm:flex-row sm:justify-between sm:px-8 sm:text-left">
 				<div className="flex items-center gap-2.5">
 					<Image
-						src="/images/monster-64.png"
+						src={asset("/images/monster-64.png")}
 						alt=""
 						width={28}
 						height={28}

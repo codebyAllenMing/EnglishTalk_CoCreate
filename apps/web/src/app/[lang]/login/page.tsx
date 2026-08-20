@@ -1,6 +1,7 @@
 import Image from "next/image";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { asset } from "@/asset";
 import { getDictionary, getLocale } from "@/dictionaries";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -22,7 +23,7 @@ export default async function LoginPage() {
 		<main className="flex min-h-dvh flex-col items-center justify-center px-5 py-12">
 			<Link href={`/${locale}`} className="mb-8 flex items-center gap-2.5">
 				<Image
-						src="/images/monster-64.png"
+						src={asset("/images/monster-64.png")}
 						alt=""
 						width={32}
 						height={32}

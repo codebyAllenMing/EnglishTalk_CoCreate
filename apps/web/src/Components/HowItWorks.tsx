@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { asset } from "@/asset";
 import { getDictionary } from "@/dictionaries";
 
 /**
@@ -38,7 +39,7 @@ export default async function HowItWorks() {
 							className={`mx-auto mb-4 flex size-24 items-center justify-center rounded-full sm:size-28 ${step.tone}`}
 						>
 							<Image
-								src={`/images/${step.icon}.webp`}
+								src={asset(`/images/${step.icon}.webp`)}
 								alt=""
 								width={256}
 								height={256}

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { asset } from "@/asset";
 import { getDictionary, getLocale, locales } from "@/dictionaries";
 
 /**
@@ -18,7 +19,7 @@ export default async function Nav() {
 			<nav className="mx-auto flex h-16 max-w-6xl items-center gap-6 px-5 sm:px-8">
 				<Link href={`/${locale}`} className="flex shrink-0 items-center gap-2.5">
 					<Image
-						src="/images/monster-64.png"
+						src={asset("/images/monster-64.png")}
 						alt=""
 						width={32}
 						height={32}

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { asset } from "@/asset";
 import { getDictionary } from "@/dictionaries";
 
 /**
@@ -24,7 +25,7 @@ export default async function Closing() {
 				 * 視覺上像是從弧線後面站起來。切掉的量與弧高同步縮放。
 				 */}
 				<Image
-					src="/images/monster-wave.webp"
+					src={asset("/images/monster-wave.webp")}
 					alt=""
 					width={512}
 					height={419}
