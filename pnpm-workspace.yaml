@@ -1,6 +1,12 @@
 packages:
   - "apps/*"
 
-# eslint-config-next 的傳遞依賴，需執行 build script 取得原生二進位檔
-onlyBuiltDependencies:
-  - unrs-resolver
+# pnpm 11 用 allowBuilds 取代了舊的 onlyBuiltDependencies，舊鍵已不生效。
+# 未列出的套件不會執行 build script，且 pnpm 會直接以 ERR_PNPM_IGNORED_BUILDS 中止 ——
+# 所以每個想跑 script 的傳遞依賴都必須在這裡明確表態 true/false。
+#
+# unrs-resolver 是 eslint-config-next 的傳遞依賴（原生 resolver）。
+# 各平台的 prebuilt binary 由 optionalDependencies 提供（@unrs/resolver-binding-*），
+# build script 只是取不到 prebuilt 時的 fallback，因此設 false 不執行。
+allowBuilds:
+  unrs-resolver: false
