@@ -53,8 +53,13 @@ metadata:
 
 ## 待辦
 
-0. **下一步：註冊頁 + 登入頁**（2026-08-20 使用者指定）。
-   登入頁目前只有 UI 無 auth，註冊頁尚未建立。範圍待定 —— 純 UI 或含完整 auth
+0. **下一步：個人主頁**（2026-08-23 使用者指定）。
+   `/[lang]/home` 目前是 placeholder，登入後轉導過去；設計稿在
+   `assets/design/個人主頁.jpg`。⚠️ 該頁沒有任何存取保護，登入是假的
+   （見 `AuthForm` 的 `FAKE_AUTH`），直接打網址就能進
+0.5 登入 / 註冊頁**已完成**（見 [[auth-pages-state]]），
+   與設計稿仍有落差清單未處理，最大一項是 Log in / Sign up 分頁切換
+   —— 它會動到「兩個獨立路由 vs 單頁切換」的結構
 1. Nav 的「MonsterTalk」字重 — 現 Nunito 800，UI kit 有 5 組對照待挑
 2. 產品命名 MonsterTalk 為暫定，Logo 檔仍是 ME 識別，兩者不相容
 3. **上線前換掉假數據**（`grep "FAKE_"`）
