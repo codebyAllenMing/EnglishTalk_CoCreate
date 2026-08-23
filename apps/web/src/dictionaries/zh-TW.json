@@ -106,6 +106,33 @@
         "signupLink": "註冊",
         "backHome": "回到首頁"
     },
+    "signup": {
+        "title": "建立帳號",
+        "subtitle": "加入社群，開始你的對話",
+        "displayName": "顯示名稱",
+        "displayNamePlaceholder": "其他人看到的名字",
+        "email": "Email",
+        "emailPlaceholder": "you@example.com",
+        "password": "密碼",
+        "passwordHint": "至少 8 個字元",
+        "confirmPassword": "再次輸入密碼",
+        "passwordMismatch": "兩次輸入的密碼不一致",
+        "submit": "建立帳號",
+        "divider": "或",
+        "google": "使用 Google 繼續",
+        "terms": "建立帳號即表示你同意我們的服務條款與隱私權政策。",
+        "hasAccount": "已經有帳號了？",
+        "loginLink": "登入",
+        "backHome": "回到首頁"
+    },
+    "home": {
+        "greeting": "歡迎回來！",
+        "subtitle": "這裡之後會是你的個人首頁 —— 你預約的房間、聊過的人，還有你的怪獸。",
+        "underConstruction": "施工中",
+        "note": "登入還沒真的接上，所以任何人都能進到這一頁。個人首頁是下一步。",
+        "backLanding": "回到 Landing Page",
+        "logout": "登出"
+    },
     "footer": {
         "tagline": "輕鬆聊，認真學。"
     }

@@ -45,10 +45,12 @@ export default async function Nav() {
 					>
 						{dict.nav.login}
 					</Link>
-					{/* 註冊頁尚未實作 —— 依決策不給連結 */}
-					<span className="hidden cursor-default rounded-full bg-primary-500 px-4 py-2 text-sm font-extrabold text-white sm:inline-block">
+					<Link
+						href={`/${locale}/signup`}
+						className="hidden rounded-full bg-primary-500 px-4 py-2 text-sm font-extrabold text-white transition-colors hover:bg-primary-600 sm:inline-block"
+					>
 						{dict.nav.signup}
-					</span>
+					</Link>
 				</div>
 			</nav>
 		</header>

@@ -19,6 +19,8 @@ metadata:
 - **假數據已實作但標記清楚**：統計面板 `FAKE_STATS`、評價區 `FAKE_TESTIMONIALS`，
   `grep "FAKE_"` 全數可找。⚠️ 上線前必須換掉或整區移除
 - 四路由全部 SSG，build + lint 通過
+- **已部署 GitHub Pages**：https://codebyallenming.github.io/EnglishTalk_CoCreate/
+  push 到 main 自動 build。repo 是 **public**（共創專案，使用者確認無機密）
 
 ## 關鍵決策
 
@@ -33,15 +35,20 @@ metadata:
   形狀確認是橢圓弧（用橢圓公式回推誤差 <1px），所以 `border-radius: 50%` 正確
 - **底部怪獸的腳是被裁掉的**：section `overflow-hidden` + 負 margin 溢出，不是完整站著
 - **格式判準**：扁平可縮放的小圖示 → SVG；有漸層質感的插圖 → WebP（實測描邊 SVG 613KB/31色 vs WebP 34KB/48948色）
+- **靜態匯出只在 `GITHUB_PAGES=true` 時啟用**，本機 dev 不受影響。
+  `src/asset.ts` 替 public/ 圖片補 basePath —— `images.unoptimized` 後 `next/image`
+  不會自己改寫 src，少了它靜態站上每張圖都 404 而本機看不出來
+- **`proxy.ts` 在靜態匯出下不執行**（沒有伺服器）。根路徑語言分流改由
+  `public/index.html` 在瀏覽器端做。改用 Cloudflare Pages 的話拿掉 `GITHUB_PAGES` 即可恢復
 
 ## 待辦
 
+0. **下一步：註冊頁 + 登入頁**（2026-08-20 使用者指定）。
+   登入頁目前只有 UI 無 auth，註冊頁尚未建立。範圍待定 —— 純 UI 或含完整 auth
 1. Nav 的「MonsterTalk」字重 — 現 Nunito 800，UI kit 有 5 組對照待挑
-2. 登入頁範圍 — 只做 UI 或含完整 auth（會牽動後端骨架、DB）
-3. 產品命名 MonsterTalk 為暫定，Logo 檔仍是 ME 識別，兩者不相容
-4. **上線前換掉假數據**（`grep "FAKE_"`）
-5. 部署 Cloudflare Pages（需先設 `output: "export"` 或 image loader，目前是預設 server 最佳化）
-6. **repo 尚無任何 commit**
+2. 產品命名 MonsterTalk 為暫定，Logo 檔仍是 ME 識別，兩者不相容
+3. **上線前換掉假數據**（`grep "FAKE_"`）
+4. Cloudflare Pages 為原訂方案（proxy.ts 能跑、Image 最佳化在），目前先走 GitHub Pages
 
 ## 位置
 

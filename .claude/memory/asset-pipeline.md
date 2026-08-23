@@ -42,3 +42,16 @@ metadata:
 
 規格與踩坑細節在 vault 的 `landing-page-spec.md`（入口見 [[englishtalk-vault-pointer]]）；
 實作狀態見 [[frontend-build-state]]。
+
+## 兩條處理路線（2026-08-23 補）
+
+`build_icons.py` 現在有兩種群組：
+
+- **要互相對齊份量的**（features / steps / stats / avatars）→ 走 `balance()`
+- **各自絕對定位的**（auth）→ 走 `trim()` + `fit()`，不做平衡
+
+判準是「這組圖會不會並排出現、需不需要看起來一樣重」。登入頁那四隻怪獸
+散在版面不同角落、尺寸由設計稿決定，硬套 `balance()` 反而錯。
+
+⚠️ `trim()` 的 `alpha_floor` 預設 **8** 不是 0 —— AI 出圖邊緣常有一圈 alpha 1~5 的
+雜訊，照 0 去裁會多留十幾 px 空邊，之後絕對定位就對不準。

@@ -13,8 +13,10 @@
 import sys
 from pathlib import Path
 
+from PIL import Image
+
 sys.path.insert(0, str(Path(__file__).parent))
-from iconkit import balance, cutout, recolor  # noqa: E402
+from iconkit import balance, cutout, fit, recolor, trim  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = ROOT / "assets" / "source"
@@ -84,6 +86,18 @@ AVATARS = {
 	),
 }
 
+# 登入 / 註冊頁的插圖 —— 不進 balance。
+# 那個演算法是為了「一排並列的圖示看起來份量相當」而寫的，這裡每隻怪獸各自
+# 絕對定位在版面不同角落，尺寸由設計稿決定，硬要互相對齊反而錯。
+AUTH = {
+	"auth-monster-wave": dict(src="auth/monster_01_v1.png"),        # 青綠揮手 —— 登入頁
+	"auth-monster-stand": dict(src="auth/monster_01_v2.png"),       # 同一隻的站姿 —— 註冊頁
+	"auth-monster-headphones": dict(src="auth/monster_02_v1.png"),  # 紫，卡片左側
+	"auth-monster-antenna": dict(src="auth/monster_03_v1.png"),     # 粉紅，卡片右側
+	# 背景是滿版的，不 trim 也不去背 —— 它整張都是內容（極淡暖色塊 + 散落圓點）
+	"auth-background": dict(src="auth/background.png", long_edge=1536, flatten=True),
+}
+
 GROUPS = {
 	# fill 小一點是因為圖只有 56–80px 卻放在更大的圓裡，要留邊不頂到圓
 	"features": (FEATURES, dict(fill=0.92, box_weight=0.0)),
@@ -91,11 +105,35 @@ GROUPS = {
 	"stats": (STATS, dict(fill=0.92, box_weight=0.5)),
 	"peek": (PEEK, dict(fill=0.96, box_weight=0.0)),
 	"avatars": (AVATARS, dict(fill=0.92, box_weight=0.6)),
+	# None = 不做視覺重量平衡，走 build_auth 那條路
+	"auth": (AUTH, None),
 }
+
+# 怪獸在版面上最寬約 250px，出 512 是留給 2x 螢幕
+AUTH_LONG_EDGE = 512
+
+
+def save(image, name, quality=88):
+	OUTPUT.mkdir(parents=True, exist_ok=True)
+	path = OUTPUT / f"{name}.webp"
+	image.save(path, "WEBP", quality=quality, method=6)
+	print(f"  {name:24s} {str(image.size):12s} {path.stat().st_size / 1024:5.1f} KB")
+
+
+def build_auth(specs):
+	for name, spec in specs.items():
+		image = Image.open(SOURCE / spec["src"])
+		if spec.get("flatten"):
+			image = image.convert("RGB")
+		else:
+			image = trim(image.convert("RGBA"))
+		save(fit(image, spec.get("long_edge", AUTH_LONG_EDGE)), name)
 
 
 def build(group_name):
 	specs, balance_opts = GROUPS[group_name]
+	if balance_opts is None:
+		return build_auth(specs)
 
 	prepared = {}
 	for name, spec in specs.items():
@@ -104,11 +142,8 @@ def build(group_name):
 			image = recolor(image, **spec["recolor"])
 		prepared[name] = image
 
-	OUTPUT.mkdir(parents=True, exist_ok=True)
 	for name, image in balance(prepared, **balance_opts).items():
-		path = OUTPUT / f"{name}.webp"
-		image.save(path, "WEBP", quality=92, method=6)
-		print(f"  {name:24s} {path.stat().st_size / 1024:5.1f} KB")
+		save(image, name, quality=92)
 
 
 if __name__ == "__main__":

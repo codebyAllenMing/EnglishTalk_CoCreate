@@ -1,6 +1,7 @@
 import Image from "next/image";
+import Link from "next/link";
 import { asset } from "@/asset";
-import { getDictionary } from "@/dictionaries";
+import { getDictionary, getLocale } from "@/dictionaries";
 
 /**
  * 底部 CTA 區塊。
@@ -13,6 +14,7 @@ import { getDictionary } from "@/dictionaries";
  */
 export default async function Closing() {
 	const dict = await getDictionary();
+	const locale = await getLocale();
 
 	return (
 		<section className="arc-top mt-10 overflow-hidden bg-primary-50 pt-10 pb-14 sm:pt-14">
@@ -37,11 +39,13 @@ export default async function Closing() {
 					<h2 className="text-2xl font-extrabold sm:text-3xl lg:text-4xl">
 						{dict.closing.title}
 					</h2>
-					{/* 註冊流程尚未實作 —— 依決策不給連結 */}
-					<span className="mt-6 inline-flex cursor-default items-center gap-2 rounded-full bg-primary-500 px-7 py-3.5 font-extrabold text-white">
+					<Link
+						href={`/${locale}/signup`}
+						className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary-500 px-7 py-3.5 font-extrabold text-white transition-colors hover:bg-primary-600"
+					>
 						{dict.closing.cta}
 						<span aria-hidden="true">→</span>
-					</span>
+					</Link>
 				</div>
 			</div>
 		</section>

@@ -162,3 +162,24 @@ def balance(images, size=256, fill=0.92, box_weight=0.5):
 		result[name] = canvas
 
 	return result
+
+
+def trim(image, alpha_floor=8):
+	"""
+	裁掉四周的透明邊。
+
+	alpha_floor 不用 0 是因為 AI 出圖的邊緣常有一圈近乎全透明的雜訊
+	（alpha 1~5），照 0 去裁會多留十幾 px 的空邊，絕對定位就對不準。
+	"""
+	arr = np.array(image.convert("RGBA"))
+	ys, xs = np.where(arr[:, :, 3] > alpha_floor)
+	return image.crop((xs.min(), ys.min(), xs.max() + 1, ys.max() + 1))
+
+
+def fit(image, long_edge):
+	"""等比縮到長邊為 long_edge。只縮不放 —— 放大只會糊掉，不會變清楚。"""
+	scale = min(1.0, long_edge / max(image.size))
+	if scale == 1.0:
+		return image
+	return image.resize((max(1, round(image.width * scale)), max(1, round(image.height * scale))),
+	                    Image.LANCZOS)
