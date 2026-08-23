@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import LocaleSwitch from "@/Components/LocaleSwitch";
 import { asset } from "@/asset";
 import { getDictionary, getLocale, locales } from "@/dictionaries";
 
@@ -38,7 +39,7 @@ export default async function Nav() {
 				</ul>
 
 				<div className="ml-auto flex items-center gap-2 sm:gap-3">
-					<LocaleSwitch current={locale} />
+					<LocaleSwitch current={locale} locales={locales} label={dict.nav.language} />
 					<Link
 						href={`/${locale}/login`}
 						className="rounded-full border-2 border-ink-200 px-4 py-2 text-sm font-extrabold transition-colors hover:border-primary-400 hover:text-primary-600"
@@ -54,33 +55,5 @@ export default async function Nav() {
 				</div>
 			</nav>
 		</header>
-	);
-}
-
-const LOCALE_LABEL: Record<string, string> = { "en": "EN", "zh-TW": "中" };
-
-/**
- * 語言切換。視覺稿沒有這個元件，但有 i18n 就必須有切換入口，
- * 否則使用者會被 Accept-Language 鎖死。
- * TODO: 目前切換後回首頁；要保留當前路徑需改為 Client Component 讀 usePathname。
- */
-function LocaleSwitch({ current }: { current: string }) {
-	return (
-		<div className="flex items-center rounded-full border border-ink-200 p-0.5">
-			{locales.map((locale) => (
-				<Link
-					key={locale}
-					href={`/${locale}`}
-					aria-current={locale === current ? "true" : undefined}
-					className={`rounded-full px-2.5 py-1 text-xs font-extrabold transition-colors ${
-						locale === current
-							? "bg-primary-500 text-white"
-							: "text-ink-400 hover:text-primary-600"
-					}`}
-				>
-					{LOCALE_LABEL[locale] ?? locale}
-				</Link>
-			))}
-		</div>
 	);
 }

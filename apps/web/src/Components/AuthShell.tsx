@@ -1,8 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import LocaleSwitch from "@/Components/LocaleSwitch";
 import { asset } from "@/asset";
-import { getLocale } from "@/dictionaries";
+import { getDictionary, getLocale, locales } from "@/dictionaries";
 
 type Props = {
 	title: string;
@@ -63,6 +64,7 @@ type Props = {
  */
 export default async function AuthShell({ title, subtitle, backHome, monster, children }: Props) {
 	const locale = await getLocale();
+	const dict = await getDictionary();
 
 	return (
 		/*
@@ -81,6 +83,11 @@ export default async function AuthShell({ title, subtitle, backHome, monster, ch
 				className="object-cover"
 			/>
 
+			{/* 桌機版釘在畫面右上角 —— 那裡是空的，也不必跟置中的 logo 搶同一列 */}
+			<div className="absolute top-5 right-5 z-30 hidden sm:block">
+				<LocaleSwitch current={locale} locales={locales} label={dict.nav.language} />
+			</div>
+
 			<div className="relative flex w-full max-w-sm flex-col items-center">
 				{/* 品牌列：手機版 logo 靠左、返回靠右；桌機版 logo 置中，返回移到卡片下方 */}
 				<div className="mb-6 flex w-full items-center justify-between sm:mb-8 sm:justify-center">
@@ -96,12 +103,23 @@ export default async function AuthShell({ title, subtitle, backHome, monster, ch
 						<span className="text-lg font-extrabold tracking-tight">MonsterTalk</span>
 					</Link>
 
-					<Link
-						href={`/${locale}`}
-						className="text-sm font-semibold text-ink-400 sm:hidden"
-					>
-						← {backHome}
-					</Link>
+					{/*
+					 * 手機版把語系切換與返回併在品牌列右側。這一列在 375px 上很緊，
+					 * 英文的 "Back to home" 又比中文長 —— 所以 380px 以下只留箭頭。
+					 */}
+					<div className="flex items-center gap-2.5 sm:hidden">
+						<LocaleSwitch
+							current={locale}
+							locales={locales}
+							label={dict.nav.language}
+						/>
+						<Link
+							href={`/${locale}`}
+							className="text-sm font-semibold whitespace-nowrap text-ink-400"
+						>
+							← <span className="max-[380px]:hidden">{backHome}</span>
+						</Link>
+					</div>
 				</div>
 
 				<div className="relative w-full">
@@ -144,7 +162,7 @@ export default async function AuthShell({ title, subtitle, backHome, monster, ch
 						width={487}
 						height={512}
 						sizes="220px"
-						className="pointer-events-none absolute -right-[6%] -bottom-16 z-20 h-auto w-[42%] sm:-right-[24%] sm:-bottom-11 sm:w-[44.7%]"
+						className="pointer-events-none absolute -right-[6%] -bottom-16 z-20 h-auto w-[42%] opacity-60 sm:-right-[24%] sm:-bottom-11 sm:w-[44.7%] sm:opacity-100"
 					/>
 				</div>
 

@@ -84,11 +84,33 @@ Forgot password、Apple 登入），實際只有 520px，垂直空間少了四�
 註冊頁卡片 746px 高，超出視窗的下半截會直接消失而且捲不到（2026-08-23 踩到）。
 `overflow-x: clip` 只管水平，而且 clip 不建立捲動容器。
 
-**手機版三隻都在，但紫與粉紅翻到卡片上層（`z-20`）並降到 40% 不透明度**
-（2026-08-23 使用者決定）。390px 視窗扣掉 `px-5` 後卡片就佔 350px、左右各只剩 20px，
+**手機版三隻都淡化：紫與粉紅 40%、青綠 60%**，且紫與粉紅翻到卡片上層（`z-20`）
+（2026-08-23 使用者決定）。青綠不跟到 40% 是因為它大半壓在**背景**而非白卡上 ——
+米白底上再降到四成會幾乎消失。390px 視窗扣掉 `px-5` 後卡片就佔 350px、左右各只剩 20px，
 留在下層只能露出 16% 等於一條色邊。淡化後壓在表單邊緣仍讀得到字，
 也接近設計稿手機版把三隻都畫進框裡的意思。
 桌機再翻回下層（`sm:z-0 sm:opacity-100`）。
+
+## 語言切換
+
+`Components/LocaleSwitch.tsx`，Nav 與 AuthShell 共用。
+
+**這是全站唯一的 Client Component**，理由只有一個：切換後要留在原本那一頁。
+先前它是 Nav.tsx 的私有元件、寫死 `href={/${locale}}`，在 landing 上看不出差別
+（本來就在首頁），但放到登入 / 註冊頁就會變成「填到一半切語言，整頁跑掉」。
+
+⚠️ `locales` 由 Server Component 以 prop 傳入，**不能在 client 直接 import
+`@/dictionaries`** —— 那個模組相依 `next/root-params`，會把 server-only 的東西
+拖進 client bundle。
+
+⚠️ `usePathname()` 回傳的路徑**不含 basePath**（Next 剝掉），而 `<Link>` 又會補上，
+所以直接操作路徑字串就對了。尾斜線同理：dev 拿到 `/zh-TW/login`、
+靜態站拿到 `/zh-TW/login/`，換掉第一段後兩邊各自維持原形狀，不會多一次 308。
+靜態匯出驗過產出是 `/EnglishTalk_CoCreate/en/login/`。
+
+版面：桌機釘在畫面右上角（`absolute top-5 right-5`，那裡是空的，不必跟置中的 logo
+搶同一列）；手機併進品牌列右側，與返回首頁同一組。那一列在 375px 上很緊，
+英文 "Back to home" 又比中文長，所以 **380px 以下只留箭頭**（`max-[380px]:hidden`）。
 
 ## 設計稿與現況的落差（尚未處理）
 
@@ -99,6 +121,7 @@ Forgot password、Apple 登入），實際只有 520px，垂直空間少了四�
 設計稿卡片內有、目前實作沒有的：
 
 - 卡片頂部的 **Log in / Sign up 分頁切換**（目前是兩個獨立路由 + 底部文字連結）
+- 設計稿沒有語言切換 —— 那是 i18n 必要的入口，額外加的
 - 欄位**前置 icon**（信封、鎖）與密碼的**眼睛切換**
 - **Forgot password?** 連結
 - **Continue with Apple**（目前只有 Google）
