@@ -37,6 +37,13 @@ metadata:
   ⚠️ 那個負 margin **只能掛在 `lg:`**（2026-08-23 修）。`lg` 是 `flex-row`，負 margin
   的效果是自己往下溢出；掉到 `lg` 以下變成 `flex-col`，**同一個值會改成把下一個元素往上拉**，
   標題直接被拉進怪獸肚子裡。負 margin 的語意會隨 flex 方向翻轉，跨斷點時要特別檢查
+- **UI icon 用 `lucide-react`**（2026-08-23，全專案第一個也是唯一的 UI 相依）。
+  ⚠️ 關鍵是**在 Server Component 裡用** —— icon 於建置期 render 成靜態 SVG，
+  client bundle 完全沒有 lucide（實測 chunk 內只剩一個 module 名字串，
+  無 `createLucideIcon`、無 path 資料）。一旦某個欄位需要 client state
+  （例如密碼的眼睛切換），那一頁的 icon 才會進 client bundle
+- **品牌 logo 不走 icon library**：Google / Apple 要內嵌官方彩色 SVG。
+  Font Awesome brands 是單色字形，不符 Google 品牌規範，設計稿也是彩色的
 - **格式判準**：扁平可縮放的小圖示 → SVG；有漸層質感的插圖 → WebP（實測描邊 SVG 613KB/31色 vs WebP 34KB/48948色）
 - **靜態匯出只在 `GITHUB_PAGES=true` 時啟用**，本機 dev 不受影響。
   `src/asset.ts` 替 public/ 圖片補 basePath —— `images.unoptimized` 後 `next/image`

@@ -1,9 +1,11 @@
+import { Mail, User } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import AuthDivider from "@/Components/AuthDivider";
 import AuthField from "@/Components/AuthField";
 import AuthForm from "@/Components/AuthForm";
 import AuthShell from "@/Components/AuthShell";
+import PasswordField from "@/Components/PasswordField";
 import { getDictionary, getLocale } from "@/dictionaries";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -35,6 +37,7 @@ export default async function SignupPage() {
 					<>
 						<AuthField
 							id="displayName"
+							icon={User}
 							label={signup.displayName}
 							type="text"
 							// nickname 而非 name：這是對外顯示的稱呼，不是真實姓名
@@ -43,26 +46,29 @@ export default async function SignupPage() {
 						/>
 						<AuthField
 							id="email"
+							icon={Mail}
 							label={signup.email}
 							type="email"
 							autoComplete="email"
 							placeholder={signup.emailPlaceholder}
 						/>
-						<AuthField
+						<PasswordField
 							id="password"
 							label={signup.password}
-							type="password"
 							// new-password 讓密碼管理器提議新密碼，而不是自動填入舊的
 							autoComplete="new-password"
 							placeholder="••••••••"
 							hint={signup.passwordHint}
+							showLabel={dict.form.showPassword}
+							hideLabel={dict.form.hidePassword}
 						/>
-						<AuthField
+						<PasswordField
 							id="confirmPassword"
 							label={signup.confirmPassword}
-							type="password"
 							autoComplete="new-password"
 							placeholder="••••••••"
+							showLabel={dict.form.showPassword}
+							hideLabel={dict.form.hidePassword}
 						/>
 					</>
 				}

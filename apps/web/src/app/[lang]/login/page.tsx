@@ -1,9 +1,11 @@
+import { Mail } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import AuthDivider from "@/Components/AuthDivider";
 import AuthField from "@/Components/AuthField";
 import AuthForm from "@/Components/AuthForm";
 import AuthShell from "@/Components/AuthShell";
+import PasswordField from "@/Components/PasswordField";
 import { getDictionary, getLocale } from "@/dictionaries";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -30,17 +32,19 @@ export default async function LoginPage() {
 					<>
 						<AuthField
 							id="email"
+							icon={Mail}
 							label={login.email}
 							type="email"
 							autoComplete="email"
 							placeholder={login.emailPlaceholder}
 						/>
-						<AuthField
+						<PasswordField
 							id="password"
 							label={login.password}
-							type="password"
 							autoComplete="current-password"
 							placeholder="••••••••"
+							showLabel={dict.form.showPassword}
+							hideLabel={dict.form.hidePassword}
 						/>
 					</>
 				}

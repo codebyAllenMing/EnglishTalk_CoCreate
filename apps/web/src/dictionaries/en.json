@@ -136,5 +136,9 @@
     },
     "footer": {
         "tagline": "Keep it chill. Take it seriously."
+    },
+    "form": {
+        "showPassword": "Show password",
+        "hidePassword": "Hide password"
     }
 }

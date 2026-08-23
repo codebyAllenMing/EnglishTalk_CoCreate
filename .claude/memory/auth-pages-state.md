@@ -91,11 +91,37 @@ Forgot password、Apple 登入），實際只有 520px，垂直空間少了四�
 也接近設計稿手機版把三隻都畫進框裡的意思。
 桌機再翻回下層（`sm:z-0 sm:opacity-100`）。
 
+## Client Component 只有三個
+
+`AuthForm`（送出攔截 + 密碼一致性）、`LocaleSwitch`（保留路徑）、`PasswordField`（顯示切換）。
+其餘全是 Server Component —— 這不只是潔癖，lucide 的 icon 在 Server Component 裡是
+**建置期 render 成靜態 SVG**，完全不進 client bundle；一旦某個元件跨到 client，
+它用到的 icon 就得跟著打包。實測 Mail / User 只在 HTML 裡，Eye / EyeOff / Lock 才在 chunk 裡。
+
+## 表單欄位的 icon
+
+`AuthField`（server）收 `icon: LucideIcon`，由頁面傳入（email → Mail、displayName → User）。
+**密碼欄位一律用 `PasswordField`**（client），它把 Lock 寫死在內部，右側多一顆顯示 / 隱藏切換。
+
+⚠️ 眼睛按鈕一定要 `type="button"` —— `<button>` 在 `<form>` 裡的預設 type 是 submit，
+漏掉的話點眼睛會直接送出表單。
+
+⚠️ 切換的是 input 的 `type`，不是另外疊一個明碼欄位 —— 後者會讓密碼管理器看到兩個欄位
+而填錯，也會讓 `AuthForm` 的一致性檢查抓不到值。
+
+`src/fieldStyles.ts` 存放兩者共用的 class 字串。抽出來不是為了少打字，而是這兩個元件
+會在同一張表單裡上下相鄰，圓角 / 邊框 / focus ring 差一點點就看得出來，
+而它們隔著 client 邊界沒辦法共用元件，只能共用字串。
+
+⚠️ icon 寫在 `<input>` **之後**，視覺位置靠 absolute 拉回左邊 —— Tailwind 的 `peer`
+必須是目標元素的**前置兄弟**，這樣才能用 `peer-focus:text-primary-500`
+讓 icon 跟著 border 一起變主色。icon 不可 focus，DOM 順序不影響 tab 鍵。
+
 ## 語言切換
 
 `Components/LocaleSwitch.tsx`，Nav 與 AuthShell 共用。
 
-**這是全站唯一的 Client Component**，理由只有一個：切換後要留在原本那一頁。
+需要 client 的理由只有一個：切換後要留在原本那一頁。
 先前它是 Nav.tsx 的私有元件、寫死 `href={/${locale}}`，在 landing 上看不出差別
 （本來就在首頁），但放到登入 / 註冊頁就會變成「填到一半切語言，整頁跑掉」。
 
@@ -122,7 +148,7 @@ Forgot password、Apple 登入），實際只有 520px，垂直空間少了四�
 
 - 卡片頂部的 **Log in / Sign up 分頁切換**（目前是兩個獨立路由 + 底部文字連結）
 - 設計稿沒有語言切換 —— 那是 i18n 必要的入口，額外加的
-- 欄位**前置 icon**（信封、鎖）與密碼的**眼睛切換**
+- ~~欄位前置 icon~~ 已完成（lucide-react：Mail / Lock / User）；**密碼的眼睛切換**仍缺 —— 那需要 client state
 - **Forgot password?** 連結
 - **Continue with Apple**（目前只有 Google）
 - 標籤是 **Email or username**（目前是 Email）

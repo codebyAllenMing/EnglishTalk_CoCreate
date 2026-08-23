@@ -136,5 +136,9 @@
     },
     "footer": {
         "tagline": "輕鬆聊，認真學。"
+    },
+    "form": {
+        "showPassword": "顯示密碼",
+        "hidePassword": "隱藏密碼"
     }
 }
