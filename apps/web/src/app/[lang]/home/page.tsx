@@ -18,7 +18,8 @@ export async function generateMetadata(): Promise<Metadata> {
  * 路由取名 /home 而非 /dashboard：landing 是給「還沒登入的人」看的，
  * 這裡才是登入後的家。命名要照使用者的心智模型，不是照技術慣例。
  *
- * 垂直置中只在 sm 以上做，且用 my-auto 而非 justify-center，理由見 AuthShell 的註解。
+ * 垂直置中只在 sm 以上做，且用 justify-center-safe（不是 justify-center，也不是
+ * my-auto），理由見 AuthShell 的註解 —— 那兩個在內容放不下時上半截會捲不回來。
  */
 export default async function HomePage() {
 	const dict = await getDictionary();
@@ -26,8 +27,8 @@ export default async function HomePage() {
 	const { home } = dict;
 
 	return (
-		<main className="flex min-h-dvh flex-col items-center px-5 pt-10 pb-8 text-center sm:py-12">
-			<div className="flex flex-col items-center sm:my-auto">
+		<main className="flex min-h-dvh flex-col items-center justify-start px-5 pt-10 pb-8 text-center sm:justify-center-safe sm:py-12">
+			<div className="flex flex-col items-center">
 				<Image
 					src={asset("/images/monster-wave.webp")}
 					alt=""
