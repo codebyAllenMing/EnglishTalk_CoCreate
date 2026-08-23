@@ -33,7 +33,10 @@ metadata:
 - **弧線用 CSS 不切圖**：`.arc-top` 的 `clamp(20px, 5vw, 100px)`。
   ⚠️ 原本寫 1.9vw 是**量錯的**，實測設計稿是 5.08%（稿寬 1024、弧高 52px）。
   形狀確認是橢圓弧（用橢圓公式回推誤差 <1px），所以 `border-radius: 50%` 正確
-- **底部怪獸的腳是被裁掉的**：section `overflow-hidden` + 負 margin 溢出，不是完整站著
+- **底部怪獸的腳是被裁掉的**：section `overflow-hidden` + 負 margin 溢出，不是完整站著。
+  ⚠️ 那個負 margin **只能掛在 `lg:`**（2026-08-23 修）。`lg` 是 `flex-row`，負 margin
+  的效果是自己往下溢出；掉到 `lg` 以下變成 `flex-col`，**同一個值會改成把下一個元素往上拉**，
+  標題直接被拉進怪獸肚子裡。負 margin 的語意會隨 flex 方向翻轉，跨斷點時要特別檢查
 - **格式判準**：扁平可縮放的小圖示 → SVG；有漸層質感的插圖 → WebP（實測描邊 SVG 613KB/31色 vs WebP 34KB/48948色）
 - **靜態匯出只在 `GITHUB_PAGES=true` 時啟用**，本機 dev 不受影響。
   `src/asset.ts` 替 public/ 圖片補 basePath —— `images.unoptimized` 後 `next/image`

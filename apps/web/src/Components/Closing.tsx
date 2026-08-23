@@ -24,7 +24,12 @@ export default async function Closing() {
 				 *
 				 * 設計稿裡牠的腳是被裁掉的（怪獸 y 1452–1535，畫布底 1536），不是完整站著 ——
 				 * 用負的 margin-bottom 往下溢出，靠 section 的 overflow-hidden 切掉，
-				 * 視覺上像是從弧線後面站起來。切掉的量與弧高同步縮放。
+				 * 視覺上像是從弧線後面站起來。
+				 *
+				 * ⚠️ 那個負值**只能在 lg 以上**。lg 是 flex-row，負 margin 的效果是自己往下溢出；
+				 *    一掉到 lg 以下就變成 flex-col，同一個負值會改成把**下一個元素往上拉**，
+				 *    標題直接被拉進怪獸肚子裡（2026-08-23 回報）。
+				 *    直排時腳本來也不該被裁 —— 弧線在 section 頂端，怪獸不在它後面。
 				 */}
 				<Image
 					src={asset("/images/monster-wave.webp")}
@@ -32,7 +37,7 @@ export default async function Closing() {
 					width={512}
 					height={419}
 					sizes="(max-width: 640px) 128px, (max-width: 1024px) 176px, 224px"
-					className="-mb-14 h-auto w-32 shrink-0 sm:-mb-16 sm:w-44 lg:-mb-20 lg:w-56"
+					className="h-auto w-32 shrink-0 sm:w-44 lg:-mb-20 lg:w-56"
 				/>
 
 				<div className="pb-4 text-center lg:pb-10 lg:text-left">
