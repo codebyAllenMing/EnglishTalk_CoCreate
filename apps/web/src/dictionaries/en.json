@@ -210,7 +210,12 @@
                 "hosted": "Room you host",
                 "add": "Add time slot"
             },
-            "timezone": "All times shown in your local time"
+            "timezone": "All times shown in your local time",
+            "openSlotHint": "Pick the hours you're free to chat. Others can then book you."
         }
+    },
+    "common": {
+        "close": "Close",
+        "cancel": "Cancel"
     }
 }

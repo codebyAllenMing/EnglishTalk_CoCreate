@@ -76,6 +76,14 @@
 }
 
 @layer base {
+	/*
+	 * 對話框開啟時鎖住背景捲動。原生 <dialog> 的 showModal() 會讓背景 inert，
+	 * 但**不會**阻止 body 捲動 —— 用 :has 純 CSS 補上，不必為此寫一個 effect。
+	 */
+	body:has(dialog[open]) {
+		overflow: hidden;
+	}
+
 	html {
 		scroll-behavior: smooth;
 	}

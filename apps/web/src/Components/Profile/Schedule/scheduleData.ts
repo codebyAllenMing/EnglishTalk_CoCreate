@@ -1,6 +1,6 @@
 import type { LangCode } from "../profileData";
 import raw from "./fakeSchedule.json";
-import { toMinutes } from "./week";
+import { currentWeekStart, todayIndexIn, toMinutes } from "./week";
 
 export type SlotKind = "open" | "session" | "hosted" | "add";
 
@@ -39,34 +39,38 @@ export const SLOT_HEIGHT = 34;
  *
  * 存成 JSON 而不是 TS 常數，是為了對設計稿時好改：時間寫 "16:00" 這種人看得懂的
  * 字串，不是 960 這種要心算的分鐘數。轉換在這裡做一次，元件拿到的已經是分鐘數。
- *
- * weekStart 用 2025-05-19 是因為那天剛好是星期一，跟設計稿的 Mon May 19 對得上
- * （2026 年的 5/19 是星期二）。畫面上不顯示年份，看不出差別。
  */
-export const FAKE_SCHEDULE = {
-	weekStart: raw.weekStart,
-	/** 哪一欄要高亮。⚠️ 刻意由資料/props 傳入而不是在元件裡算 new Date() —— 靜態
-	 *  匯出是在建置期 render 的，元件內算出來的「今天」會凍結在部署那一天。 */
-	todayIndex: raw.todayIndex,
-	slots: raw.slots.map(
-		(s): Slot => ({
-			day: s.day,
-			startMinutes: toMinutes(s.start),
-			endMinutes: toMinutes(s.end),
-			kind: s.kind as SlotKind,
-			title: "title" in s ? s.title : undefined,
-			from: "from" in s ? (s.from as LangCode) : undefined,
-			to: "to" in s ? (s.to as LangCode) : undefined,
-			seats: "seats" in s ? s.seats : undefined,
-		}),
-	),
-};
+const SLOTS: Slot[] = raw.slots.map((s) => ({
+	day: s.day,
+	startMinutes: toMinutes(s.start),
+	endMinutes: toMinutes(s.end),
+	kind: s.kind as SlotKind,
+	title: "title" in s ? s.title : undefined,
+	from: "from" in s ? (s.from as LangCode) : undefined,
+	to: "to" in s ? (s.to as LangCode) : undefined,
+	seats: "seats" in s ? s.seats : undefined,
+}));
+
+/**
+ * 做成函式而不是常數：module 層級的常數只會在模組首次載入時算一次，
+ * dev server 跑一整天之後「本週」就不動了。每次 render 呼叫才會跟著日期走。
+ *
+ * ⚠️ 靜態匯出時這仍然是**建置期**執行的，所以線上的「本週」會停在部署那一天，
+ *    直到下次部署。那是靜態站的本質限制，不是這裡的 bug —— 真要即時，
+ *    得等接上 API（屆時週的起訖本來就由 API 或使用者選擇決定）。
+ *
+ * 元件那端維持收 props，換成真資料時只要改這個函式的內容。
+ */
+export function getFakeSchedule() {
+	const weekStart = currentWeekStart();
+	return { weekStart, todayIndex: todayIndexIn(weekStart), slots: SLOTS };
+}
 
 /**
  * 初始捲動位置：第一個時段再往前一小時，讓它不要緊貼著頂端。
  * 全天 48 格展開有 1344px，不捲的話打開只會看到一片空的凌晨。
  */
-export function initialScrollTop(slots: Slot[]): number {
+export function initialScrollTop(slots: readonly Slot[]): number {
 	if (!slots.length) return 0;
 	const earliest = Math.min(...slots.map((s) => s.startMinutes));
 	const target = Math.max(0, earliest - 60);

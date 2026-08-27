@@ -1,9 +1,10 @@
 import { CalendarDays, ChevronLeft, ChevronRight, Plus, Users } from "lucide-react";
 import Card from "@/Components/UI/Card";
+import Dialog from "@/Components/UI/Dialog";
 import { getDictionary, getLocale } from "@/dictionaries";
 import ScheduleGrid from "./ScheduleGrid";
 import ScheduleLegend from "./ScheduleLegend";
-import { FAKE_SCHEDULE, initialScrollTop } from "./scheduleData";
+import { getFakeSchedule, initialScrollTop } from "./scheduleData";
 import { buildWeek } from "./week";
 
 /**
@@ -13,16 +14,18 @@ import { buildWeek } from "./week";
  *    建立時段也要等後端。照專案既有決策，沒有去處的東西不做成可互動的假象。
  *    ‹ › 放在捲動容器**外面**，所以橫向捲動時它們不會跟著跑掉。
  *
- * ⚠️ todayIndex 由資料傳入而不是在這裡算 new Date()：靜態匯出是建置期 render，
- *    元件內算出來的「今天」會凍結在部署那一天。接上 API 後改傳入來源即可。
+ * ⚠️ 週的起訖與 todayIndex 都由 getFakeSchedule() 算好後以 props 傳進去，
+ *    元件本身不碰 new Date()。靜態匯出是建置期 render，線上的「本週」會停在部署
+ *    那一天 —— 那是靜態站的限制，但至少每次部署都會更新，dev 則永遠是對的。
  */
 export default async function ScheduleSection() {
 	const dict = await getDictionary();
 	const locale = await getLocale();
 	const s = dict.profile.schedule;
 
-	const days = buildWeek(FAKE_SCHEDULE.weekStart, locale);
-	const scrollTop = initialScrollTop(FAKE_SCHEDULE.slots);
+	const schedule = getFakeSchedule();
+	const days = buildWeek(schedule.weekStart, locale);
+	const scrollTop = initialScrollTop(schedule.slots);
 
 	return (
 		<Card className="p-4 sm:p-5">
@@ -40,13 +43,30 @@ export default async function ScheduleSection() {
 						<Users aria-hidden="true" className="size-4" />
 						{s.hostRoom}
 					</button>
-					<button
-						type="button"
-						className="flex items-center gap-2 rounded-full bg-primary-500 px-3.5 py-2 text-sm font-extrabold text-white transition-colors hover:bg-primary-600"
+					{/*
+					 * 第一個接上 Dialog 的地方。trigger 的內容在這裡（Server Component）
+					 * 渲染好再傳進去，所以這個區塊不必跟著變成 client。
+					 * 內容還是 placeholder —— 建立時段要等後端。
+					 */}
+					<Dialog
+						trigger={
+							<>
+								<Plus aria-hidden="true" className="size-4" />
+								{s.openSlot}
+							</>
+						}
+						triggerClassName="flex items-center gap-2 rounded-full bg-primary-500 px-3.5 py-2 text-sm font-extrabold text-white transition-colors hover:bg-primary-600"
+						title={s.openSlot}
+						description={s.openSlotHint}
+						closeLabel={dict.common.close}
+						footer={
+							<span className="text-xs text-ink-300">{dict.profile.soon.note}</span>
+						}
 					>
-						<Plus aria-hidden="true" className="size-4" />
-						{s.openSlot}
-					</button>
+						<p className="rounded-xl bg-primary-50 px-4 py-8 text-center text-sm text-ink-400">
+							{dict.profile.soon.note}
+						</p>
+					</Dialog>
 				</div>
 			</header>
 
@@ -57,8 +77,8 @@ export default async function ScheduleSection() {
 
 				<ScheduleGrid
 					days={days}
-					slots={FAKE_SCHEDULE.slots}
-					todayIndex={FAKE_SCHEDULE.todayIndex}
+					slots={schedule.slots}
+					todayIndex={schedule.todayIndex}
 					locale={locale}
 					dict={s}
 					scrollTop={scrollTop}

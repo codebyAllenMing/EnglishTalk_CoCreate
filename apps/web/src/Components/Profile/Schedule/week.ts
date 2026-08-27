@@ -51,3 +51,26 @@ export function formatTime(minutes: number, locale: string): string {
 	const d = new Date(2000, 0, 1, Math.floor(minutes / 60), minutes % 60);
 	return new Intl.DateTimeFormat(locale, { hour: "numeric", minute: "2-digit" }).format(d);
 }
+
+/** Date → "YYYY-MM-DD"。不用 toISOString，那會先轉 UTC 而在台灣時間的凌晨倒退一天。 */
+function toISODate(d: Date): string {
+	const pad = (n: number) => String(n).padStart(2, "0");
+	return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/** 本週的星期一。getDay() 週日是 0，所以週日要往回推 6 天而不是往前 1 天。 */
+export function currentWeekStart(): string {
+	const now = new Date();
+	const day = now.getDay();
+	const monday = new Date(now);
+	monday.setDate(now.getDate() + (day === 0 ? -6 : 1 - day));
+	return toISODate(monday);
+}
+
+/** 今天落在該週的第幾欄（週一 = 0）。不在該週內回傳 -1，表頭就不會有任何高亮。 */
+export function todayIndexIn(weekStart: string): number {
+	const start = parseLocalDate(weekStart);
+	const today = parseLocalDate(toISODate(new Date()));
+	const diff = Math.round((today.getTime() - start.getTime()) / 86_400_000);
+	return diff >= 0 && diff < 7 ? diff : -1;
+}
