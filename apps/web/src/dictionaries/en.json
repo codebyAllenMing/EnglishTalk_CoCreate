@@ -140,5 +140,60 @@
     "form": {
         "showPassword": "Show password",
         "hidePassword": "Hide password"
+    },
+    "profile": {
+        "brand": {
+            "tagline": "Mandarin × English",
+            "slogan": [
+                "Keep it ",
+                "chill",
+                ". Take it ",
+                "seriously",
+                "."
+            ]
+        },
+        "nav": {
+            "home": "Home",
+            "schedule": "My Schedule",
+            "monsters": "Find Monsters",
+            "rooms": "Rooms",
+            "messages": "Messages",
+            "reputation": "Reputation",
+            "settings": "Settings"
+        },
+        "card": {
+            "edit": "Edit profile",
+            "online": "Online",
+            "native": "Native",
+            "learning": "Learning",
+            "reputation": "Reputation",
+            "tokens": "ME Tokens"
+        },
+        "lang": {
+            "zh": "Mandarin",
+            "en": "English"
+        },
+        "level": {
+            "beginner": "Beginner",
+            "intermediate": "Intermediate",
+            "advanced": "Advanced"
+        },
+        "invite": {
+            "title": "Invite friends, get tokens!",
+            "cta": "Invite Now"
+        },
+        "topBar": {
+            "notifications": "Notifications",
+            "account": "Account menu",
+            "tokens": "Tokens"
+        },
+        "soon": {
+            "schedule": "My Schedule",
+            "monsters": "Find Conversation Monsters",
+            "note": "Under construction — this section is next."
+        },
+        "demo": {
+            "bio": "I love language, boba tea, and weekend hikes. Let's chat about movies, travel, or daily life! 🌿"
+        }
     }
 }

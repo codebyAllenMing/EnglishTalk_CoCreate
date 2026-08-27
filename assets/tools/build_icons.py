@@ -76,7 +76,7 @@ PEEK = {
 
 # 評價區的三個頭像。三張並排，最怕大小不一 —— 出圖時取景就有落差
 # （lucas 佔畫布 89%、sophie 76%、minji 72%），靠 balance() 拉齊。
-AVATARS = {
+TESTIMONIALS = {
 	"avatar-sophie": dict(src="avatar-sophie.png"),
 	"avatar-lucas": dict(src="avatar-lucas.png"),
 	"avatar-minji": dict(
@@ -84,6 +84,15 @@ AVATARS = {
 		# 跟 step-create-monster 同樣的漂移：紫偏亮偏藍，收回 primary-500
 		recolor=dict(hue_shift=-6 / 360, lightness_scale=0.94, min_saturation=0.15),
 	),
+}
+
+# 個人首頁的怪獸頭像 —— 10 隻對話夥伴 + 本人。
+# 這組**要**進 balance：它們是並排在卡片格狀裡的，寬高比差異會直接變成
+# 視覺上的大小不一。揮手的 Bobby / Tao 內容框是 1.3 的橫向，其餘都接近正方形。
+AVATARS = {
+	f"avatar-{name}": dict(src=f"avatars/{name}.png")
+	for name in ("allen", "alex", "bobby", "leo", "luna", "mia", "nina", "ryan", "sunny",
+	             "tao", "yuki")
 }
 
 # 登入 / 註冊頁的插圖 —— 不進 balance。
@@ -98,19 +107,31 @@ AUTH = {
 	"auth-background": dict(src="auth/background.png", long_edge=1536, flatten=True),
 }
 
+# 個人首頁的裝飾插圖 —— 跟 auth 同樣不進 balance，它是單獨定位的裝飾，
+# 不跟任何東西並排對齊。星星與碎片畫在圖裡，位置關係固定，不另外拼裝。
+PROFILE = {
+	"profile-invite": dict(src="profile/invite.png"),   # 側邊欄底部的邀請卡
+}
+
 GROUPS = {
 	# fill 小一點是因為圖只有 56–80px 卻放在更大的圓裡，要留邊不頂到圓
 	"features": (FEATURES, dict(fill=0.92, box_weight=0.0)),
 	"steps": (STEPS, dict(fill=0.86, box_weight=0.5)),
 	"stats": (STATS, dict(fill=0.92, box_weight=0.5)),
 	"peek": (PEEK, dict(fill=0.96, box_weight=0.0)),
-	"avatars": (AVATARS, dict(fill=0.92, box_weight=0.6)),
+	"testimonials": (TESTIMONIALS, dict(fill=0.92, box_weight=0.6)),
 	# None = 不做視覺重量平衡，走 build_auth 那條路
 	"auth": (AUTH, None),
+	"profile": (PROFILE, None),
+	# 顯示最大 130px（側邊欄頭像與詳情面板），320 是留給 2x 螢幕的
+	"avatars": (AVATARS, dict(size=320, fill=0.92, box_weight=0.5)),
 }
 
-# 怪獸在版面上最寬約 250px，出 512 是留給 2x 螢幕
-AUTH_LONG_EDGE = 512
+# 不做 balance 的那幾組，各自的預設長邊（顯示尺寸的 2x 再留一點餘裕）
+LONG_EDGE = {
+	"auth": 512,      # 登入頁的怪獸在版面上最寬約 250px
+	"profile": 256,   # 邀請卡的怪獸顯示只有 84×90px
+}
 
 
 def save(image, name, quality=88):
@@ -120,20 +141,20 @@ def save(image, name, quality=88):
 	print(f"  {name:24s} {str(image.size):12s} {path.stat().st_size / 1024:5.1f} KB")
 
 
-def build_auth(specs):
+def build_trimmed(specs, long_edge):
 	for name, spec in specs.items():
 		image = Image.open(SOURCE / spec["src"])
 		if spec.get("flatten"):
 			image = image.convert("RGB")
 		else:
 			image = trim(image.convert("RGBA"))
-		save(fit(image, spec.get("long_edge", AUTH_LONG_EDGE)), name)
+		save(fit(image, spec.get("long_edge", long_edge)), name)
 
 
 def build(group_name):
 	specs, balance_opts = GROUPS[group_name]
 	if balance_opts is None:
-		return build_auth(specs)
+		return build_trimmed(specs, LONG_EDGE[group_name])
 
 	prepared = {}
 	for name, spec in specs.items():

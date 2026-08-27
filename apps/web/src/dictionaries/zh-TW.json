@@ -140,5 +140,60 @@
     "form": {
         "showPassword": "顯示密碼",
         "hidePassword": "隱藏密碼"
+    },
+    "profile": {
+        "brand": {
+            "tagline": "中文 × English",
+            "slogan": [
+                "",
+                "輕鬆",
+                "聊天，",
+                "認真",
+                "學習。"
+            ]
+        },
+        "nav": {
+            "home": "個人首頁",
+            "schedule": "我的行程",
+            "monsters": "尋找怪獸",
+            "rooms": "聊天室",
+            "messages": "訊息",
+            "reputation": "評價",
+            "settings": "設定"
+        },
+        "card": {
+            "edit": "編輯個人資料",
+            "online": "線上",
+            "native": "母語",
+            "learning": "學習中",
+            "reputation": "評價",
+            "tokens": "ME 代幣"
+        },
+        "lang": {
+            "zh": "中文",
+            "en": "English"
+        },
+        "level": {
+            "beginner": "初級",
+            "intermediate": "中級",
+            "advanced": "進階"
+        },
+        "invite": {
+            "title": "邀請朋友，賺取代幣！",
+            "cta": "立即邀請"
+        },
+        "topBar": {
+            "notifications": "通知",
+            "account": "帳號選單",
+            "tokens": "代幣"
+        },
+        "soon": {
+            "schedule": "我的行程",
+            "monsters": "尋找對話怪獸",
+            "note": "開發中 —— 下一步就做這區。"
+        },
+        "demo": {
+            "bio": "我喜歡語言、珍奶，還有週末爬山。想聊電影、旅行，或是日常生活都可以！🌿"
+        }
     }
 }
