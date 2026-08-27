@@ -1,17 +1,48 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useRef, type MouseEvent, type ReactNode } from "react";
+import { useRef, type CSSProperties, type MouseEvent, type ReactNode } from "react";
+
+type DialogAction = {
+	/**
+	 * 按鈕文字。**必填**，不是忘了給預設值 —— 專案有 i18n，而 Dialog 是 Client
+	 * Component 拿不到字典（getDictionary 是 server-only）。在元件裡寫死
+	 * 「確定」之類的 fallback，中文版遲早會冒出英文。
+	 */
+	label: string;
+	/**
+	 * ⚠️ 函式**無法**從 Server Component 傳進來（props 必須可序列化）。
+	 * 要用這個欄位，呼叫端本身得是 Client Component，或改走 Server Action。
+	 * 純展示用的對話框不給它就好，按鈕仍然會顯示。
+	 */
+	onClick?: (close: () => void) => void;
+	disabled?: boolean;
+};
 
 type Props = {
 	/** 觸發按鈕的內容。由 Server Component 渲染好傳進來，呼叫端不必變成 client */
 	trigger: ReactNode;
 	triggerClassName?: string;
+	/** 給需要 inline style 的觸發元素用，例如週曆卡片的 grid 定位 */
+	triggerStyle?: CSSProperties;
 	title: string;
 	description?: string;
 	closeLabel: string;
 	children: ReactNode;
-	/** 底部按鈕列，通常是取消 / 確認 */
+	/**
+	 * 次要動作。有給才顯示，不給就沒有這顆。點下去一定會關閉對話框，
+	 * onClick 只是額外的副作用（例如清空草稿）。
+	 */
+	cancel?: DialogAction;
+	/**
+	 * 主要動作。有給才顯示。**不會自動關閉** —— onClick 收到一個 close 函式，
+	 * 由呼叫端決定何時關：等 API 回來再關、驗證失敗就不關，都在上層決定。
+	 */
+	confirm?: DialogAction;
+	/**
+	 * 完全自訂的底部區塊。給了就取代 cancel / confirm ——
+	 * 三顆按鈕、左側放說明之類的特例走這裡。
+	 */
 	footer?: ReactNode;
 	/**
 	 * 點遮罩是否關閉，預設 true。填到一半的表單、或必須做出選擇的確認，
@@ -49,24 +80,34 @@ type Props = {
 export default function Dialog({
 	trigger,
 	triggerClassName,
+	triggerStyle,
 	title,
 	description,
 	closeLabel,
 	children,
+	cancel,
+	confirm,
 	footer,
 	closeOnBackdrop = true,
 	className = "max-w-md",
 }: Props) {
 	const ref = useRef<HTMLDialogElement>(null);
 
+	const close = () => ref.current?.close();
+
 	const closeIfBackdrop = (event: MouseEvent<HTMLDialogElement>) => {
 		if (!closeOnBackdrop) return;
-		if (event.target === ref.current) ref.current?.close();
+		if (event.target === ref.current) close();
 	};
 
 	return (
 		<>
-			<button type="button" className={triggerClassName} onClick={() => ref.current?.showModal()}>
+			<button
+				type="button"
+				className={triggerClassName}
+				style={triggerStyle}
+				onClick={() => ref.current?.showModal()}
+			>
 				{trigger}
 			</button>
 
@@ -89,7 +130,7 @@ export default function Dialog({
 						<button
 							type="button"
 							aria-label={closeLabel}
-							onClick={() => ref.current?.close()}
+							onClick={close}
 							className="-mt-1 -mr-2 shrink-0 rounded-full p-2 text-ink-400 transition-colors hover:bg-primary-50 hover:text-primary-600"
 						>
 							<X aria-hidden="true" className="size-4" />
@@ -98,9 +139,35 @@ export default function Dialog({
 
 					<div className="min-h-0 flex-1 overflow-y-auto px-6 pb-5">{children}</div>
 
-					{footer && (
+					{(footer || cancel || confirm) && (
 						<footer className="flex items-center justify-end gap-2 border-t border-ink-100 px-6 py-4">
-							{footer}
+							{footer ?? (
+								<>
+									{cancel && (
+										<button
+											type="button"
+											disabled={cancel.disabled}
+											onClick={() => {
+												cancel.onClick?.(close);
+												close();
+											}}
+											className="rounded-full border-2 border-ink-200 px-5 py-2 text-sm font-extrabold transition-colors hover:border-primary-400 hover:text-primary-600 disabled:cursor-not-allowed disabled:opacity-50"
+										>
+											{cancel.label}
+										</button>
+									)}
+									{confirm && (
+										<button
+											type="button"
+											disabled={confirm.disabled}
+											onClick={() => confirm.onClick?.(close)}
+											className="rounded-full bg-primary-500 px-5 py-2 text-sm font-extrabold text-white transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50"
+										>
+											{confirm.label}
+										</button>
+									)}
+								</>
+							)}
 						</footer>
 					)}
 				</div>

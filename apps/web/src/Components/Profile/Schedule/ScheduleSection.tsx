@@ -46,7 +46,10 @@ export default async function ScheduleSection() {
 					{/*
 					 * 第一個接上 Dialog 的地方。trigger 的內容在這裡（Server Component）
 					 * 渲染好再傳進去，所以這個區塊不必跟著變成 client。
-					 * 內容還是 placeholder —— 建立時段要等後端。
+					 *
+					 * confirm 只給 label 與 disabled、沒有 onClick —— 函式無法從 Server
+					 * Component 跨到 client。接 API 時這一區會連同表單一起轉成 client，
+					 * 屆時才補上 onClick。內容目前也還是 placeholder。
 					 */}
 					<Dialog
 						trigger={
@@ -59,9 +62,8 @@ export default async function ScheduleSection() {
 						title={s.openSlot}
 						description={s.openSlotHint}
 						closeLabel={dict.common.close}
-						footer={
-							<span className="text-xs text-ink-300">{dict.profile.soon.note}</span>
-						}
+						cancel={{ label: dict.common.cancel }}
+						confirm={{ label: s.createSlot, disabled: true }}
 					>
 						<p className="rounded-xl bg-primary-50 px-4 py-8 text-center text-sm text-ink-400">
 							{dict.profile.soon.note}
@@ -81,6 +83,9 @@ export default async function ScheduleSection() {
 					todayIndex={schedule.todayIndex}
 					locale={locale}
 					dict={s}
+					closeLabel={dict.common.close}
+					cancelLabel={dict.common.cancel}
+					soonNote={dict.profile.soon.note}
 					scrollTop={scrollTop}
 				/>
 

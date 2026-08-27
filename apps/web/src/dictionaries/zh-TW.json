@@ -211,11 +211,19 @@
                 "add": "新增時段"
             },
             "timezone": "所有時間以你的當地時間顯示",
-            "openSlotHint": "選擇你有空聊天的時段，其他人就能來預約。"
+            "openSlotHint": "選擇你有空聊天的時段，其他人就能來預約。",
+            "detail": {
+                "type": "類型",
+                "time": "時間",
+                "languages": "語言",
+                "participants": "人數"
+            },
+            "createSlot": "建立時段"
         }
     },
     "common": {
         "close": "關閉",
-        "cancel": "取消"
+        "cancel": "取消",
+        "confirm": "確定"
     }
 }

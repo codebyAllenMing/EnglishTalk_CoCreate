@@ -9,6 +9,9 @@ type Props = {
 	todayIndex: number;
 	locale: string;
 	dict: Dictionary["profile"]["schedule"];
+	closeLabel: string;
+	cancelLabel: string;
+	soonNote: string;
 	scrollTop: number;
 };
 
@@ -52,6 +55,9 @@ export default function ScheduleGrid({
 	todayIndex,
 	locale,
 	dict,
+	closeLabel,
+	cancelLabel,
+	soonNote,
 	scrollTop,
 }: Props) {
 	const hourFmt = new Intl.DateTimeFormat(locale, { hour: "numeric" });
@@ -125,7 +131,15 @@ export default function ScheduleGrid({
 					))}
 
 					{slots.map((slot, i) => (
-						<SlotCard key={i} slot={slot} locale={locale} dict={dict} />
+						<SlotCard
+							key={i}
+							slot={slot}
+							locale={locale}
+							dict={dict}
+							closeLabel={closeLabel}
+							cancelLabel={cancelLabel}
+							soonNote={soonNote}
+						/>
 					))}
 				</div>
 			</div>

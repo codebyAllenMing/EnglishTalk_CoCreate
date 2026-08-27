@@ -211,11 +211,19 @@
                 "add": "Add time slot"
             },
             "timezone": "All times shown in your local time",
-            "openSlotHint": "Pick the hours you're free to chat. Others can then book you."
+            "openSlotHint": "Pick the hours you're free to chat. Others can then book you.",
+            "detail": {
+                "type": "Type",
+                "time": "Time",
+                "languages": "Languages",
+                "participants": "Participants"
+            },
+            "createSlot": "Create slot"
         }
     },
     "common": {
         "close": "Close",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "confirm": "Confirm"
     }
 }
