@@ -6,6 +6,8 @@ import Avatar from "@/Components/UI/Avatar";
 import Dialog from "@/Components/UI/Dialog";
 import LangBadge from "@/Components/UI/LangBadge";
 import type { Dictionary } from "@/dictionaries";
+import type { AvatarChoice } from "./avatarChoices";
+import MonsterPicker from "./MonsterPicker";
 import type { LangCode } from "./profileData";
 
 /** 設計稿的計數器寫 6 / 20 */
@@ -22,6 +24,8 @@ type Props = {
 	cancelLabel: string;
 	dict: Dictionary["profile"]["edit"];
 	langDict: Dictionary["profile"]["lang"];
+	pickerDict: Dictionary["profile"]["picker"];
+	choices: readonly AvatarChoice[];
 };
 
 /**
@@ -55,8 +59,13 @@ export default function EditProfileDialog({
 	cancelLabel,
 	dict,
 	langDict,
+	pickerDict,
+	choices,
 }: Props) {
 	const [draft, setDraft] = useState(name);
+	// 換頭像在這裡是真的會變的 —— 那只是 client state，不需要 API。
+	// 只有「儲存變更」需要後端，所以預覽先動起來
+	const [picked, setPicked] = useState<string | null>(null);
 	// ⚠️ 這張卡在桌機與手機版型各 render 一次，id 寫死會讓 label 指到同一個輸入框
 	const nameId = useId();
 
@@ -73,22 +82,27 @@ export default function EditProfileDialog({
 			closeOnBackdrop={false}
 			// 關閉的四條路（Esc / ✕ / 取消 / 之後的儲存）都會還原草稿。
 			// 沒有持久化，所以留著半截的名字反而會誤導
-			onClose={() => setDraft(name)}
+			onClose={() => {
+				setDraft(name);
+				setPicked(null);
+			}}
 			cancel={{ label: cancelLabel }}
 			confirm={{ label: dict.save, disabled: true }}
 		>
 			<div className="flex flex-col gap-4">
 				<div className="relative mx-auto w-40">
-					<Avatar src={avatar} className="w-full" sizes="160px" />
-					{/* 換頭像也還沒有 API。位置貼著圓形底的右下 45 度，
-					    百分比定位才跟得上 Avatar 的等比縮放 */}
-					<button
-						type="button"
-						aria-label={dict.avatar}
-						className="absolute right-[7%] bottom-[9%] rounded-full bg-primary-50 p-2 text-primary-500 shadow-[0_2px_8px_rgba(13,24,82,.12)] transition-colors hover:bg-primary-100"
-					>
-						<Pencil aria-hidden="true" className="size-3.5" />
-					</button>
+					<Avatar src={picked ?? avatar} className="w-full" sizes="160px" />
+					{/* 這顆筆打開的是「選擇你的怪獸」—— 對話框裡再開一個對話框。
+					    位置貼著圓形底的右下 45 度，百分比定位才跟得上 Avatar 的等比縮放
+					    （triggerClassName 在 MonsterPicker 裡） */}
+					<MonsterPicker
+						value={picked ?? avatar}
+						onChange={setPicked}
+						choices={choices}
+						closeLabel={closeLabel}
+						cancelLabel={cancelLabel}
+						dict={pickerDict}
+					/>
 				</div>
 
 				<div>

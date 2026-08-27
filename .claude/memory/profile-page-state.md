@@ -62,6 +62,36 @@ metadata:
 表單有 state 所以對話框必然是 client，但**獨立成一個檔案之後 `ProfileCard` 維持
 Server Component**，進 client bundle 的只有這個對話框。
 
+### 選擇怪獸（設計稿 `assets/design/個人主頁-選擇怪獸圖.png`）
+
+編輯對話框裡頭像右下那顆筆打開的 —— **對話框裡再開一個對話框**。
+`Components/Profile/MonsterPicker.tsx`（client）+ `avatarChoices.ts`（假資料）。
+
+原生 `<dialog>` 撐得住巢狀：`showModal()` 會把元素提升到 **top layer**，
+不受外層 `overflow-hidden` 裁切，Esc 也只關最上面那一個。外層編輯對話框已經是
+`closeOnBackdrop={false}`，內層冒泡上去的點擊不會誤關它。
+
+⚠️⚠️ **選取狀態用「`null` 代表沒動過」，不要直接複製 `value`。**
+按「使用這隻怪獸」的順序是 `onChange` → `close`，而 `close` 觸發的 `onClose` 拿到的是
+**那一輪 render 的 `value`**（還是舊值）—— 直接 `setPicked(value)` 會把剛選好的蓋回去。
+退回 `null`、顯示時 fallback 到最新的 `value` 就沒這問題。
+
+**換頭像是真的會動的**：那只是 client state，不需要 API，所以編輯對話框裡的預覽
+會立刻換。只有「儲存變更」需要後端，仍然 disabled；關閉對話框時連同名字一起還原。
+
+⚠️ **未擁有的怪獸先略過**（使用者 2026-08-27：「其中有鎖住的先選擇忽略」）。
+設計稿有 Rocky / Ziggy 兩隻灰掉上鎖的，那要等「用代幣解鎖怪獸」的規則定案，
+也還沒有那兩隻的圖。`owned` 欄位、三顆篩選 chip、灰階與鎖頭的 UI 都照設計稿做好了，
+資料出現 `false` 的那天會直接動起來；目前「未擁有」那一頁是空狀態。
+
+⚠️ 挑選清單的 id 與 Find Monsters 的十隻**刻意重疊** —— 怪獸是角色、圖是共用的，
+設計稿的清單裡就是 Luna / Bobby / Alex 這些名字。但兩份清單描述的是不同的東西
+（一份是可選的造型、一份是別的使用者），所以**沒有**從 `FAKE_MONSTERS` 推導。
+`allen` 排第一是因為那是登入者目前用的 —— **挑選清單一定要含得住傳進來的值**，
+不然「目前選中」根本畫不出來。
+
+設計稿底部的分頁圓點沒做（只有一頁的量），同「Show more monsters」的處理。
+
 ### `Dialog` 這一輪的三處改動
 
 ⚠️ **標題 id 改用 `useId()`**（修掉既有 bug）。原本寫死 `id="dialog-title"`，

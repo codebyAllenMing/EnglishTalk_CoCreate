@@ -4,6 +4,7 @@ import Card from "@/Components/UI/Card";
 import LangBadge from "@/Components/UI/LangBadge";
 import TokenCount from "@/Components/UI/TokenCount";
 import { getDictionary } from "@/dictionaries";
+import { FAKE_AVATAR_CHOICES } from "./avatarChoices";
 import EditProfileDialog from "./EditProfileDialog";
 import { FAKE_PROFILE } from "./profileData";
 
@@ -14,7 +15,7 @@ import { FAKE_PROFILE } from "./profileData";
  */
 export default async function ProfileCard() {
 	const dict = await getDictionary();
-	const { card, lang, level, demo, edit } = dict.profile;
+	const { card, lang, level, demo, edit, picker } = dict.profile;
 	const p = FAKE_PROFILE;
 
 	return (
@@ -34,6 +35,8 @@ export default async function ProfileCard() {
 				cancelLabel={dict.common.cancel}
 				dict={edit}
 				langDict={lang}
+				pickerDict={picker}
+				choices={FAKE_AVATAR_CHOICES}
 			/>
 
 			<Avatar
