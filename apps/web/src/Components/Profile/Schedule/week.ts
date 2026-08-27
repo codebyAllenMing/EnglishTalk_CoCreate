@@ -74,3 +74,49 @@ export function todayIndexIn(weekStart: string): number {
 	const diff = Math.round((today.getTime() - start.getTime()) / 86_400_000);
 	return diff >= 0 && diff < 7 ? diff : -1;
 }
+
+/** 以 weekStart 為基準位移 n 週，回傳新的 "YYYY-MM-DD"。 */
+export function shiftWeek(weekStart: string, weeks: number): string {
+	const d = parseLocalDate(weekStart);
+	d.setDate(d.getDate() + weeks * 7);
+	return toISODate(d);
+}
+
+/** 以 iso 為基準位移 n 天。 */
+export function shiftDay(iso: string, days: number): string {
+	const d = parseLocalDate(iso);
+	d.setDate(d.getDate() + days);
+	return toISODate(d);
+}
+
+/** date 落在 weekStart 那週的第幾天（週一 = 0）。不在該週內回傳 -1。 */
+export function dayOffsetFrom(weekStart: string, date: string): number {
+	const diff = Math.round(
+		(parseLocalDate(date).getTime() - parseLocalDate(weekStart).getTime()) / 86_400_000,
+	);
+	return diff >= 0 && diff < 7 ? diff : -1;
+}
+
+/**
+ * 該週的日期範圍，拆成月日與年份兩段，例如
+ * `{ range: "8月24日 – 8月30日", year: "2026" }`。
+ *
+ * ⚠️ 刻意**不用** Intl 的 formatRange：它在中文語系一律輸出「2026/8/24至2026/8/30」
+ *    —— 用「至」連接、不簡化、還把年份重複兩次。那是 CLDR 的中文範圍規則，改不掉。
+ *    單獨格式化兩個日期再自己串，中文才會是正常的「8月24日 – 8月30日」。
+ *
+ * 年份分開回傳而不是接在字串裡，是為了讓它能用較淡的樣式排在後面 ——
+ * 這樣就不必決定中文該用逗號還是別的標點來連接，各語系都不會怪。
+ * 跨年的那一週會得到「2026 – 2027」。
+ */
+export function formatWeekRange(weekStart: string, locale: string) {
+	const start = parseLocalDate(weekStart);
+	const end = parseLocalDate(shiftDay(weekStart, 6));
+	const fmt = new Intl.DateTimeFormat(locale, { month: "short", day: "numeric" });
+	const years =
+		start.getFullYear() === end.getFullYear()
+			? String(start.getFullYear())
+			: `${start.getFullYear()} – ${end.getFullYear()}`;
+
+	return { range: `${fmt.format(start)} – ${fmt.format(end)}`, year: years };
+}

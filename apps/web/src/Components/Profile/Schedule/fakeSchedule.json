@@ -1,24 +1,28 @@
 {
     "slots": [
         {
+            "week": 0,
             "day": 0,
             "start": "12:00",
             "end": "14:00",
             "kind": "open"
         },
         {
+            "week": 0,
             "day": 0,
             "start": "16:00",
             "end": "18:00",
             "kind": "add"
         },
         {
+            "week": 0,
             "day": 0,
             "start": "20:00",
             "end": "22:00",
             "kind": "hosted"
         },
         {
+            "week": 0,
             "day": 1,
             "start": "16:00",
             "end": "17:00",
@@ -32,24 +36,28 @@
             }
         },
         {
+            "week": 0,
             "day": 1,
             "start": "20:00",
             "end": "21:30",
             "kind": "open"
         },
         {
+            "week": 0,
             "day": 2,
             "start": "12:00",
             "end": "13:30",
             "kind": "hosted"
         },
         {
+            "week": 0,
             "day": 2,
             "start": "16:00",
             "end": "17:30",
             "kind": "open"
         },
         {
+            "week": 0,
             "day": 3,
             "start": "20:00",
             "end": "21:30",
@@ -63,34 +71,88 @@
             }
         },
         {
+            "week": 0,
             "day": 4,
             "start": "14:00",
             "end": "15:30",
             "kind": "open"
         },
         {
+            "week": 0,
             "day": 4,
             "start": "20:00",
             "end": "22:00",
             "kind": "hosted"
         },
         {
+            "week": 0,
             "day": 5,
             "start": "11:00",
             "end": "12:30",
             "kind": "open"
         },
         {
+            "week": 0,
             "day": 5,
             "start": "16:00",
             "end": "17:30",
             "kind": "hosted"
         },
         {
+            "week": 0,
             "day": 6,
             "start": "18:00",
             "end": "19:30",
             "kind": "open"
+        },
+        {
+            "week": -1,
+            "day": 1,
+            "start": "19:00",
+            "end": "20:30",
+            "kind": "session",
+            "title": "Movie night chat",
+            "from": "en",
+            "to": "zh",
+            "seats": {
+                "taken": 4,
+                "total": 4
+            }
+        },
+        {
+            "week": -1,
+            "day": 4,
+            "start": "13:00",
+            "end": "14:30",
+            "kind": "open"
+        },
+        {
+            "week": 1,
+            "day": 0,
+            "start": "10:00",
+            "end": "11:30",
+            "kind": "open"
+        },
+        {
+            "week": 1,
+            "day": 2,
+            "start": "20:00",
+            "end": "21:00",
+            "kind": "session",
+            "title": "Weekly check-in",
+            "from": "zh",
+            "to": "en",
+            "seats": {
+                "taken": 1,
+                "total": 2
+            }
+        },
+        {
+            "week": 1,
+            "day": 5,
+            "start": "15:00",
+            "end": "17:00",
+            "kind": "hosted"
         }
     ]
 }

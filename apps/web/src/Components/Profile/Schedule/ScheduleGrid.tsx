@@ -5,7 +5,7 @@ import type { WeekDay } from "./week";
 
 type Props = {
 	days: WeekDay[];
-	slots: Slot[];
+	slots: readonly { slot: Slot; day: number }[];
 	todayIndex: number;
 	locale: string;
 	dict: Dictionary["profile"]["schedule"];
@@ -130,10 +130,11 @@ export default function ScheduleGrid({
 						/>
 					))}
 
-					{slots.map((slot, i) => (
+					{slots.map(({ slot, day }, i) => (
 						<SlotCard
 							key={i}
 							slot={slot}
+							day={day}
 							locale={locale}
 							dict={dict}
 							closeLabel={closeLabel}

@@ -96,6 +96,37 @@ production 的 CSS 是 head 裡的 blocking `<link>`，第一次就會成功。
 不去猜 CSS 何時注入完）；不成就用 `ResizeObserver` 等容器真的變可捲動再設，
 設完立刻 `disconnect`。比賭 `requestAnimationFrame` 的單一時機可靠。
 
+### 切週與資料模型
+
+**週切換必須是 client**：靜態匯出沒有伺服器、URL query 不會觸發新的 SSG，
+換一週只能在瀏覽器端重算。範圍縮到最小 —— `ScheduleSection`（server）只負責
+Card 外框與圖例，`ScheduleBoard`（client）承接 header 與網格。
+
+⚠️ **起始週由 server 傳入，client 只做 offset 位移。** 兩邊各自呼叫
+`currentWeekStart()` 會 hydration mismatch —— client 算的是「使用者的今天」、
+server 算的是「建置那天」。
+
+⚠️ **`Slot` 用絕對日期 `date` 不用「週內第幾天」。** 資料一次抓一個範圍回來
+（使用者 2026-08-27 決定：切週**不重新打 API**），相對索引跨不了週，
+三週的資料混在一起會分不出哪筆屬於哪週。`slotsInWeek(slots, weekStart)` 依週篩選
+並換算欄位索引。JSON 裡仍用 `week`（-1/0/1 相對位移）+ `day` 描述，改資料時好讀，
+轉成絕對日期在 `buildSlots()` 做。
+
+header 移進 `ScheduleBoard`（日期範圍要跟著切週變），但**兩顆動作按鈕當
+`ReactNode` 傳進去** —— 內容仍是 server 渲染的，裡面 Dialog 的 trigger 不用跟著搬。
+
+### 日期範圍的格式（踩過）
+
+⚠️ **不要用 `Intl.formatRange`。** 它在中文語系一律輸出「2026/8/24至2026/8/30」——
+用「至」連接、不簡化重複的月份、年份還出現兩次。那是 CLDR 的中文範圍規則，改不掉
+（試過 short / long / numeric / 2-digit / dateStyle 全部一樣）。
+
+解法：單獨格式化兩個日期再自己串 `–`，中文才會是正常的「8月24日 – 8月30日」。
+代價是失去英文的自動簡化（`Aug 24 – 30`），換得兩種語系一致。
+
+年份**分開回傳**、用淡一階的色排在後面，不接進字串 —— 這樣不必決定中文該用
+逗號還是別的標點來連接。跨年那週顯示「2026 – 2027」。
+
 ### 假資料
 
 `fakeSchedule.json` 13 個時段。時間存 `"16:00"` 字串不存分鐘數 —— 對設計稿時

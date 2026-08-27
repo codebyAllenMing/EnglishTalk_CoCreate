@@ -7,6 +7,8 @@ import { formatTime } from "./week";
 
 type Props = {
 	slot: Slot;
+	/** 該時段落在這一週的第幾欄。由 slotsInWeek() 算好傳進來 */
+	day: number;
 	locale: string;
 	dict: Dictionary["profile"]["schedule"];
 	closeLabel: string;
@@ -38,11 +40,19 @@ const TONE: Record<Slot["kind"], string> = {
 	add: "border-2 border-dashed border-primary-200 bg-primary-50/40 text-primary-500 hover:border-solid hover:border-primary-400 hover:bg-primary-100",
 };
 
-export default function SlotCard({ slot, locale, dict, closeLabel, cancelLabel, soonNote }: Props) {
+export default function SlotCard({
+	slot,
+	day,
+	locale,
+	dict,
+	closeLabel,
+	cancelLabel,
+	soonNote,
+}: Props) {
 	const startRow = slot.startMinutes / SLOT_MINUTES + 1;
 	const span = Math.max(1, (slot.endMinutes - slot.startMinutes) / SLOT_MINUTES);
 	const time = `${formatTime(slot.startMinutes, locale)} – ${formatTime(slot.endMinutes, locale)}`;
-	const style = { gridColumn: slot.day + 2, gridRow: `${startRow} / span ${span}` };
+	const style = { gridColumn: day + 2, gridRow: `${startRow} / span ${span}` };
 
 	const placeholder = (
 		<p className="rounded-xl bg-primary-50 px-4 py-6 text-center text-sm text-ink-400">
