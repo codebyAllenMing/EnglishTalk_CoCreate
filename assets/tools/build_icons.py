@@ -89,8 +89,9 @@ TESTIMONIALS = {
 # 個人首頁的怪獸頭像 —— 10 隻對話夥伴 + 本人。
 # 這組**要**進 balance：它們是並排在卡片格狀裡的，寬高比差異會直接變成
 # 視覺上的大小不一。揮手的 Bobby / Tao 內容框是 1.3 的橫向，其餘都接近正方形。
+# cutout=False：母檔已經是去背的透明 PNG，再跑一次白底去背會把它毀掉
 AVATARS = {
-	f"avatar-{name}": dict(src=f"avatars/{name}.png")
+	f"avatar-{name}": dict(src=f"avatars/{name}.png", cutout=False)
 	for name in ("allen", "alex", "bobby", "leo", "luna", "mia", "nina", "ryan", "sunny",
 	             "tao", "yuki")
 }
@@ -158,7 +159,12 @@ def build(group_name):
 
 	prepared = {}
 	for name, spec in specs.items():
-		image = cutout(SOURCE / spec["src"])
+		src = SOURCE / spec["src"]
+		# ⚠️ cutout 是為「白底 PNG」寫的：它會先 convert("RGB") 丟掉原有 alpha，
+		#    再找與邊緣相連的白色區塊當背景。對**已經去背**的母檔跑它是破壞性的 ——
+		#    透明區轉 RGB 後變成黑色，白色偵測找不到背景，於是 alpha 全給 255，
+		#    整張圖變成不透明的黑底（2026-08-27 頭像踩到）。
+		image = Image.open(src).convert("RGBA") if spec.get("cutout") is False else cutout(src)
 		if "recolor" in spec:
 			image = recolor(image, **spec["recolor"])
 		prepared[name] = image

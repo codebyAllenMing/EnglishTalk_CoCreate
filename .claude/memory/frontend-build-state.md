@@ -45,6 +45,14 @@ metadata:
 - **品牌 logo 不走 icon library**：Google / Apple 要內嵌官方彩色 SVG。
   Font Awesome brands 是單色字形，不符 Google 品牌規範，設計稿也是彩色的
 - **格式判準**：扁平可縮放的小圖示 → SVG；有漸層質感的插圖 → WebP（實測描邊 SVG 613KB/31色 vs WebP 34KB/48948色）
+- ⚠️ **Next dev 的圖片優化快取不會因為來源檔案改變而失效**（2026-08-27 踩過）。
+  改了 `public/images/` 的圖、重跑 build_icons，畫面卻還是舊的 —— 回應帶
+  `X-Nextjs-Cache: HIT`。要 `rm -rf apps/web/.next/dev/cache/images` 才會重新編碼，
+  瀏覽器那份還要再硬重新整理。**上線不會遇到**：`GITHUB_PAGES=true` 走
+  `images.unoptimized`，圖片直接從 public/ 出去，沒有這層快取
+- ⚠️ **dev 的圖片優化端點會依 `Accept` 協商格式**。用 curl 不帶 header 測會拿到
+  **JPEG（沒有 alpha，透明區變黑）**，那是測試方式的問題不是圖的問題；
+  瀏覽器一定會送 `image/webp`
 - **靜態匯出只在 `GITHUB_PAGES=true` 時啟用**，本機 dev 不受影響。
   `src/asset.ts` 替 public/ 圖片補 basePath —— `images.unoptimized` 後 `next/image`
   不會自己改寫 src，少了它靜態站上每張圖都 404 而本機看不出來
@@ -53,15 +61,21 @@ metadata:
 
 ## 待辦
 
-0. **下一步：個人主頁**（2026-08-23 使用者指定）。
-   `/[lang]/home` 目前是 placeholder，登入後轉導過去；設計稿在
-   `assets/design/個人主頁.jpg`。⚠️ 該頁沒有任何存取保護，登入是假的
-   （見 `AuthForm` 的 `FAKE_AUTH`），直接打網址就能進
+0. **下一步：個人首頁的 My Schedule 週曆**。骨架與側邊欄已完成（be1f453），
+   見 [[profile-page-state]]。週曆決定**自己畫不用套件** —— 沒有事件重疊，
+   套件最主要的價值用不到；30 分鐘粒度用 CSS Grid 的 `grid-row: span N` 直接對應
+   ⚠️ `/[lang]/home` 沒有任何存取保護，登入是假的（見 `AuthForm` 的 `FAKE_AUTH`），
+   直接打網址就能進
 0.5 登入 / 註冊頁**已完成**（見 [[auth-pages-state]]），
    與設計稿仍有落差清單未處理，最大一項是 Log in / Sign up 分頁切換
    —— 它會動到「兩個獨立路由 vs 單頁切換」的結構
 1. Nav 的「MonsterTalk」字重 — 現 Nunito 800，UI kit 有 5 組對照待挑
-2. 產品命名 MonsterTalk 為暫定，Logo 檔仍是 ME 識別，兩者不相容
+2. **【延後到最後】**（2026-08-27 使用者指定，不影響目前進度）產品命名 MonsterTalk
+   為暫定，Logo 檔仍是 ME 識別，兩者不相容。個人首頁側邊欄現在用 MonsterTalk，
+   設計稿是「ME / Mandarin × English」—— 定案後只需改 `BrandBlock.tsx` 一個檔案
+2.5 **【延後到最後】`.arc-top` 的程式碼與本檔記載對不上**：globals.css 實際是
+   `clamp(14px, 1.9vw, 44px)`，但下方「關鍵決策」記著已改成 5vw、1.9vw 是量錯的。
+   **碰 landing 前要先釐清哪個才對**，別照著錯的那份改
 3. **上線前換掉假數據**（`grep "FAKE_"`）
 4. Cloudflare Pages 為原訂方案（proxy.ts 能跑、Image 最佳化在），目前先走 GitHub Pages
 
