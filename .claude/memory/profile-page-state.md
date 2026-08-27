@@ -146,46 +146,88 @@ header 移進 `ScheduleBoard`（日期範圍要跟著切週變），但**兩顆�
 `hosted`（紫）卡片的標題目前顯示「開放中」，因為設計稿的紫卡標題確實也是 Open。
 等有房間名稱再改。
 
-## Find Conversation Monsters（進行中）
+## Find Conversation Monsters（已完成）
 
-**只完成資料層，畫面尚未動工**（2026-08-27）。`home/page.tsx` 那一區還是 placeholder。
+**2026-08-27 完成。** 檔案在 `Components/Profile/Monsters/`：
+`MonstersSection`（server，只餵字典與假資料）、`MonstersBoard`（client，狀態層）、
+`MonsterFilters`、`MonsterCard`、`MonsterPanel`、`monstersData.ts`、`fakeMonsters.json`。
 
-已建立：
-- `Components/Profile/Monsters/fakeMonsters.json` —— 10 隻怪獸
-- `Components/Profile/Monsters/monstersData.ts` —— 型別、`FAKE_MONSTERS`、`filterMonsters()`
+### 與週曆不同：整區都在 client
 
-規劃的元件（尚未建立）：
+週曆只有「切週」需要互動，外框與圖例留在 server。這裡的標題列、格狀、面板
+**全部**跟著篩選與選取變動，能留在 server 的只剩一個 Card 外框 ——
+拆出去換來的是一堆 props 穿越，所以整塊進 client。
 
-| 元件 | 職責 |
-|---|---|
-| `MonstersSection`（server） | Card 外框 + 標題 |
-| `MonstersBoard`（client） | 篩選狀態 + 選中的怪獸 |
-| `MonsterFilters` | 語言/程度下拉、線上開關、搜尋框 |
-| `MonsterCard` | 單張卡，套現有的 `Avatar` / `LangBadge` |
-| `MonsterPanel` | 右側詳情，手機版走 `Dialog` |
+**選中的人由 id 推導，不另存物件**：`selectedId` 存 id，物件從**篩選後**的清單找。
+「篩掉正在看的那個人」因此會自然收起面板 —— 存物件的話要多寫一個 effect 比對並
+清空，而 effect 清 state 一定是渲染兩次。
 
-模式與週曆相同：server 只留外框，狀態集中在一個 client Board。
+### 詳情面板：一個節點兩種版型（沒有走 Dialog）
 
-### 設計稿的內容
+`xl` 以上是格狀右側的常駐欄位（寬 `w-66`，跟側邊欄同寬）；`xl` 以下是
+`fixed inset-x-3 bottom-3` 的浮動面板 + 遮罩。
 
-**卡片格** 5 欄 × 2 列：頭像（右上綠點）、名字、兩個語言徽章、底部狀態。
-狀態二選一：時鐘「Free at 4 PM」或人形「2 slots open」。
-選中的那張是紫框 + 陰影。下方「Show more monsters ▾」。
+⚠️ **刻意不用 Dialog。** `showModal()` 是 JS 呼叫，媒體查詢擋不住它 —— 要嘛在
+effect 裡自己 `matchMedia`（把斷點複製一份到 JS，兩邊遲早漂移），要嘛把面板內容
+渲染兩次。用 CSS 換 position 就好：一份內容、一個節點、斷點只存在於 CSS。
+代價是少了 `<dialog>` 的焦點鎖與 inert，**Esc 關閉在 `MonstersBoard` 補上**。
+另外**沒有鎖背景捲動**（`globals.css` 的 `body:has(dialog[open])` 對它無效）。
 
-**篩選列**：All languages ▾、All levels ▾、Online now（toggle）、Search monsters…（放大鏡）。
+⚠️⚠️ **`relative` 與 `fixed` 不能掛在同一個元素上。** Tailwind 的 position utility
+同屬一組、輸出順序固定（static → fixed → absolute → relative → sticky），
+**永遠是 relative 贏**，跟 class 寫的先後無關。所以定位用的 `relative` 放在
+**內層 div**，Card 只負責 `fixed` / `xl:static`。用 `xl:static` 而非 `xl:relative`
+也是同一個考量：static 會忽略 `inset-x` / `bottom`，不必補一排 `xl:inset-auto`。
 
-**詳情面板**：✕、大頭像、名字 + 綠點 + Online now、語言徽章 ×2 + 程度 pill、
-自我介紹、「Room up to 4 people」（淺黃底）、Next available「Today 8:00 PM →」、
-「View schedule」（紫實心）、「Say hello」（白底框）。
+⚠️ 遮罩 `z-40`、面板 `z-50` —— 要壓過 TabBar 的 `z-30`，不然暗幕之上會浮著一條
+亮的導覽列。
 
-### 已做的判斷（要改的話趁畫面還沒做）
+沒選人時桌機顯示提示（`hint.title` / `hint.note`）而不是整個消失 ——
+欄位一下有一下沒有，旁邊格狀的寬度就會跟著跳。
 
-- **篩選做成真的能用** —— client 端篩已載入的 10 筆，不打 API，跟週曆切週同一個原則
-- **語言篩選比對「對方的母語」** —— 那才是你能練到的語言，不是他正在學的
-- **`bio` 不進字典** —— 使用者自己寫的內容，真實產品不會翻譯它；
-  假資料刻意中英文混著放（幾隻中文、幾隻英文），才看得出真實情況的排版
-- **`id` 綁頭像檔名**（`avatar-${id}.webp`），所以 id 必須跟 `assets/source/avatars/` 對得上
-- 卡片的語言徽章順序是 **母語在前、學習中在後**（設計稿裡 Alex 是「中 EN」、Bobby 是「EN 中」）
+### 格狀與卡片
+
+`grid-cols-2 sm:3 md:4 2xl:5`。5 欄只在 ≥1536px 出現（設計稿 1448 + 瀏覽器外框），
+其餘寬度 4 欄比較不會讓卡片胖到失衡。
+
+⚠️ **卡片上的頭像沒有圓底** —— `Avatar` 新增 `circle` prop（預設 `true`，既有呼叫端
+不受影響）。十張並排時，十個淡紫圓會變成畫面上最搶眼的圖形，蓋過怪獸本身。
+線上點也因此畫在**卡片右上角**，不是 Avatar 自己那顆（那顆是貼著圓緣定位的）。
+
+語言徽章**母語在前、學習中在後** —— 順序帶著資訊：第一顆才是你能跟他練到的語言。
+
+狀態列兩種擇一：有開放名額顯示名額（比較急迫、可以馬上進去），否則顯示下一個有空
+的時間。整點時**不輸出分鐘**（`formatHour`）—— 設計稿寫的是「Free at 4 PM」。
+詳情面板則用週曆的 `formatTime`（帶分鐘），也跟設計稿一致。
+
+### 篩選
+
+兩個下拉用原生 `<select>` + `appearance-none` 自己畫箭頭 —— 手機會叫出系統選單、
+鍵盤與螢幕閱讀器都是現成的。「Online now」用 `role="switch"`，它不是表單欄位而是
+立刻生效的開關。
+
+⚠️ 語言篩的是**對方的母語**，下拉的 aria-label 因此寫「對方的母語」而不只是「語言」。
+
+### 假資料的調整
+
+⚠️ **每隻怪獸都補了 `freeAt`**（原本與 `slotsOpen` 二選一）。面板的「Next available」
+是固定欄位，少了它面板高度會隨著選誰而跳動。`slotsOpen` 改成純選填的額外資訊。
+
+Nina 是唯一 `online: false` 的 —— 「Online now」開關才有東西可篩。
+
+字典的 `{count}` / `{time}` 用 `fill()` 這個五行的 replace 代入，沒有為此裝 i18n 套件。
+英文的 1 slot / 2 slots 靠 `slotOpen` / `slotsOpen` 兩個 key，中文兩者相同。
+
+### 沒做的
+
+⚠️ 設計稿底部的「**Show more monsters ▾**」**沒有做** —— 假資料就只有 10 隻、
+格狀已經全部攤開，那顆按鈕按下去無事可做。等 API 有分頁再補。
+
+面板上三顆按鈕（下次有空、查看行程、打聲招呼）是純視覺，跟側邊欄七項、
+週曆的「開設聊天室」同一個處理。
+
+字典的 `profile.soon.schedule` / `profile.soon.monsters` 已刪除（placeholder 沒了），
+`soon.note` 仍在用（週曆 Dialog 的內容）。
 
 ## 未定
 
@@ -216,5 +258,5 @@ seriously.」，但 Nav 與登入頁都已經是 **MonsterTalk**。側邊欄 log
 ⚠️ `build_icons.py` 的舊 `avatars` 群組（landing 評價區的 sophie / lucas / minji）
 **已改名 `testimonials`**，把 `avatars` 讓給這批。改名不影響輸出檔名，重跑驗證位元一致。
 
-**How to apply:** 下一步是 **Find Conversation Monsters** —— 篩選列 + 10 張怪獸卡
-+ 右側可關閉的詳情面板。卡片直接套 `Avatar` 與 `LangBadge`，素材已全部入庫。
+**How to apply:** 個人首頁的四個區塊都做完了。剩下的是**未定**那節（Logo 識別）、
+設計稿的「Show more monsters」等分頁 API，以及登入/註冊頁與設計稿的落差清單。

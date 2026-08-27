@@ -188,8 +188,6 @@
             "tokens": "代幣"
         },
         "soon": {
-            "schedule": "我的行程",
-            "monsters": "尋找對話怪獸",
             "note": "開發中 —— 下一步就做這區。"
         },
         "demo": {
@@ -219,6 +217,36 @@
                 "participants": "人數"
             },
             "createSlot": "建立時段"
+        },
+        "monsters": {
+            "title": "尋找對話怪獸",
+            "allLanguages": "所有語言",
+            "allLevels": "所有程度",
+            "languageLabel": "對方的母語",
+            "levelLabel": "程度",
+            "onlineNow": "線上中",
+            "offline": "離線",
+            "search": "搜尋怪獸…",
+            "searchLabel": "搜尋怪獸",
+            "freeAt": "{time} 有空",
+            "slotOpen": "還有 {count} 個名額",
+            "slotsOpen": "還有 {count} 個名額",
+            "empty": {
+                "title": "沒有符合的怪獸",
+                "note": "換個語言或程度，或把搜尋清空試試。"
+            },
+            "hint": {
+                "title": "選一隻怪獸",
+                "note": "點卡片看他的自我介紹、房間人數與下一個有空的時間。"
+            },
+            "panel": {
+                "close": "關閉詳情",
+                "roomUpTo": "房間最多 {count} 人",
+                "nextAvailable": "下次有空",
+                "today": "今天",
+                "viewSchedule": "查看行程",
+                "sayHello": "打聲招呼"
+            }
         }
     },
     "common": {

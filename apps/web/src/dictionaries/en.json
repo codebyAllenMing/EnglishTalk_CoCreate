@@ -188,8 +188,6 @@
             "tokens": "Tokens"
         },
         "soon": {
-            "schedule": "My Schedule",
-            "monsters": "Find Conversation Monsters",
             "note": "Under construction — this section is next."
         },
         "demo": {
@@ -219,6 +217,36 @@
                 "participants": "Participants"
             },
             "createSlot": "Create slot"
+        },
+        "monsters": {
+            "title": "Find Conversation Monsters",
+            "allLanguages": "All languages",
+            "allLevels": "All levels",
+            "languageLabel": "Language they speak natively",
+            "levelLabel": "Level",
+            "onlineNow": "Online now",
+            "offline": "Offline",
+            "search": "Search monsters…",
+            "searchLabel": "Search monsters",
+            "freeAt": "Free at {time}",
+            "slotOpen": "{count} slot open",
+            "slotsOpen": "{count} slots open",
+            "empty": {
+                "title": "No monsters here",
+                "note": "Try another language, level, or clear the search."
+            },
+            "hint": {
+                "title": "Pick a monster",
+                "note": "Tap a card to see their intro, room size and next open time."
+            },
+            "panel": {
+                "close": "Close details",
+                "roomUpTo": "Room up to {count} people",
+                "nextAvailable": "Next available",
+                "today": "Today",
+                "viewSchedule": "View schedule",
+                "sayHello": "Say hello"
+            }
         }
     },
     "common": {

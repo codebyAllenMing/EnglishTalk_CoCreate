@@ -10,6 +10,12 @@ type Props = {
 	online?: boolean;
 	onlineLabel?: string;
 	priority?: boolean;
+	/**
+	 * 身後那圈淡紫底色，預設有。
+	 * 怪獸卡片格狀的頭像直接站在白底上（設計稿如此）—— 十張並排時，
+	 * 十個圓會變成畫面上最搶眼的圖形，蓋過怪獸本身。
+	 */
+	circle?: boolean;
 };
 
 /**
@@ -29,10 +35,13 @@ export default function Avatar({
 	online,
 	onlineLabel,
 	priority,
+	circle = true,
 }: Props) {
 	return (
 		<div className={`relative shrink-0 ${className}`}>
-			<div className="absolute inset-x-[6%] top-[4%] aspect-square rounded-full bg-primary-100" />
+			{circle && (
+				<div className="absolute inset-x-[6%] top-[4%] aspect-square rounded-full bg-primary-100" />
+			)}
 			<Image
 				src={asset(`/images/${src}.webp`)}
 				alt=""

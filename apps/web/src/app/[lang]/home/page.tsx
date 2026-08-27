@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import BrandBlock from "@/Components/Profile/BrandBlock";
 import InviteCard from "@/Components/Profile/InviteCard";
+import MonstersSection from "@/Components/Profile/Monsters/MonstersSection";
 import ProfileCard from "@/Components/Profile/ProfileCard";
 import ScheduleSection from "@/Components/Profile/Schedule/ScheduleSection";
 import SideNav from "@/Components/Profile/SideNav";
 import TabBar from "@/Components/Profile/TabBar";
 import TopBar from "@/Components/Profile/TopBar";
-import Card from "@/Components/UI/Card";
 import { getDictionary } from "@/dictionaries";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -33,9 +33,6 @@ export async function generateMetadata(): Promise<Metadata> {
  * 所以 ProfileCard 的頭像**刻意不給 priority** —— 給了會變成同一張圖 preload 兩次。
  */
 export default async function HomePage() {
-	const dict = await getDictionary();
-	const { soon } = dict.profile;
-
 	return (
 		<div className="min-h-dvh bg-app">
 			{/* pb-20 讓內容不被固定在底部的 TabBar 蓋住；桌機沒有 TabBar 所以收回去 */}
@@ -61,7 +58,7 @@ export default async function HomePage() {
 
 					<main className="flex flex-col gap-5">
 						<ScheduleSection />
-						<Placeholder title={soon.monsters} note={soon.note} className="min-h-96" />
+						<MonstersSection />
 					</main>
 
 					<div className="lg:hidden">
@@ -72,26 +69,5 @@ export default async function HomePage() {
 
 			<TabBar />
 		</div>
-	);
-}
-
-/**
- * 尚未實作的區塊。留出接近實際高度的空框，是為了現在就看得出整頁的比例，
- * 而不是等兩區都做完才發現版面不對。
- */
-function Placeholder({
-	title,
-	note,
-	className,
-}: {
-	title: string;
-	note: string;
-	className: string;
-}) {
-	return (
-		<Card className={`flex flex-col items-center justify-center gap-2 p-6 ${className}`}>
-			<h2 className="text-lg font-extrabold text-ink-400">{title}</h2>
-			<p className="text-sm text-ink-300">{note}</p>
-		</Card>
 	);
 }
