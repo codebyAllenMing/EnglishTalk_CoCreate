@@ -4,7 +4,7 @@ import { NAV_ITEMS } from "./navItems";
 import { FAKE_PROFILE } from "./profileData";
 
 /**
- * 桌機側邊欄的七項導覽。手機版改用 TabBar，兩者共用 navItems.ts 的同一份定義。
+ * 桌機側邊欄的五項導覽。手機版改用 TabBar，兩者共用 navItems.ts 的同一份定義。
  *
  * ⚠️ 全部是純視覺不給連結 —— 對應頁面都還不存在。第一項是當前頁，用 aria-current
  *    標記；其餘既不是連結也不是按鈕，所以用 <li> 而不是 <a>，免得鍵盤使用者

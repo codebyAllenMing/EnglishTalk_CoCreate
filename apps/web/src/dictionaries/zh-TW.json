@@ -154,8 +154,6 @@
         },
         "nav": {
             "home": "個人首頁",
-            "schedule": "我的行程",
-            "monsters": "尋找怪獸",
             "rooms": "聊天室",
             "messages": "訊息",
             "reputation": "評價",
@@ -198,15 +196,13 @@
             "hostRoom": "開設聊天室",
             "openSlot": "開放時段",
             "open": "開放中",
-            "addSlot": "新增時段",
             "seats": "人",
             "prevWeek": "上一週",
             "nextWeek": "下一週",
             "legend": {
                 "open": "你的開放時段",
                 "session": "你的對話",
-                "hosted": "你開設的聊天室",
-                "add": "新增時段"
+                "hosted": "你開設的聊天室"
             },
             "timezone": "所有時間以你的當地時間顯示",
             "openSlotHint": "選擇你有空聊天的時段，其他人就能來預約。",

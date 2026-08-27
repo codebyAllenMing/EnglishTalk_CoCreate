@@ -39,7 +39,6 @@ export default async function ScheduleSection() {
 				locale={locale}
 				dict={s}
 				closeLabel={dict.common.close}
-				cancelLabel={dict.common.cancel}
 				soonNote={dict.profile.soon.note}
 				scrollTop={scrollTop}
 				actions={

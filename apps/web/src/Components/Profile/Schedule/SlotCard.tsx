@@ -1,4 +1,4 @@
-import { ArrowRight, Plus, Users } from "lucide-react";
+import { ArrowRight, Users } from "lucide-react";
 import Dialog from "@/Components/UI/Dialog";
 import LangBadge from "@/Components/UI/LangBadge";
 import type { Dictionary } from "@/dictionaries";
@@ -12,13 +12,12 @@ type Props = {
 	locale: string;
 	dict: Dictionary["profile"]["schedule"];
 	closeLabel: string;
-	cancelLabel: string;
 	soonNote: string;
 };
 
 /**
- * 一張時段卡片。四種 kind 共用同一個元件 —— 它們的差別只有配色與顯示哪幾個欄位，
- * 拆成四個檔案會變成維護四份相同的 Grid 定位邏輯。
+ * 一張時段卡片。三種 kind 共用同一個元件 —— 它們的差別只有配色與顯示哪幾個欄位，
+ * 拆成三個檔案會變成維護三份相同的 Grid 定位邏輯。
  *
  * 定位靠 grid-column / grid-row，不用 absolute：
  *   gridColumn = day + 2       （第一欄是時間軸）
@@ -37,7 +36,6 @@ const TONE: Record<Slot["kind"], string> = {
 	open: "bg-token/25 text-ink hover:bg-token/55",
 	session: "bg-secondary-100 text-ink hover:bg-secondary-200",
 	hosted: "bg-primary-100 text-ink hover:bg-primary-200",
-	add: "border-2 border-dashed border-primary-200 bg-primary-50/40 text-primary-500 hover:border-solid hover:border-primary-400 hover:bg-primary-100",
 };
 
 export default function SlotCard({
@@ -46,7 +44,6 @@ export default function SlotCard({
 	locale,
 	dict,
 	closeLabel,
-	cancelLabel,
 	soonNote,
 }: Props) {
 	const startRow = slot.startMinutes / SLOT_MINUTES + 1;
@@ -59,28 +56,6 @@ export default function SlotCard({
 			{soonNote}
 		</p>
 	);
-
-	if (slot.kind === "add") {
-		return (
-			<Dialog
-				trigger={
-					<>
-						{dict.addSlot}
-						<Plus aria-hidden="true" className="size-4" />
-					</>
-				}
-				triggerClassName={`m-0.5 flex flex-col items-center justify-center gap-1 rounded-xl text-xs font-extrabold transition-colors ${TONE.add}`}
-				triggerStyle={style}
-				title={dict.openSlot}
-				description={dict.openSlotHint}
-				closeLabel={closeLabel}
-				cancel={{ label: cancelLabel }}
-				confirm={{ label: dict.createSlot, disabled: true }}
-			>
-				{placeholder}
-			</Dialog>
-		);
-	}
 
 	return (
 		<Dialog

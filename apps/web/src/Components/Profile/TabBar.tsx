@@ -7,20 +7,21 @@ import { FAKE_PROFILE } from "./profileData";
  * 手機版的底部導覽，取代桌機的側邊欄。
  *
  * 選了 tab bar 而不是漢堡抽屜（使用者 2026-08-27 決定）：抽屜要 client state，
- * tab bar 純 CSS 就能切，整頁維持 Server Component。代價是七項只放得下五項，
- * Rooms 與 Reputation 只在桌機出現 —— 那兩項不在主要動線上。
+ * tab bar 純 CSS 就能切，整頁維持 Server Component。
+ *
+ * 導覽剩五項之後桌機與手機顯示的是同一組 —— 原本挑五項的 inTabBar 旗標
+ * 沒有存在的理由了。
  *
  * 固定在底部，所以主要內容區要留出等高的下邊距（見 page.tsx 的 pb-20）。
  */
 export default async function TabBar() {
 	const dict = await getDictionary();
 	const { nav } = dict.profile;
-	const items = NAV_ITEMS.filter((item) => item.inTabBar);
 
 	return (
 		<nav className="fixed inset-x-0 bottom-0 z-30 border-t border-ink-100 bg-surface/95 backdrop-blur lg:hidden">
 			<ul className="flex items-stretch">
-				{items.map(({ key, icon: Icon }, i) => {
+				{NAV_ITEMS.map(({ key, icon: Icon }, i) => {
 					const current = i === 0;
 					return (
 						<li key={key} className="flex-1">

@@ -154,8 +154,6 @@
         },
         "nav": {
             "home": "Home",
-            "schedule": "My Schedule",
-            "monsters": "Find Monsters",
             "rooms": "Rooms",
             "messages": "Messages",
             "reputation": "Reputation",
@@ -198,15 +196,13 @@
             "hostRoom": "Host a room",
             "openSlot": "Open a time slot",
             "open": "Open",
-            "addSlot": "Add time slot",
             "seats": "seats",
             "prevWeek": "Previous week",
             "nextWeek": "Next week",
             "legend": {
                 "open": "Your open time",
                 "session": "Your sessions",
-                "hosted": "Room you host",
-                "add": "Add time slot"
+                "hosted": "Room you host"
             },
             "timezone": "All times shown in your local time",
             "openSlotHint": "Pick the hours you're free to chat. Others can then book you.",

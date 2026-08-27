@@ -8,11 +8,10 @@ const SWATCH: Record<SlotKind, string> = {
 	open: "bg-token/25",
 	session: "bg-secondary-100",
 	hosted: "bg-primary-100",
-	add: "border-2 border-dashed border-primary-200",
 };
 
 export default function ScheduleLegend({ dict }: Props) {
-	const items: SlotKind[] = ["open", "session", "hosted", "add"];
+	const items: SlotKind[] = ["open", "session", "hosted"];
 
 	return (
 		<div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 px-1 text-xs text-ink-500">

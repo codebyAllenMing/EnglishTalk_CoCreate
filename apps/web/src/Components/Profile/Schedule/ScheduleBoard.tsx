@@ -14,7 +14,6 @@ type Props = {
 	locale: string;
 	dict: Dictionary["profile"]["schedule"];
 	closeLabel: string;
-	cancelLabel: string;
 	soonNote: string;
 	scrollTop: number;
 	/**
@@ -52,7 +51,6 @@ export default function ScheduleBoard({
 	locale,
 	dict,
 	closeLabel,
-	cancelLabel,
 	soonNote,
 	scrollTop,
 	actions,
@@ -93,7 +91,6 @@ export default function ScheduleBoard({
 					locale={locale}
 					dict={dict}
 					closeLabel={closeLabel}
-					cancelLabel={cancelLabel}
 					soonNote={soonNote}
 					scrollTop={scrollTop}
 				/>

@@ -2,7 +2,7 @@ import type { LangCode } from "../profileData";
 import raw from "./fakeSchedule.json";
 import { currentWeekStart, dayOffsetFrom, shiftDay, shiftWeek, toMinutes } from "./week";
 
-export type SlotKind = "open" | "session" | "hosted" | "add";
+export type SlotKind = "open" | "session" | "hosted";
 
 export type Slot = {
 	/**

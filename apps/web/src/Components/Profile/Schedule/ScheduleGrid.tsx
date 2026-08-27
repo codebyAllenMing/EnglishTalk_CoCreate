@@ -10,7 +10,6 @@ type Props = {
 	locale: string;
 	dict: Dictionary["profile"]["schedule"];
 	closeLabel: string;
-	cancelLabel: string;
 	soonNote: string;
 	scrollTop: number;
 };
@@ -56,7 +55,6 @@ export default function ScheduleGrid({
 	locale,
 	dict,
 	closeLabel,
-	cancelLabel,
 	soonNote,
 	scrollTop,
 }: Props) {
@@ -138,7 +136,6 @@ export default function ScheduleGrid({
 							locale={locale}
 							dict={dict}
 							closeLabel={closeLabel}
-							cancelLabel={cancelLabel}
 							soonNote={soonNote}
 						/>
 					))}

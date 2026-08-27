@@ -24,11 +24,13 @@ metadata:
 
 - **這輪只做骨架 + 側邊欄**，週曆與 Find Monsters 之後分批
 - **手機版用底部 tab bar**（不是漢堡抽屜）—— 純 CSS 可切，不需要 client state。
-  放 5 項：`個人首頁 / My Schedule / Find Monsters / Messages / Settings`，
-  Rooms 與 Reputation 只留在桌機側邊欄
+  ⚠️ **2026-08-27 修正**：導覽拿掉 `My Schedule` 與 `Find Monsters`
+  （使用者：「就已經在畫面常駐了」，導覽再列一次是指向自己）。
+  只剩 `Home / Rooms / Messages / Reputation / Settings` 五項，tab bar 塞得下全部 ——
+  原本用來挑五項的 `inTabBar` 旗標連同它的理由一起拿掉，桌機與手機顯示同一組
 - **不用 Dashboard 這個字**。路由維持 `/[lang]/home`（`AuthForm` 的 redirectTo 不用改），
   選單第一項是 `Home` / 「個人首頁」—— 使用者要的是「跟個人首頁相關的單字」
-- **側邊欄 7 項全是純視覺不給連結**，照既有的「不存在的頁面不給連結」
+- **側邊欄五項全是純視覺不給連結**，照既有的「不存在的頁面不給連結」
 - **假數據命名 `FAKE_PROFILE`**，與 `FAKE_STATS` / `FAKE_TESTIMONIALS` 同一套
 
 ## 已完成
@@ -44,7 +46,7 @@ metadata:
 ⚠️ **`ProfileCard` 的頭像刻意不給 `priority`**：品牌列 / 個人資料卡 / 邀請卡在桌機與
 手機兩種版型各 render 一次（互斥的 `hidden` / `lg:hidden`），給了會 preload 兩次。
 
-導覽七項用 `<li>` 不用 `<a>` —— 頁面都不存在，做成連結會讓鍵盤使用者 tab 到
+導覽用 `<li>` 不用 `<a>` —— 頁面都不存在，做成連結會讓鍵盤使用者 tab 到
 一個按了沒反應的東西。
 
 ## My Schedule 週曆
@@ -55,8 +57,12 @@ metadata:
 日期用原生 `Intl` 還自帶 i18n（英文 Mon / May 19，中文自動變週一 / 5月19日）。
 
 檔案在 `Components/Profile/Schedule/`：`ScheduleSection`（外框 + 標題列 + ‹ ›）、
-`ScheduleGrid`（Grid + 表頭 + 時間軸 + 初始捲動）、`SlotCard`（四種變體共用）、
+`ScheduleGrid`（Grid + 表頭 + 時間軸 + 初始捲動）、`SlotCard`（三種變體共用）、
 `ScheduleLegend`、`scheduleData.ts`、`week.ts`、`fakeSchedule.json`。
+
+⚠️ **`add`（虛線的「新增時段」卡）已移除**（使用者 2026-08-27：「我評估後覺得有點多餘」）——
+標題列本來就有一顆「開放時段」，格子裡再放一張同義的虛線卡是重複的入口。
+`SlotKind` 因此剩三種，`SlotCard` 的 `cancelLabel` 這條 props 鏈也一起收掉。
 
 ### 規格
 
