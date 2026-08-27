@@ -146,6 +146,47 @@ header 移進 `ScheduleBoard`（日期範圍要跟著切週變），但**兩顆�
 `hosted`（紫）卡片的標題目前顯示「開放中」，因為設計稿的紫卡標題確實也是 Open。
 等有房間名稱再改。
 
+## Find Conversation Monsters（進行中）
+
+**只完成資料層，畫面尚未動工**（2026-08-27）。`home/page.tsx` 那一區還是 placeholder。
+
+已建立：
+- `Components/Profile/Monsters/fakeMonsters.json` —— 10 隻怪獸
+- `Components/Profile/Monsters/monstersData.ts` —— 型別、`FAKE_MONSTERS`、`filterMonsters()`
+
+規劃的元件（尚未建立）：
+
+| 元件 | 職責 |
+|---|---|
+| `MonstersSection`（server） | Card 外框 + 標題 |
+| `MonstersBoard`（client） | 篩選狀態 + 選中的怪獸 |
+| `MonsterFilters` | 語言/程度下拉、線上開關、搜尋框 |
+| `MonsterCard` | 單張卡，套現有的 `Avatar` / `LangBadge` |
+| `MonsterPanel` | 右側詳情，手機版走 `Dialog` |
+
+模式與週曆相同：server 只留外框，狀態集中在一個 client Board。
+
+### 設計稿的內容
+
+**卡片格** 5 欄 × 2 列：頭像（右上綠點）、名字、兩個語言徽章、底部狀態。
+狀態二選一：時鐘「Free at 4 PM」或人形「2 slots open」。
+選中的那張是紫框 + 陰影。下方「Show more monsters ▾」。
+
+**篩選列**：All languages ▾、All levels ▾、Online now（toggle）、Search monsters…（放大鏡）。
+
+**詳情面板**：✕、大頭像、名字 + 綠點 + Online now、語言徽章 ×2 + 程度 pill、
+自我介紹、「Room up to 4 people」（淺黃底）、Next available「Today 8:00 PM →」、
+「View schedule」（紫實心）、「Say hello」（白底框）。
+
+### 已做的判斷（要改的話趁畫面還沒做）
+
+- **篩選做成真的能用** —— client 端篩已載入的 10 筆，不打 API，跟週曆切週同一個原則
+- **語言篩選比對「對方的母語」** —— 那才是你能練到的語言，不是他正在學的
+- **`bio` 不進字典** —— 使用者自己寫的內容，真實產品不會翻譯它；
+  假資料刻意中英文混著放（幾隻中文、幾隻英文），才看得出真實情況的排版
+- **`id` 綁頭像檔名**（`avatar-${id}.webp`），所以 id 必須跟 `assets/source/avatars/` 對得上
+- 卡片的語言徽章順序是 **母語在前、學習中在後**（設計稿裡 Alex 是「中 EN」、Bobby 是「EN 中」）
+
 ## 未定
 
 ⚠️ **Logo 識別衝突**：設計稿左上是「ME / Mandarin × English / Keep it chill. Take it
