@@ -243,6 +243,15 @@
                 "viewSchedule": "查看行程",
                 "sayHello": "打聲招呼"
             }
+        },
+        "edit": {
+            "hint": "更新你的個人資訊",
+            "avatar": "更換頭像",
+            "name": "名字",
+            "native": "母語",
+            "learning": "學習中的語言",
+            "locked": "無法變更",
+            "save": "儲存變更"
         }
     },
     "common": {

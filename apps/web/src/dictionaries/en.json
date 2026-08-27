@@ -243,6 +243,15 @@
                 "viewSchedule": "View schedule",
                 "sayHello": "Say hello"
             }
+        },
+        "edit": {
+            "hint": "Update your personal information",
+            "avatar": "Change avatar",
+            "name": "Name",
+            "native": "Native Language",
+            "learning": "Learning Language",
+            "locked": "Can't change",
+            "save": "Save Changes"
         }
     },
     "common": {

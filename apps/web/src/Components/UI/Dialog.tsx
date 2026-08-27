@@ -1,7 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useRef, type CSSProperties, type MouseEvent, type ReactNode } from "react";
+import { useId, useRef, type CSSProperties, type MouseEvent, type ReactNode } from "react";
 
 type DialogAction = {
 	/**
@@ -22,6 +22,11 @@ type DialogAction = {
 type Props = {
 	/** 觸發按鈕的內容。由 Server Component 渲染好傳進來，呼叫端不必變成 client */
 	trigger: ReactNode;
+	/**
+	 * 觸發按鈕的無障礙名稱。**只有圖示的觸發鈕必填** —— 例如個人資料卡右上角
+	 * 那支筆，沒有它螢幕閱讀器只會唸到「按鈕」。有文字的 trigger 不用給。
+	 */
+	triggerLabel?: string;
 	triggerClassName?: string;
 	/** 給需要 inline style 的觸發元素用，例如週曆卡片的 grid 定位 */
 	triggerStyle?: CSSProperties;
@@ -53,6 +58,12 @@ type Props = {
 	 *    （例如不可中斷的流程），得另外在 onCancel 裡 preventDefault。
 	 */
 	closeOnBackdrop?: boolean;
+	/**
+	 * 對話框關閉後呼叫。接的是原生的 close 事件，所以 **Esc、✕、點遮罩、
+	 * 取消鈕四條路都會觸發** —— 表單要在關閉時還原草稿就靠它，不必在每顆按鈕上
+	 * 各補一次（那樣一定會漏掉 Esc）。
+	 */
+	onClose?: () => void;
 	className?: string;
 };
 
@@ -79,6 +90,7 @@ type Props = {
  */
 export default function Dialog({
 	trigger,
+	triggerLabel,
 	triggerClassName,
 	triggerStyle,
 	title,
@@ -89,9 +101,17 @@ export default function Dialog({
 	confirm,
 	footer,
 	closeOnBackdrop = true,
+	onClose,
 	className = "max-w-md",
 }: Props) {
 	const ref = useRef<HTMLDialogElement>(null);
+	/**
+	 * ⚠️ 標題的 id 必須每個實例不同。同一頁上的 Dialog 不只一個
+	 * （週曆每張卡片一個、個人資料卡在桌機與手機版型各一個），寫死同一個 id
+	 * 會讓 aria-labelledby 一律指到 DOM 裡的第一個 —— 每個對話框都被唸成
+	 * 同一個標題，而且 HTML 也不合法。
+	 */
+	const titleId = useId();
 
 	const close = () => ref.current?.close();
 
@@ -104,6 +124,7 @@ export default function Dialog({
 		<>
 			<button
 				type="button"
+				aria-label={triggerLabel}
 				className={triggerClassName}
 				style={triggerStyle}
 				onClick={() => ref.current?.showModal()}
@@ -114,13 +135,14 @@ export default function Dialog({
 			<dialog
 				ref={ref}
 				onClick={closeIfBackdrop}
-				aria-labelledby="dialog-title"
+				onClose={onClose}
+				aria-labelledby={titleId}
 				className={`m-auto w-[calc(100%-2rem)] bg-transparent p-4 opacity-0 backdrop:bg-ink/40 backdrop:opacity-0 backdrop:backdrop-blur-[2px] backdrop:transition-opacity backdrop:duration-200 transition-all transition-discrete duration-200 open:opacity-100 open:backdrop:opacity-100 starting:open:opacity-0 starting:open:backdrop:opacity-0 ${className}`}
 			>
 				<div className="flex max-h-[85dvh] flex-col overflow-hidden rounded-2xl bg-surface shadow-[0_1px_2px_rgba(13,24,82,.06),0_24px_60px_rgba(13,24,82,.18)]">
 					<header className="flex items-start gap-4 px-6 pt-5 pb-4">
 						<div className="min-w-0 flex-1">
-							<h2 id="dialog-title" className="text-lg font-extrabold">
+							<h2 id={titleId} className="text-lg font-extrabold">
 								{title}
 							</h2>
 							{description && (
@@ -131,7 +153,7 @@ export default function Dialog({
 							type="button"
 							aria-label={closeLabel}
 							onClick={close}
-							className="-mt-1 -mr-2 shrink-0 rounded-full p-2 text-ink-400 transition-colors hover:bg-primary-50 hover:text-primary-600"
+							className="shrink-0 rounded-full bg-app p-2.5 text-ink transition-colors hover:bg-primary-100 hover:text-primary-600"
 						>
 							<X aria-hidden="true" className="size-4" />
 						</button>
@@ -139,8 +161,10 @@ export default function Dialog({
 
 					<div className="min-h-0 flex-1 overflow-y-auto px-6 pb-5">{children}</div>
 
+					{/* 設計稿的底部是兩顆等寬按鈕、沒有分隔線（見 個人主頁-編輯.png）。
+					    只給一顆時它會自己佔滿整列，那也是對的 */}
 					{(footer || cancel || confirm) && (
-						<footer className="flex items-center justify-end gap-2 border-t border-ink-100 px-6 py-4">
+						<footer className="flex items-center gap-3 px-6 pt-3 pb-6">
 							{footer ?? (
 								<>
 									{cancel && (
@@ -151,7 +175,7 @@ export default function Dialog({
 												cancel.onClick?.(close);
 												close();
 											}}
-											className="rounded-full border-2 border-ink-200 px-5 py-2 text-sm font-extrabold transition-colors hover:border-primary-400 hover:text-primary-600 disabled:cursor-not-allowed disabled:opacity-50"
+											className="flex-1 rounded-xl bg-primary-50 px-5 py-3 text-sm font-extrabold text-primary-600 transition-colors hover:bg-primary-100 disabled:cursor-not-allowed disabled:opacity-50"
 										>
 											{cancel.label}
 										</button>
@@ -161,7 +185,7 @@ export default function Dialog({
 											type="button"
 											disabled={confirm.disabled}
 											onClick={() => confirm.onClick?.(close)}
-											className="rounded-full bg-primary-500 px-5 py-2 text-sm font-extrabold text-white transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50"
+											className="flex-1 rounded-xl bg-primary-500 px-5 py-3 text-sm font-extrabold text-white transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50"
 										>
 											{confirm.label}
 										</button>

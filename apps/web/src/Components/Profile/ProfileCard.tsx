@@ -1,9 +1,10 @@
-import { BarChart3, Pencil, Star } from "lucide-react";
+import { BarChart3, Star } from "lucide-react";
 import Avatar from "@/Components/UI/Avatar";
 import Card from "@/Components/UI/Card";
 import LangBadge from "@/Components/UI/LangBadge";
 import TokenCount from "@/Components/UI/TokenCount";
 import { getDictionary } from "@/dictionaries";
+import EditProfileDialog from "./EditProfileDialog";
 import { FAKE_PROFILE } from "./profileData";
 
 /**
@@ -13,18 +14,27 @@ import { FAKE_PROFILE } from "./profileData";
  */
 export default async function ProfileCard() {
 	const dict = await getDictionary();
-	const { card, lang, level, demo } = dict.profile;
+	const { card, lang, level, demo, edit } = dict.profile;
 	const p = FAKE_PROFILE;
 
 	return (
 		<Card className="relative p-5">
-			<button
-				type="button"
-				aria-label={card.edit}
-				className="absolute top-4 right-4 rounded-full border border-ink-100 bg-primary-50 p-2 text-primary-500 transition-colors hover:bg-primary-100"
-			>
-				<Pencil aria-hidden="true" className="size-3.5" />
-			</button>
+			{/*
+			 * 編輯是個對話框而不是另一頁 —— 個人資料就這幾個欄位，換頁再換回來
+			 * 反而會把使用者帶離首頁。表單有 state 所以那個對話框是 Client
+			 * Component，獨立成一個檔案之後，這張卡本身維持 Server Component。
+			 */}
+			<EditProfileDialog
+				name={p.name}
+				avatar={p.avatar}
+				native={p.nativeCode}
+				learning={p.learningCode}
+				title={card.edit}
+				closeLabel={dict.common.close}
+				cancelLabel={dict.common.cancel}
+				dict={edit}
+				langDict={lang}
+			/>
 
 			<Avatar
 				src={p.avatar}
