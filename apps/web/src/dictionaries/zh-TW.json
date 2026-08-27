@@ -194,6 +194,23 @@
         },
         "demo": {
             "bio": "我喜歡語言、珍奶，還有週末爬山。想聊電影、旅行，或是日常生活都可以！🌿"
+        },
+        "schedule": {
+            "title": "我的行程",
+            "hostRoom": "開設聊天室",
+            "openSlot": "開放時段",
+            "open": "開放中",
+            "addSlot": "新增時段",
+            "seats": "人",
+            "prevWeek": "上一週",
+            "nextWeek": "下一週",
+            "legend": {
+                "open": "你的開放時段",
+                "session": "你的對話",
+                "hosted": "你開設的聊天室",
+                "add": "新增時段"
+            },
+            "timezone": "所有時間以你的當地時間顯示"
         }
     }
 }

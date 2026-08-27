@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import BrandBlock from "@/Components/Profile/BrandBlock";
 import InviteCard from "@/Components/Profile/InviteCard";
 import ProfileCard from "@/Components/Profile/ProfileCard";
+import ScheduleSection from "@/Components/Profile/Schedule/ScheduleSection";
 import SideNav from "@/Components/Profile/SideNav";
 import TabBar from "@/Components/Profile/TabBar";
 import TopBar from "@/Components/Profile/TopBar";
@@ -59,7 +60,7 @@ export default async function HomePage() {
 					</div>
 
 					<main className="flex flex-col gap-5">
-						<Placeholder title={soon.schedule} note={soon.note} className="min-h-64" />
+						<ScheduleSection />
 						<Placeholder title={soon.monsters} note={soon.note} className="min-h-96" />
 					</main>
 

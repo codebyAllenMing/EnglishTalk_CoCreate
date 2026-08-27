@@ -194,6 +194,23 @@
         },
         "demo": {
             "bio": "I love language, boba tea, and weekend hikes. Let's chat about movies, travel, or daily life! 🌿"
+        },
+        "schedule": {
+            "title": "My Schedule",
+            "hostRoom": "Host a room",
+            "openSlot": "Open a time slot",
+            "open": "Open",
+            "addSlot": "Add time slot",
+            "seats": "seats",
+            "prevWeek": "Previous week",
+            "nextWeek": "Next week",
+            "legend": {
+                "open": "Your open time",
+                "session": "Your sessions",
+                "hosted": "Room you host",
+                "add": "Add time slot"
+            },
+            "timezone": "All times shown in your local time"
         }
     }
 }

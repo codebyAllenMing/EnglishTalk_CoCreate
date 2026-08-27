@@ -1,0 +1,29 @@
+{
+    "weekStart": "2025-05-19",
+    "todayIndex": 1,
+    "slots": [
+        { "day": 0, "start": "12:00", "end": "14:00", "kind": "open" },
+        { "day": 0, "start": "16:00", "end": "18:00", "kind": "add" },
+        { "day": 0, "start": "20:00", "end": "22:00", "kind": "hosted" },
+
+        { "day": 1, "start": "16:00", "end": "17:00", "kind": "session",
+          "title": "English practice", "from": "en", "to": "zh",
+          "seats": { "taken": 2, "total": 2 } },
+        { "day": 1, "start": "20:00", "end": "21:30", "kind": "open" },
+
+        { "day": 2, "start": "12:00", "end": "13:30", "kind": "hosted" },
+        { "day": 2, "start": "16:00", "end": "17:30", "kind": "open" },
+
+        { "day": 3, "start": "20:00", "end": "21:30", "kind": "session",
+          "title": "Small group room", "from": "en", "to": "zh",
+          "seats": { "taken": 3, "total": 4 } },
+
+        { "day": 4, "start": "14:00", "end": "15:30", "kind": "open" },
+        { "day": 4, "start": "20:00", "end": "22:00", "kind": "hosted" },
+
+        { "day": 5, "start": "11:00", "end": "12:30", "kind": "open" },
+        { "day": 5, "start": "16:00", "end": "17:30", "kind": "hosted" },
+
+        { "day": 6, "start": "18:00", "end": "19:30", "kind": "open" }
+    ]
+}
