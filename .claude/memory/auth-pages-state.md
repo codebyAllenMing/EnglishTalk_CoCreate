@@ -32,7 +32,16 @@ metadata:
     但 curl / Node 測試要自己加 `Origin: http://localhost:6531`，不然每個請求都像失敗
   - Google 按鈕（`AuthDivider`）仍是純視覺
 - **路由 `/home` 而非 `/dashboard`**：landing 是給未登入者看的，`/home` 才是登入後的家
-- **`/home` 沒有任何存取保護**，直接打網址就能進。靜態匯出沒有 middleware，只能在 client 查 session 後導去 login —— 還沒做
+- **登入後區域的守門在 `app/[lang]/(app)/layout.tsx`**（2026-09-21）：home / settings / room 搬進 route group
+  `(app)`（網址不變），layout 只掛 `src/auth/SessionProvider.tsx` —— 在 client 打 `get-session`，
+  沒登入 `router.replace` 去 login；連不到 API 記成 `unreachable`、**不導走**（dev 沒開 api 與 GitHub Pages
+  都還能看 mock）。children 一律先 render 不等結果（等的話 hydration 對不上、每次進頁都閃）。
+  **這是體驗不是安全**，HTML 本來就是公開靜態檔。`useSession()` 給下游拿 user。
+- **登出在頂部列的帳號選單** `Components/Profile/AccountMenu.tsx`（client）：頭像 + 名字 / email（來自 session）+ 登出。
+  用 React state 不用 Popover API（top layer 定位對不準頭像，anchor positioning 瀏覽器沒齊）；
+  點外面 / Esc 關閉自己接。登出後導去 **landing** 不是 login。頭像以 ReactNode 從 TopBar 傳入，next/image 留在 server。
+- ⚠️ 搬目錄後 `.next/types` 與 `.next/dev/types` 的 validator 會指向舊路徑，tsc / build 直接炸；
+  `rm -rf .next/types .next/dev/types` 再跑就好。CI 全新 clone 沒這問題
 - ⚠️⚠️ **flex 垂直置中一律用 `justify-center-safe`（`justify-content: safe center`）。
   `justify-center` 不行，`my-auto` 也不行** —— 兩者在內容高於容器時都會往**上下兩端**
   溢出，捲動只能往下，被推到負座標的上半部永遠捲不回來。

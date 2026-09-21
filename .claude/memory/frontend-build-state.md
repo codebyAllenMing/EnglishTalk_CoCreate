@@ -64,8 +64,9 @@ metadata:
 0. **個人首頁 `/home`、個人設定 `/settings`、對話室 `/room/[code]` 都已完成**（2026-09-21），
    見 [[profile-page-state]] 與 [[talk-room-state]]。四張設計稿全部立起來了，
    剩下的是接後端與各頁的落差清單。
-   ⚠️ 這兩頁沒有任何存取保護，直接打網址就能進。登入 / 註冊已接 `apps/api`（2026-09-21，
-   見 [[auth-pages-state]] 與 [[auth-backend-plan]]），但 client 端的 session 檢查還沒做
+   登入 / 註冊已接 `apps/api`，登入後區域在 `(app)` route group、layout 在 client 查 session 沒登入導去 login、
+   頂部列帳號選單可登出（2026-09-21，見 [[auth-pages-state]] 與 [[auth-backend-plan]]）。
+   ⚠️ 守門是體驗不是安全：靜態 HTML 仍公開，連不到 API 時不導走
 0.5 登入 / 註冊頁**已完成**（見 [[auth-pages-state]]），
    與設計稿仍有落差清單未處理，最大一項是 Log in / Sign up 分頁切換
    —— 它會動到「兩個獨立路由 vs 單頁切換」的結構

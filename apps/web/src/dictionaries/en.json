@@ -193,7 +193,8 @@
         "topBar": {
             "notifications": "Notifications",
             "account": "Account menu",
-            "tokens": "Tokens"
+            "tokens": "Tokens",
+            "logout": "Log out"
         },
         "soon": {
             "note": "Under construction — this section is next."

@@ -193,7 +193,8 @@
         "topBar": {
             "notifications": "通知",
             "account": "帳號選單",
-            "tokens": "代幣"
+            "tokens": "代幣",
+            "logout": "登出"
         },
         "soon": {
             "note": "開發中 —— 下一步就做這區。"

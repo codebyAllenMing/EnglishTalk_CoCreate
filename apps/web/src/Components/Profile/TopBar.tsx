@@ -1,9 +1,10 @@
-import { Bell, ChevronDown } from "lucide-react";
+import { Bell } from "lucide-react";
 import LocaleSwitch from "@/Components/LocaleSwitch";
 import Avatar from "@/Components/UI/Avatar";
 import CountBadge from "@/Components/UI/CountBadge";
 import TokenCount from "@/Components/UI/TokenCount";
 import { getDictionary, getLocale, locales } from "@/dictionaries";
+import AccountMenu from "./AccountMenu";
 import { FAKE_PROFILE } from "./profileData";
 
 /**
@@ -11,7 +12,7 @@ import { FAKE_PROFILE } from "./profileData";
  *
  * 語言切換放最左而不是最右：頭像留在最右角是通用慣例，使用者找帳號選單會往那裡看。
  *
- * 通知與帳號選單都還沒有內容 —— 展開需要 client state，等真的有東西可展開再說。
+ * 帳號選單（AccountMenu，client）目前只有登出。通知還沒有內容，等真的有東西可展開再說。
  */
 export default async function TopBar() {
 	const dict = await getDictionary();
@@ -43,14 +44,12 @@ export default async function TopBar() {
 				</span>
 			</button>
 
-			<button
-				type="button"
-				aria-label={topBar.account}
-				className="flex items-center gap-1 text-ink-400 transition-colors hover:text-primary-600"
-			>
-				<Avatar src={p.avatar} className="w-9" sizes="36px" />
-				<ChevronDown aria-hidden="true" className="size-4" />
-			</button>
+			<AccountMenu
+				locale={locale}
+				label={topBar.account}
+				logoutLabel={topBar.logout}
+				avatar={<Avatar src={p.avatar} className="w-9" sizes="36px" />}
+			/>
 		</div>
 	);
 }

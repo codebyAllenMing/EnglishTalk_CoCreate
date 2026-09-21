@@ -49,3 +49,31 @@ export const signIn = (email: string, password: string) =>
 
 export const signUp = (name: string, email: string, password: string) =>
 	post("/api/auth/sign-up/email", { name, email, password });
+
+export type SessionUser = {
+	id: string;
+	name: string;
+	email: string;
+	image: string | null;
+};
+
+/**
+ * 目前登入的使用者；沒登入回 null（better-auth 回 200 + `null`）。
+ * ⚠️ 連不到 API 會 throw，不會假裝成「沒登入」—— 呼叫端（SessionProvider）決定怎麼辦。
+ */
+export async function getSession(): Promise<SessionUser | null> {
+	const response = await fetch(apiUrl("/api/auth/get-session"), { credentials: "include" });
+	if (!response.ok) throw new Error(`get-session responded ${response.status}`);
+	const data: { user: SessionUser } | null = await response.json();
+	return data?.user ?? null;
+}
+
+/** 清掉 server 端的 session 與 cookie。better-auth 的 POST 一定要 JSON body，空物件也要給 */
+export async function signOut(): Promise<void> {
+	await fetch(apiUrl("/api/auth/sign-out"), {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		credentials: "include",
+		body: "{}",
+	});
+}
