@@ -1,5 +1,6 @@
 packages:
   - "apps/*"
+  - "packages/*"
 
 # pnpm 11 用 allowBuilds 取代了舊的 onlyBuiltDependencies，舊鍵已不生效。
 # 未列出的套件不會執行 build script，且 pnpm 會直接以 ERR_PNPM_IGNORED_BUILDS 中止 ——
@@ -8,5 +9,9 @@ packages:
 # unrs-resolver 是 eslint-config-next 的傳遞依賴（原生 resolver）。
 # 各平台的 prebuilt binary 由 optionalDependencies 提供（@unrs/resolver-binding-*），
 # build script 只是取不到 prebuilt 時的 fallback，因此設 false 不執行。
+#
+# esbuild 是 tsx 與 drizzle-kit 的傳遞依賴，同樣的道理：binary 由 @esbuild/darwin-arm64 之類的
+# optionalDependencies 提供，postinstall 只是把它複製到 bin/ 加速啟動，不跑也能用。
 allowBuilds:
+  esbuild: false
   unrs-resolver: false

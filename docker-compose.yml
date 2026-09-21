@@ -1,0 +1,34 @@
+# dev 專用：Postgres + Mailpit（假 SMTP，不寄真信）。
+# prod 不用這份 —— Postgres 在 Neon、寄信走 API（見 .claude/memory/auth-backend-plan.md）。
+#
+#   docker compose up -d      啟動（背景）
+#   docker compose down       停止（資料留在 volume）
+#   docker compose down -v    停止並清空資料庫
+name: monstertalk
+
+services:
+  postgres:
+    # 跟 Neon 的版本對齊，dev 與 prod 跑同一個大版
+    image: postgres:17-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: monstertalk
+      POSTGRES_PASSWORD: monstertalk
+      POSTGRES_DB: monstertalk
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U monstertalk -d monstertalk"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mailpit:
+    image: axllent/mailpit
+    ports:
+      - "8025:8025" # 收件匣 UI  http://localhost:8025
+      - "1025:1025" # SMTP
+
+volumes:
+  pgdata:

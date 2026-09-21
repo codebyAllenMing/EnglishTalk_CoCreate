@@ -7,8 +7,13 @@
     },
     "scripts": {
         "dev": "pnpm --filter web dev",
+        "dev:api": "pnpm --filter api dev",
         "build": "pnpm --filter web build",
         "start": "pnpm --filter web start",
-        "lint": "pnpm --filter web lint"
+        "lint": "pnpm --filter web lint",
+        "typecheck": "pnpm --filter api --filter @monstertalk/auth --filter @monstertalk/db typecheck",
+        "db:generate": "pnpm --filter @monstertalk/db db:generate",
+        "db:migrate": "pnpm --filter @monstertalk/db db:migrate",
+        "db:studio": "pnpm --filter @monstertalk/db db:studio"
     }
 }
