@@ -26,8 +26,13 @@ metadata:
 cp .env.example .env.local        # 填 BETTER_AUTH_SECRET（openssl rand -base64 32）
 docker compose up -d              # Postgres 5432、Mailpit 8025
 corepack pnpm db:migrate          # 套 migration（改 schema 後先 db:generate）
+corepack pnpm db:seed             # 11 個測試帳號（可重跑，已存在就跳過）
 corepack pnpm dev:api             # tsx watch，--env-file 讀 repo 根的 .env.local
 ```
+
+**測試帳號**（`apps/api/src/seed.ts`）：`allen / bobby / luna / alex / mia / sunny / tao / yuki / ryan / nina / leo`
+各 `<id>@example.com`，密碼一律 `password123`。名字對應前端 mock 的 11 隻怪獸，之後個人資料進 DB 就填這些人。
+seed 走 `auth.api.signUpEmail`（server-side）所以 hash 跟真註冊一樣；DATABASE_URL 不是 localhost 直接拒跑。
 前端 6531、api 4000；cookie 在 localhost 不分 port，不需要 tunnel。Mac mini 那條不用。
 
 ## 踩過的坑（2026-09-21）
@@ -36,6 +41,9 @@ corepack pnpm dev:api             # tsx watch，--env-file 讀 repo 根的 .env.
   ⚠️ lockfile 一旦含了太新的版本，之後 `pnpm install` 會在重解**之前**就中止；解法是 `git checkout pnpm-lock.yaml` 讓新套件重解，web 的鎖定不動。
 - `allowBuilds` 新增 `esbuild: false`（tsx 與 drizzle-kit 的傳遞依賴，binary 由 optionalDependencies 提供）。已用 scratchpad 複本跑 `--frozen-lockfile` 全新安裝驗過。
 - **tsx 會把 `--env-file` 轉給 Node**，所以 api 的 script 不需要 dotenv。drizzle-kit 只讀 cwd 的 `.env`，`drizzle.config.ts` 用 `process.loadEnvFile("../../.env.local")`（Node 內建，路徑相對於 `packages/db`，透過 `pnpm --filter` 跑就對）。
+- 「已存在」在 better-auth 有**兩個碼**：HTTP 端點回 `USER_ALREADY_EXISTS`，server-side `auth.api.signUpEmail` 丟的
+  APIError 是 `USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL`。判斷用 `isAPIError`（從 `@monstertalk/auth` 再匯出，
+  api 不直接相依 better-auth —— pnpm 嚴格隔離本來也 import 不到）。
 - better-auth 的 POST 端點**一定要 `Content-Type: application/json` 且有 JSON body**，連 sign-out 也要 `-d '{}'`，否則 415 / 400。
 - **沒有 `Origin` header 的 POST 直接 403 `MISSING_OR_NULL_ORIGIN`**（CSRF 保護）。瀏覽器一定帶；curl / Node 測試要自己加。
 - cookie 兩顆都是 HttpOnly：`better-auth.session_token`（DB 那列）與 `better-auth.session_data`（五分鐘 cookieCache）。
@@ -76,8 +84,8 @@ wrangler 4.86 OAuth 已登入（`water6240@gmail.com`）；cloudflared 有憑證
 
 ## 未定 / 下一步
 
-- ~~前端接 API~~ **已接（2026-09-21）**，見 [[auth-pages-state]]。還沒做的：`/home` 在 client 查 session
-  （`GET /api/auth/get-session`）沒登入就導去 login；登出按鈕（`POST /api/auth/sign-out`，body 要 `{}`）
+- ~~前端接 API~~ ~~/home 查 session、登出~~ **都做完了（2026-09-21）**，見 [[auth-pages-state]]。
+  登入流程剩的：已登入的人打 /login 沒有導回 /home；個人資料卡與頂部列的名字仍是 FAKE_PROFILE（等 schema）
 - DB schema（除了 users）另開一場：個人資料欄位、房間預約、Word Bank、點數 ledger
 - vault 的 `tech-inventory` 要改 —— **使用者說一聲才動**
 
