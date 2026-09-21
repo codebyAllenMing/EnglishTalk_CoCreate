@@ -1,0 +1,31 @@
+{
+    "code": "HAPPY123",
+    "kind": "casual",
+    "startsAt": "2026-09-22T20:00",
+    "durationMinutes": 20,
+    "participants": [
+        { "id": "allen", "name": "Allen", "lang": "zh", "me": true },
+        { "id": "luna", "name": "Luna", "lang": "en" },
+        { "id": "mia", "name": "Mia", "lang": "zh" },
+        { "id": "sunny", "name": "Sunny", "lang": "en" }
+    ],
+    "messages": [
+        { "id": "m1", "from": "allen", "at": "20:02", "text": "我很愛珍珠奶茶！" },
+        { "id": "m2", "from": "luna", "at": "20:03", "text": "That's great! We usually say \"I love bubble tea!\" or \"I'm really into bubble tea!\" Both sound natural. 😊" },
+        { "id": "m3", "from": "allen", "at": "20:04", "text": "Oh I see! I love bubble tea!" },
+        { "id": "m4", "from": "luna", "at": "20:05", "text": "Yes! You can also say \"Bubble tea is my favorite!\" Super common! 👍" }
+    ],
+    "topics": [
+        { "en": "Weekend plans", "zh": "週末計畫" },
+        { "en": "A food you could eat every day", "zh": "每天吃都不膩的食物" },
+        { "en": "The last thing that made you laugh", "zh": "最近一次讓你大笑的事" },
+        { "en": "A place you want to visit", "zh": "想去的一個地方" },
+        { "en": "Your morning routine", "zh": "你的早晨例行公事" },
+        { "en": "A skill you want to learn", "zh": "想學的一項技能" }
+    ],
+    "words": [
+        { "id": "w1", "word": "obsessed", "pos": "adj", "meaning": "really like something", "example": "I'm obsessed with bubble tea.", "lang": "en" },
+        { "id": "w2", "word": "flavor", "pos": "n", "meaning": "taste", "example": "What flavor do you like?", "lang": "en" },
+        { "id": "w3", "word": "shop", "pos": "n", "meaning": "store / place to buy", "example": "We should try that new bubble tea shop!", "lang": "en" }
+    ]
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useId, useRef, type CSSProperties, type MouseEvent, type ReactNode } from "react";
+import { useEffect, useId, useRef, type CSSProperties, type MouseEvent, type ReactNode } from "react";
 
 type DialogAction = {
 	/**
@@ -20,8 +20,11 @@ type DialogAction = {
 };
 
 type Props = {
-	/** 觸發按鈕的內容。由 Server Component 渲染好傳進來，呼叫端不必變成 client */
-	trigger: ReactNode;
+	/**
+	 * 觸發按鈕的內容。由 Server Component 渲染好傳進來，呼叫端不必變成 client。
+	 * 受控模式（給了 open）可以不給 —— 開關由呼叫端決定，不需要按鈕。
+	 */
+	trigger?: ReactNode;
 	/**
 	 * 觸發按鈕的無障礙名稱。**只有圖示的觸發鈕必填** —— 例如個人資料卡右上角
 	 * 那支筆，沒有它螢幕閱讀器只會唸到「按鈕」。有文字的 trigger 不用給。
@@ -64,6 +67,17 @@ type Props = {
 	 * 各補一次（那樣一定會漏掉 Esc）。
 	 */
 	onClose?: () => void;
+	/**
+	 * 受控模式。給了就由呼叫端決定開關，trigger 不必給。
+	 *
+	 * 用在「一份清單、每列都能開同一個對話框」的場景（聊天訊息點了存單字）——
+	 * 每列各掛一個 Dialog 會在 DOM 裡塞 N 份對話框，清單一長就是浪費；
+	 * 改成清單只記「選中哪一列」，一個受控的 Dialog 跟著開關。
+	 *
+	 * ⚠️ 給 open 就要一起給 onClose 把 state 同步回來 —— Esc 與 ✕ 會直接關掉原生
+	 *    <dialog>，上層不知道的話，state 還是 true、下次就開不起來。
+	 */
+	open?: boolean;
 	className?: string;
 };
 
@@ -102,6 +116,7 @@ export default function Dialog({
 	footer,
 	closeOnBackdrop = true,
 	onClose,
+	open,
 	className = "max-w-md",
 }: Props) {
 	const ref = useRef<HTMLDialogElement>(null);
@@ -115,6 +130,15 @@ export default function Dialog({
 
 	const close = () => ref.current?.close();
 
+	// 受控模式：state 變了才碰原生 API，已經是目標狀態就不重複呼叫
+	// （對已開的 dialog 再 showModal() 會丟 InvalidStateError）
+	useEffect(() => {
+		const el = ref.current;
+		if (open === undefined || !el) return;
+		if (open && !el.open) el.showModal();
+		else if (!open && el.open) el.close();
+	}, [open]);
+
 	const closeIfBackdrop = (event: MouseEvent<HTMLDialogElement>) => {
 		if (!closeOnBackdrop) return;
 		if (event.target === ref.current) close();
@@ -122,15 +146,17 @@ export default function Dialog({
 
 	return (
 		<>
-			<button
-				type="button"
-				aria-label={triggerLabel}
-				className={triggerClassName}
-				style={triggerStyle}
-				onClick={() => ref.current?.showModal()}
-			>
-				{trigger}
-			</button>
+			{trigger !== undefined && (
+				<button
+					type="button"
+					aria-label={triggerLabel}
+					className={triggerClassName}
+					style={triggerStyle}
+					onClick={() => ref.current?.showModal()}
+				>
+					{trigger}
+				</button>
+			)}
 
 			<dialog
 				ref={ref}

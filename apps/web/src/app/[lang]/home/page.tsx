@@ -3,6 +3,7 @@ import AppShell from "@/Components/Profile/AppShell";
 import InviteCard from "@/Components/Profile/InviteCard";
 import MonstersSection from "@/Components/Profile/Monsters/MonstersSection";
 import ProfileCard from "@/Components/Profile/ProfileCard";
+import RoomEndedNotice from "@/Components/Profile/RoomEndedNotice";
 import ScheduleSection from "@/Components/Profile/Schedule/ScheduleSection";
 import { getDictionary } from "@/dictionaries";
 
@@ -23,7 +24,8 @@ export async function generateMetadata(): Promise<Metadata> {
  * 殼（側邊欄、頂部列、TabBar）在 AppShell。個人資料卡與邀請卡是這一頁特有的：
  * 桌機在側邊欄，窄版分別落到主內容的上方與下方 —— 所以各傳兩次。
  */
-export default function HomePage() {
+export default async function HomePage() {
+	const dict = await getDictionary();
 	return (
 		<AppShell
 			current="home"
@@ -34,6 +36,8 @@ export default function HomePage() {
 		>
 			<ScheduleSection />
 			<MonstersSection />
+			{/* 從結束的房間被送回來時才會彈（看 ?ended=） */}
+			<RoomEndedNotice dict={dict.room} closeLabel={dict.common.close} confirmLabel={dict.common.confirm} />
 		</AppShell>
 	);
 }

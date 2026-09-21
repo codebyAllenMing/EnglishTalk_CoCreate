@@ -61,8 +61,9 @@ metadata:
 
 ## 待辦
 
-0. **個人首頁 `/home` 與個人設定 `/settings` 已完成**（2026-09-21），見 [[profile-page-state]]。
-   登入後的殼在 `AppShell`，下一頁（聊天室 `assets/design/聊天室.jpg`）直接套。
+0. **個人首頁 `/home`、個人設定 `/settings`、對話室 `/room/[code]` 都已完成**（2026-09-21），
+   見 [[profile-page-state]] 與 [[talk-room-state]]。四張設計稿全部立起來了，
+   剩下的是接後端與各頁的落差清單。
    ⚠️ 這兩頁沒有任何存取保護，登入是假的（見 `AuthForm` 的 `FAKE_AUTH`），
    直接打網址就能進
 0.5 登入 / 註冊頁**已完成**（見 [[auth-pages-state]]），

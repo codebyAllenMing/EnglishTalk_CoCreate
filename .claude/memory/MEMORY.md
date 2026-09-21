@@ -8,3 +8,5 @@
 - [素材產製工具鏈](asset-pipeline.md) — Codia 出 SVG、ChatGPT 出 PNG，入庫前一律程式化調色
 - [登入註冊頁狀態](auth-pages-state.md) — 三頁已完成、假登入、RWD 踩坑，以及還沒套用的插圖素材
 - [個人首頁狀態](profile-page-state.md) — 設計稿數據、已定決策與 11 隻頭像素材，開工前的完整脈絡
+- [對話室狀態](talk-room-state.md) — /room/[code] 的 mock、計時與 Word Bank 的定案、接後端的邊界
+- [後端第一步：登入與 DB 的定案](auth-backend-plan.md) — better-auth + Hono + Drizzle + Postgres(Docker)、httpOnly cookie、workspace 拆法，尚未動工
