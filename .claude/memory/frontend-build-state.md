@@ -61,10 +61,9 @@ metadata:
 
 ## 待辦
 
-0. **下一步：個人首頁的 My Schedule 週曆**。骨架與側邊欄已完成（be1f453），
-   見 [[profile-page-state]]。週曆決定**自己畫不用套件** —— 沒有事件重疊，
-   套件最主要的價值用不到；30 分鐘粒度用 CSS Grid 的 `grid-row: span N` 直接對應
-   ⚠️ `/[lang]/home` 沒有任何存取保護，登入是假的（見 `AuthForm` 的 `FAKE_AUTH`），
+0. **個人首頁 `/home` 與個人設定 `/settings` 已完成**（2026-09-21），見 [[profile-page-state]]。
+   登入後的殼在 `AppShell`，下一頁（聊天室 `assets/design/聊天室.jpg`）直接套。
+   ⚠️ 這兩頁沒有任何存取保護，登入是假的（見 `AuthForm` 的 `FAKE_AUTH`），
    直接打網址就能進
 0.5 登入 / 註冊頁**已完成**（見 [[auth-pages-state]]），
    與設計稿仍有落差清單未處理，最大一項是 Log in / Sign up 分頁切換

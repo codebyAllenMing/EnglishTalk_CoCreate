@@ -1,43 +1,34 @@
-import { BarChart3, Star } from "lucide-react";
+import { BarChart3, Pencil, Star } from "lucide-react";
+import Link from "next/link";
 import Avatar from "@/Components/UI/Avatar";
 import Card from "@/Components/UI/Card";
 import LangBadge from "@/Components/UI/LangBadge";
 import TokenCount from "@/Components/UI/TokenCount";
-import { getDictionary } from "@/dictionaries";
-import { FAKE_AVATAR_CHOICES } from "./avatarChoices";
-import EditProfileDialog from "./EditProfileDialog";
+import { getDictionary, getLocale } from "@/dictionaries";
 import { FAKE_PROFILE } from "./profileData";
 
 /**
  * 個人資料卡：頭像、名字、語言、程度、評價、代幣、自我介紹。
  *
- * 編輯按鈕沒有行為 —— 個人資料編輯頁尚未存在，照既有決策不給連結。
+ * 右上角的筆連到 /settings。原本做成對話框（含巢狀的選擇怪獸），
+ * 使用者 2026-09-21 與夥伴討論後改成獨立頁面 —— 九個欄位的表單本來就不該
+ * 塞在對話框裡。
  */
 export default async function ProfileCard() {
 	const dict = await getDictionary();
-	const { card, lang, level, demo, edit, picker } = dict.profile;
+	const locale = await getLocale();
+	const { card, lang, level, demo } = dict.profile;
 	const p = FAKE_PROFILE;
 
 	return (
 		<Card className="relative p-5">
-			{/*
-			 * 編輯是個對話框而不是另一頁 —— 個人資料就這幾個欄位，換頁再換回來
-			 * 反而會把使用者帶離首頁。表單有 state 所以那個對話框是 Client
-			 * Component，獨立成一個檔案之後，這張卡本身維持 Server Component。
-			 */}
-			<EditProfileDialog
-				name={p.name}
-				avatar={p.avatar}
-				native={p.nativeCode}
-				learning={p.learningCode}
-				title={card.edit}
-				closeLabel={dict.common.close}
-				cancelLabel={dict.common.cancel}
-				dict={edit}
-				langDict={lang}
-				pickerDict={picker}
-				choices={FAKE_AVATAR_CHOICES}
-			/>
+			<Link
+				href={`/${locale}/settings`}
+				aria-label={card.edit}
+				className="absolute top-4 right-4 rounded-full border border-ink-100 bg-primary-50 p-2 text-primary-500 transition-colors hover:bg-primary-100"
+			>
+				<Pencil aria-hidden="true" className="size-3.5" />
+			</Link>
 
 			<Avatar
 				src={p.avatar}

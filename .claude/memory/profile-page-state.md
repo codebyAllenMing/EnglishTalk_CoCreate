@@ -24,13 +24,15 @@ metadata:
 
 - **這輪只做骨架 + 側邊欄**，週曆與 Find Monsters 之後分批
 - **手機版用底部 tab bar**（不是漢堡抽屜）—— 純 CSS 可切，不需要 client state。
-  ⚠️ **2026-08-27 修正**：導覽拿掉 `My Schedule` 與 `Find Monsters`
-  （使用者：「就已經在畫面常駐了」，導覽再列一次是指向自己）。
-  只剩 `Home / Rooms / Messages / Reputation / Settings` 五項，tab bar 塞得下全部 ——
-  原本用來挑五項的 `inTabBar` 旗標連同它的理由一起拿掉，桌機與手機顯示同一組
+  ⚠️ **導覽已改過兩次，現行版本照 `Profile Setting.jpg`**（使用者 2026-09-21 拍板）：
+  `Home / My Schedule / Find Monsters / Rooms / History / Word Bank / Settings` 七項。
+  History 與 Word Bank 是新的，Messages 與 Reputation 拿掉。
+  中間曾因「已經在畫面常駐」移除 My Schedule / Find Monsters —— 那個理由只在 `/home`
+  成立，多了設定頁之後它們回來了，連到 `/home#schedule` / `/home#monsters` 錨點。
+  `inTabBar` 旗標也回來了（七項只放得下五項，History / Word Bank 只在桌機）
 - **不用 Dashboard 這個字**。路由維持 `/[lang]/home`（`AuthForm` 的 redirectTo 不用改），
   選單第一項是 `Home` / 「個人首頁」—— 使用者要的是「跟個人首頁相關的單字」
-- **側邊欄五項全是純視覺不給連結**，照既有的「不存在的頁面不給連結」
+- **側邊欄沒有 href 的項目不給連結**（Rooms / History / Word Bank），照既有的「不存在的頁面不給連結」
 - **假數據命名 `FAKE_PROFILE`**，與 `FAKE_STATS` / `FAKE_TESTIMONIALS` 同一套
 
 ## 已完成
@@ -43,61 +45,53 @@ metadata:
 `overflow-hidden` 的圓框會把角、耳朵、揮手的手全切掉。圓與線上點用百分比定位，
 同一個元件才能從頂部列 36px 用到個人卡 128px。
 
-### 編輯個人資料（設計稿 `assets/design/個人主頁-編輯.png`）
+### 個人設定頁 `/[lang]/settings`（設計稿 `assets/design/Profile Setting.jpg`）
 
-**是對話框不是另一頁**（使用者 2026-08-27）：個人資料就這幾個欄位，換頁再換回來
-反而會把使用者帶離首頁。`Components/Profile/EditProfileDialog.tsx`（client）。
+**2026-09-21 改版**：原本是個人資料卡上的對話框（含巢狀的選擇怪獸），使用者與夥伴討論後
+改成獨立頁面。`EditProfileDialog.tsx` 與 `MonsterPicker.tsx` **已刪除**，字典的
+`profile.edit` / `profile.picker` 換成 `profile.settings`。`avatarChoices.ts` 留著給怪獸方格用。
 
-內容照設計稿：頭像（右下一顆換頭像的筆）、`Name` 輸入框 + `6 / 20` 計數器、
-兩個**唯讀**的語言列。**沒有程度與自我介紹** —— 設計稿就只有這幾項，沒有自己補。
+檔案：`app/[lang]/settings/page.tsx`（server，餵初始值）、
+`Components/Profile/Settings/SettingsForm.tsx`（client，整張表單）、
+`Components/UI/CountryFlag.tsx`、`public/flags/{tw,us}.svg`。
 
-⚠️ 母語與學習中的語言鎖住（「Can't change 🔒」）是**產品規則不是偷懶**：
-這兩個值決定配對與可進入的房間，改掉等於換一個人，累積的評價與紀錄就對不上。
-呈現用 `<p>` 而不是 disabled 的 `<input>` —— 它不是「暫時不能填的欄位」，
-是一個不屬於這張表單的既定事實。
+**殼抽成 `Components/Profile/AppShell.tsx`**（側邊欄 + 頂部列 + TabBar），`/home` 與
+`/settings` 都用它。⚠️ **是元件不是 layout.tsx**：側邊欄的內容每頁不同（首頁有個人資料卡
+與邀請卡、設定頁只有導覽 —— 你正在編輯的東西不該同時顯示在旁邊），Next 的 layout
+拿不到子頁的 props，為兩個 slot 走 parallel routes 太重。slot：`heading`（桌機在頂部列
+左側、窄版落到主內容上方）、`beforeNav` / `afterNav`（桌機側邊欄）、`mobileTop` /
+`mobileBottom`。導覽高亮由頁面用 `current` 傳入，不讀路由，整個側邊欄維持 server。
 
-⚠️ **儲存目前 disabled**（沒有 API，同「開設聊天室」「建立時段」）。輸入框與計數器
-是真的能用的。`closeOnBackdrop={false}` —— 表單填到一半誤觸遮罩會丟掉輸入。
+**已定的產品規則**（使用者 2026-09-21）：
+- **母語可以改**（前一版對話框的稿是鎖住的，這版是下拉，以這版為準）
+- 國家只有兩個：`TW` / `US`，名稱用 `Intl.DisplayNames({ type: "region" })` 依語系產生，
+  不進字典
+- 怪獸方格**用現有的上半身頭像**，不照設計稿出全身像
+- 預覽個人頁 = Find Monsters 的詳情（`MonsterDetails`，從 `MonsterPanel` 抽出來的），
+  把表單目前的值餵進去；房間人數與下次有空不在表單上，先用假值
 
-表單有 state 所以對話框必然是 client，但**獨立成一個檔案之後 `ProfileCard` 維持
-Server Component**，進 client bundle 的只有這個對話框。
+**我自己決定的**（使用者沒反對就照這樣）：
+- 程度加了 `fluent`（設計稿母語程度是 Fluent），母語程度與學習程度共用同一個四段量表。
+  `LevelCode` 因此多一個值，Find Monsters 的篩選下拉自動多出「流利」
+- 母語與學習語言**互斥自動翻轉**：只有兩種語言，改其中一個撞到另一個就把另一個翻過去
+- 性別四項、興趣十二項固定字彙（`settings.genderOptions` / `interestOptions`），
+  興趣用標籤 + 「新增興趣…」下拉，設計稿只畫箭頭、這裡把字露出來
+- 十一隻怪獸用 grid 折行不橫向捲動；表單 md 以上六欄 grid（名稱 / 國家 / 性別各 2、
+  語言與程度各 3、興趣與自我介紹 6），以下單欄
+- 顯示名稱 20 字、自我介紹 150 字照稿
+- Cancel 是連回 `/home` 的 Link；**儲存變更 disabled**（沒有 API）
 
-### 選擇怪獸（設計稿 `assets/design/個人主頁-選擇怪獸圖.png`）
-
-編輯對話框裡頭像右下那顆筆打開的 —— **對話框裡再開一個對話框**。
-`Components/Profile/MonsterPicker.tsx`（client）+ `avatarChoices.ts`（假資料）。
-
-原生 `<dialog>` 撐得住巢狀：`showModal()` 會把元素提升到 **top layer**，
-不受外層 `overflow-hidden` 裁切，Esc 也只關最上面那一個。外層編輯對話框已經是
-`closeOnBackdrop={false}`，內層冒泡上去的點擊不會誤關它。
-
-⚠️⚠️ **選取狀態用「`null` 代表沒動過」，不要直接複製 `value`。**
-按「使用這隻怪獸」的順序是 `onChange` → `close`，而 `close` 觸發的 `onClose` 拿到的是
-**那一輪 render 的 `value`**（還是舊值）—— 直接 `setPicked(value)` 會把剛選好的蓋回去。
-退回 `null`、顯示時 fallback 到最新的 `value` 就沒這問題。
-
-**換頭像是真的會動的**：那只是 client state，不需要 API，所以編輯對話框裡的預覽
-會立刻換。只有「儲存變更」需要後端，仍然 disabled；關閉對話框時連同名字一起還原。
-
-⚠️ **未擁有的怪獸先略過**（使用者 2026-08-27：「其中有鎖住的先選擇忽略」）。
-設計稿有 Rocky / Ziggy 兩隻灰掉上鎖的，那要等「用代幣解鎖怪獸」的規則定案，
-也還沒有那兩隻的圖。`owned` 欄位、三顆篩選 chip、灰階與鎖頭的 UI 都照設計稿做好了，
-資料出現 `false` 的那天會直接動起來；目前「未擁有」那一頁是空狀態。
-
-⚠️ 挑選清單的 id 與 Find Monsters 的十隻**刻意重疊** —— 怪獸是角色、圖是共用的，
-設計稿的清單裡就是 Luna / Bobby / Alex 這些名字。但兩份清單描述的是不同的東西
-（一份是可選的造型、一份是別的使用者），所以**沒有**從 `FAKE_MONSTERS` 推導。
-`allen` 排第一是因為那是登入者目前用的 —— **挑選清單一定要含得住傳進來的值**，
-不然「目前選中」根本畫不出來。
-
-設計稿底部的分頁圓點沒做（只有一頁的量），同「Show more monsters」的處理。
+⚠️ **國旗不用 emoji**：Windows 沒有國旗字型，🇹🇼 會顯示成「TW」兩個字母。
+`public/flags/` 是**手動管理**的（SVG 不經 `build_icons.py`），目前兩個檔是佔位圖
+（灰底 + 代碼），等使用者下載圓形國旗 SVG 覆蓋。語言欄位用全站既有的 `中` / `EN` 徽章，
+不用國旗（中文 ≠ 台灣旗）。
 
 ### `Dialog` 這一輪的三處改動
 
 ⚠️ **標題 id 改用 `useId()`**（修掉既有 bug）。原本寫死 `id="dialog-title"`，
 但同一頁上的 Dialog 不只一個（週曆每張卡片一個、`ProfileCard` 在桌機與手機版型
 各一個），`aria-labelledby` 會一律指到 DOM 裡的第一個 —— 每個對話框都被螢幕閱讀器
-唸成同一個標題，HTML 也不合法。`EditProfileDialog` 的輸入框 id 同理。
+唸成同一個標題，HTML 也不合法。設定頁表單的輸入框 id 同理（`useId()` 派生）。
 
 新增 `triggerLabel`：**只有圖示的觸發鈕**（那支筆）沒有它只會被唸成「按鈕」。
 

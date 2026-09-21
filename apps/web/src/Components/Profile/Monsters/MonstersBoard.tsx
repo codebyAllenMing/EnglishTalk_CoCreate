@@ -52,7 +52,7 @@ export default function MonstersBoard({ monsters, locale, dict, langDict, levelD
 	}, [selected]);
 
 	return (
-		<div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:gap-5">
+		<div id="monsters" className="flex scroll-mt-4 flex-col gap-4 xl:flex-row xl:items-start xl:gap-5">
 			<Card className="min-w-0 flex-1 p-4 sm:p-5">
 				<header className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-3">
 					<h2 className="flex items-center gap-2.5 text-lg font-extrabold">

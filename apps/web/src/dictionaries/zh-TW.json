@@ -154,9 +154,11 @@
         },
         "nav": {
             "home": "個人首頁",
+            "schedule": "我的行程",
+            "monsters": "尋找怪獸",
             "rooms": "聊天室",
-            "messages": "訊息",
-            "reputation": "評價",
+            "history": "歷史紀錄",
+            "wordBank": "單字庫",
             "settings": "設定"
         },
         "card": {
@@ -174,7 +176,8 @@
         "level": {
             "beginner": "初級",
             "intermediate": "中級",
-            "advanced": "進階"
+            "advanced": "進階",
+            "fluent": "流利"
         },
         "invite": {
             "title": "邀請朋友，賺取代幣！",
@@ -244,22 +247,53 @@
                 "sayHello": "打聲招呼"
             }
         },
-        "edit": {
-            "hint": "更新你的個人資訊",
-            "name": "名字",
+        "settings": {
+            "title": "個人設定",
+            "hint": "多告訴我們一點，才能幫你配到更合適的夥伴！",
+            "monster": {
+                "title": "1. 選擇你的怪獸",
+                "hint": "挑一隻代表你的怪獸！"
+            },
+            "basic": {
+                "title": "2. 基本資料",
+                "hint": "讓我們多認識你一點！"
+            },
+            "optional": "（選填）",
+            "displayName": "顯示名稱",
+            "country": "國家 / 地區",
+            "gender": "性別",
             "native": "母語",
-            "learning": "學習中的語言",
-            "locked": "無法變更",
-            "save": "儲存變更"
-        },
-        "picker": {
-            "title": "選擇你的怪獸",
-            "hint": "挑一隻代表你的怪獸",
-            "all": "全部怪獸",
-            "owned": "已擁有",
-            "locked": "未擁有",
-            "use": "使用這隻怪獸",
-            "empty": "目前所有怪獸你都已經擁有了。"
+            "nativeLevel": "母語程度",
+            "learning": "想學的語言",
+            "learningLevel": "學習語言程度",
+            "interests": "興趣",
+            "addInterest": "新增興趣…",
+            "removeInterest": "移除 {name}",
+            "bio": "自我介紹",
+            "bioPlaceholder": "跟其他怪獸簡單介紹一下自己…",
+            "preview": "預覽個人頁",
+            "previewHint": "其他怪獸看到你會是這個樣子。",
+            "save": "儲存變更",
+            "genderOptions": {
+                "male": "男性",
+                "female": "女性",
+                "nonBinary": "非二元",
+                "preferNot": "不透露"
+            },
+            "interestOptions": {
+                "travel": "旅行",
+                "movies": "電影",
+                "music": "音樂",
+                "art": "藝術",
+                "fitness": "健身",
+                "food": "美食",
+                "gaming": "遊戲",
+                "reading": "閱讀",
+                "tech": "科技",
+                "sports": "運動",
+                "pets": "寵物",
+                "photography": "攝影"
+            }
         }
     },
     "common": {

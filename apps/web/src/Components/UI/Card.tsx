@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 type Props = {
 	children: ReactNode;
 	className?: string;
+	/** 給側邊欄的錨點連結用（/home#schedule） */
+	id?: string;
 };
 
 /**
@@ -11,9 +13,10 @@ type Props = {
  * 抽出來不是為了少打字，而是這五塊會同時出現在同一個畫面上，
  * 圓角或陰影差一點點就會看得出來不是同一套系統。
  */
-export default function Card({ children, className = "" }: Props) {
+export default function Card({ children, className = "", id }: Props) {
 	return (
 		<section
+			id={id}
 			className={`rounded-2xl bg-surface shadow-[0_1px_2px_rgba(13,24,82,.04),0_8px_24px_rgba(13,24,82,.05)] ${className}`}
 		>
 			{children}

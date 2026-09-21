@@ -32,7 +32,7 @@ export default async function ScheduleSection() {
 	);
 
 	return (
-		<Card className="p-4 sm:p-5">
+		<Card id="schedule" className="scroll-mt-4 p-4 sm:p-5">
 			<ScheduleBoard
 				initialWeekStart={schedule.weekStart}
 				slots={schedule.slots}

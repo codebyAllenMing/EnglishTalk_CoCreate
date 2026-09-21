@@ -154,9 +154,11 @@
         },
         "nav": {
             "home": "Home",
+            "schedule": "My Schedule",
+            "monsters": "Find Monsters",
             "rooms": "Rooms",
-            "messages": "Messages",
-            "reputation": "Reputation",
+            "history": "History",
+            "wordBank": "Word Bank",
             "settings": "Settings"
         },
         "card": {
@@ -174,7 +176,8 @@
         "level": {
             "beginner": "Beginner",
             "intermediate": "Intermediate",
-            "advanced": "Advanced"
+            "advanced": "Advanced",
+            "fluent": "Fluent"
         },
         "invite": {
             "title": "Invite friends, get tokens!",
@@ -244,22 +247,53 @@
                 "sayHello": "Say hello"
             }
         },
-        "edit": {
-            "hint": "Update your personal information",
-            "name": "Name",
+        "settings": {
+            "title": "Profile Settings",
+            "hint": "Tell us about yourself so we can match you better!",
+            "monster": {
+                "title": "1. Choose your Monster",
+                "hint": "Pick the monster that represents you!"
+            },
+            "basic": {
+                "title": "2. Basic Information",
+                "hint": "Help us get to know you!"
+            },
+            "optional": "(Optional)",
+            "displayName": "Display Name",
+            "country": "Country / Region",
+            "gender": "Gender",
             "native": "Native Language",
-            "learning": "Learning Language",
-            "locked": "Can't change",
-            "save": "Save Changes"
-        },
-        "picker": {
-            "title": "Choose Your Monster",
-            "hint": "Pick a monster to represent you",
-            "all": "All Monsters",
-            "owned": "Owned",
-            "locked": "Not Owned",
-            "use": "Use This Monster",
-            "empty": "You already own every monster."
+            "nativeLevel": "Native Language Level",
+            "learning": "Language I Want to Learn",
+            "learningLevel": "Learning Language Level",
+            "interests": "Interests",
+            "addInterest": "Add an interest…",
+            "removeInterest": "Remove {name}",
+            "bio": "Bio",
+            "bioPlaceholder": "Tell other monsters a little bit about yourself…",
+            "preview": "Preview Profile",
+            "previewHint": "This is how other monsters see you.",
+            "save": "Save Changes",
+            "genderOptions": {
+                "male": "Male",
+                "female": "Female",
+                "nonBinary": "Non-binary",
+                "preferNot": "Prefer not to say"
+            },
+            "interestOptions": {
+                "travel": "Travel",
+                "movies": "Movies",
+                "music": "Music",
+                "art": "Art",
+                "fitness": "Fitness",
+                "food": "Food",
+                "gaming": "Gaming",
+                "reading": "Reading",
+                "tech": "Tech",
+                "sports": "Sports",
+                "pets": "Pets",
+                "photography": "Photography"
+            }
         }
     },
     "common": {

@@ -1,12 +1,9 @@
 import type { Metadata } from "next";
-import BrandBlock from "@/Components/Profile/BrandBlock";
+import AppShell from "@/Components/Profile/AppShell";
 import InviteCard from "@/Components/Profile/InviteCard";
 import MonstersSection from "@/Components/Profile/Monsters/MonstersSection";
 import ProfileCard from "@/Components/Profile/ProfileCard";
 import ScheduleSection from "@/Components/Profile/Schedule/ScheduleSection";
-import SideNav from "@/Components/Profile/SideNav";
-import TabBar from "@/Components/Profile/TabBar";
-import TopBar from "@/Components/Profile/TopBar";
 import { getDictionary } from "@/dictionaries";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -23,51 +20,20 @@ export async function generateMetadata(): Promise<Metadata> {
  * 路由取名 /home 而非 /dashboard：landing 是給「還沒登入的人」看的，
  * 這裡才是登入後的家。命名照使用者的心智模型，不照技術慣例。
  *
- * ## 版面
- *
- * 桌機是側邊欄 + 主區的兩欄；lg 以下側邊欄拆開來 —— 品牌列與頂部列併成一排、
- * 個人資料卡移到內容上方、導覽換成固定在底部的 TabBar、邀請卡沉到最後。
- *
- * 品牌列、個人資料卡、邀請卡在兩種版型各出現一次（互斥的 hidden / lg:hidden）。
- * 重複的是 DOM 節點不是請求：display:none 的 <Image> 預設 lazy 不會下載，
- * 所以 ProfileCard 的頭像**刻意不給 priority** —— 給了會變成同一張圖 preload 兩次。
+ * 殼（側邊欄、頂部列、TabBar）在 AppShell。個人資料卡與邀請卡是這一頁特有的：
+ * 桌機在側邊欄，窄版分別落到主內容的上方與下方 —— 所以各傳兩次。
  */
-export default async function HomePage() {
+export default function HomePage() {
 	return (
-		<div className="min-h-dvh bg-app">
-			{/* pb-20 讓內容不被固定在底部的 TabBar 蓋住；桌機沒有 TabBar 所以收回去 */}
-			<div className="mx-auto flex max-w-[1440px] gap-6 px-4 pt-4 pb-20 lg:px-6 lg:pt-5 lg:pb-6">
-				<aside className="hidden w-66 shrink-0 flex-col gap-4 lg:flex">
-					<BrandBlock />
-					<ProfileCard />
-					<SideNav />
-					<InviteCard />
-				</aside>
-
-				<div className="flex min-w-0 flex-1 flex-col gap-5">
-					<header className="flex items-center justify-between gap-4 lg:justify-end">
-						<div className="lg:hidden">
-							<BrandBlock compact />
-						</div>
-						<TopBar />
-					</header>
-
-					<div className="lg:hidden">
-						<ProfileCard />
-					</div>
-
-					<main className="flex flex-col gap-5">
-						<ScheduleSection />
-						<MonstersSection />
-					</main>
-
-					<div className="lg:hidden">
-						<InviteCard />
-					</div>
-				</div>
-			</div>
-
-			<TabBar />
-		</div>
+		<AppShell
+			current="home"
+			beforeNav={<ProfileCard />}
+			afterNav={<InviteCard />}
+			mobileTop={<ProfileCard />}
+			mobileBottom={<InviteCard />}
+		>
+			<ScheduleSection />
+			<MonstersSection />
+		</AppShell>
 	);
 }

@@ -15,13 +15,21 @@ export const FAKE_PROFILE = {
 	avatar: "avatar-allen",
 	nativeCode: "zh",
 	learningCode: "en",
+	/** 學習語言的程度 —— 個人卡與 Find Monsters 顯示的是這個 */
 	level: "intermediate",
+	nativeLevel: "fluent",
+	country: "TW",
+	gender: "preferNot",
+	interests: ["travel", "movies", "music", "art", "fitness"],
 	reputation: 4.8,
 	tokens: 320,
 	online: true,
-	unreadMessages: 3,
 	notifications: 2,
 } as const;
 
 export type LangCode = keyof Dictionary["profile"]["lang"];
 export type LevelCode = keyof Dictionary["profile"]["level"];
+export type GenderCode = keyof Dictionary["profile"]["settings"]["genderOptions"];
+export type InterestCode = keyof Dictionary["profile"]["settings"]["interestOptions"];
+/** 只有兩個（使用者 2026-09-21：「只會有兩個國家」）。名稱由 Intl.DisplayNames 依語系產生 */
+export type CountryCode = "TW" | "US";
