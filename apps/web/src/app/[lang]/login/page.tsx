@@ -14,9 +14,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * 登入頁 —— 目前僅實作 UI。
- * 認證流程（provider、session、users 表）尚未定案，因此表單沒有 action，
- * 提交不會發生任何事。實作 auth 時再決定要不要轉成 Client Component。
+ * 登入頁。送出打 apps/api 的 POST /api/auth/sign-in/email（見 src/auth/client.ts），
+ * 成功後 session 在 httpOnly cookie 裡、轉到 /home；失敗把錯誤顯示在按鈕上方。
+ *
+ * ⚠️ Google 登入仍是純視覺（AuthDivider），社群登入之後再接。
  */
 export default async function LoginPage() {
 	const dict = await getDictionary();
@@ -26,8 +27,10 @@ export default async function LoginPage() {
 	return (
 		<AuthShell title={login.title} subtitle={login.subtitle} backHome={login.backHome} monster="wave">
 			<AuthForm
+				mode="login"
 				submitLabel={login.submit}
 				redirectTo={`/${locale}/home`}
+				errors={dict.form.errors}
 				fields={
 					<>
 						<AuthField
@@ -37,6 +40,7 @@ export default async function LoginPage() {
 							type="email"
 							autoComplete="email"
 							placeholder={login.emailPlaceholder}
+							required
 						/>
 						<PasswordField
 							id="password"
@@ -45,6 +49,7 @@ export default async function LoginPage() {
 							placeholder="••••••••"
 							showLabel={dict.form.showPassword}
 							hideLabel={dict.form.hidePassword}
+							required
 						/>
 					</>
 				}

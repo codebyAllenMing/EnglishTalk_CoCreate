@@ -1,6 +1,6 @@
 ---
 name: auth-pages-state
-description: 登入 / 註冊 / 個人首頁的實作狀態、怪獸插圖的定位數據，以及與設計稿的落差
+description: 登入 / 註冊頁的實作狀態（已接 better-auth API）、怪獸插圖的定位數據，以及與設計稿的落差
 metadata:
   type: project
 ---
@@ -9,7 +9,7 @@ metadata:
 
 ## 已完成
 
-- `/[lang]/login`、`/[lang]/signup`、`/[lang]/home`（登入後的 placeholder）
+- `/[lang]/login`、`/[lang]/signup`（已接 API）、`/[lang]/home`（登入後主畫面，見 [[profile-page-state]]）
 - 共用元件 `AuthShell` / `AuthField` / `AuthForm` / `AuthDivider`
 - 註冊欄位：displayName / email / password / confirmPassword
 - 八個路由全部 SSG，lint + build 通過
@@ -17,10 +17,22 @@ metadata:
 
 ## 關鍵決策
 
-- **假登入**：`AuthForm` 的 `FAKE_AUTH`，送出只檢查兩次密碼是否一致，其餘直接轉頁。
-  API 之後再串（使用者 2026-08-21 指定「先做頁面」）
+- **登入 / 註冊已接真 API**（2026-09-21，取代原本的 `FAKE_AUTH`）：`AuthForm` 收 `mode`
+  （login / signup），用 FormData 讀值、打 `src/auth/client.ts` 的 `signIn` / `signUp`，
+  成功 `router.push` 到 `/home`，失敗把錯誤碼對到 `dict.form.errors` 顯示在按鈕上方；送出中鎖按鈕。
+  - `src/auth/client.ts` 只包 fetch，**不裝 better-auth 的 client 套件**（兩支端點、一顆 httpOnly cookie，
+    沒有東西需要 client 端 session store）。`credentials: "include"` 不能少。
+  - 錯誤碼只留 UI 會分開處理的：`INVALID_EMAIL_OR_PASSWORD` → invalidCredentials、
+    `USER_ALREADY_EXISTS(_USE_ANOTHER_EMAIL)` → emailTaken、`PASSWORD_TOO_SHORT` → passwordTooShort；
+    fetch throw → network；其餘 unknown
+  - API origin 由 `src/api.ts` 的 `apiUrl()` 補，值來自 next.config.ts 的 `NEXT_PUBLIC_API_ORIGIN`
+    （dev 預設 `http://localhost:4000`，**靜態匯出給空字串** —— GitHub Pages 上登入會顯示「連不到伺服器」，是預期）
+  - 欄位加了 `required`，註冊密碼 `minLength={8}` 跟後端下限一致
+  - ⚠️ **better-auth 1.7 對沒有 `Origin` 的 POST 回 403 `MISSING_OR_NULL_ORIGIN`**。瀏覽器一定帶，
+    但 curl / Node 測試要自己加 `Origin: http://localhost:6531`，不然每個請求都像失敗
+  - Google 按鈕（`AuthDivider`）仍是純視覺
 - **路由 `/home` 而非 `/dashboard`**：landing 是給未登入者看的，`/home` 才是登入後的家
-- **`/home` 沒有任何存取保護**，直接打網址就能進，頁面上有寫明
+- **`/home` 沒有任何存取保護**，直接打網址就能進。靜態匯出沒有 middleware，只能在 client 查 session 後導去 login —— 還沒做
 - ⚠️⚠️ **flex 垂直置中一律用 `justify-center-safe`（`justify-content: safe center`）。
   `justify-center` 不行，`my-auto` 也不行** —— 兩者在內容高於容器時都會往**上下兩端**
   溢出，捲動只能往下，被推到負座標的上半部永遠捲不回來。
@@ -93,7 +105,7 @@ Forgot password、Apple 登入），實際只有 520px，垂直空間少了四�
 
 ## Client Component 只有三個
 
-`AuthForm`（送出攔截 + 密碼一致性）、`LocaleSwitch`（保留路徑）、`PasswordField`（顯示切換）。
+`AuthForm`（送出攔截 + 密碼一致性 + 打 API）、`LocaleSwitch`（保留路徑）、`PasswordField`（顯示切換）。
 其餘全是 Server Component —— 這不只是潔癖，lucide 的 icon 在 Server Component 裡是
 **建置期 render 成靜態 SVG**，完全不進 client bundle；一旦某個元件跨到 client，
 它用到的 icon 就得跟著打包。實測 Mail / User 只在 HTML 裡，Eye / EyeOff / Lock 才在 chunk 裡。

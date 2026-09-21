@@ -14,13 +14,15 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * 註冊頁 —— 目前僅實作 UI，不串 API。
+ * 註冊頁。送出打 apps/api 的 POST /api/auth/sign-up/email（見 src/auth/client.ts），
+ * better-auth 建好帳號後自動登入，直接轉到 /home。
  *
- * 表單送出只做「兩次密碼是否一致」的檢查，其餘直接轉頁（見 AuthForm 的 FAKE_AUTH）。
+ * 前端只做「兩次密碼是否一致」的跨欄位檢查；密碼長度的 minLength 與後端的 8 字元下限一致，
+ * 瀏覽器先擋一次、後端再擋一次（PASSWORD_TOO_SHORT）。
  *
  * 欄位為顯示名稱 / email / 密碼 / 確認密碼。母語、想學語言、程度、avatar
- * 這些 profile 欄位不放進註冊流程 —— 屬於個人主頁的範疇，且現在還沒有地方用。
- * displayName 是例外：社群產品在使用者出現的第一刻就需要一個稱呼。
+ * 這些 profile 欄位不放進註冊流程 —— 屬於個人設定的範疇。
+ * displayName 是例外：社群產品在使用者出現的第一刻就需要一個稱呼，它存進 better-auth 的 Users.name。
  */
 export default async function SignupPage() {
 	const dict = await getDictionary();
@@ -30,8 +32,10 @@ export default async function SignupPage() {
 	return (
 		<AuthShell title={signup.title} subtitle={signup.subtitle} backHome={signup.backHome} monster="stand">
 			<AuthForm
+				mode="signup"
 				submitLabel={signup.submit}
 				redirectTo={`/${locale}/home`}
+				errors={dict.form.errors}
 				mismatchMessage={signup.passwordMismatch}
 				fields={
 					<>
@@ -43,6 +47,7 @@ export default async function SignupPage() {
 							// nickname 而非 name：這是對外顯示的稱呼，不是真實姓名
 							autoComplete="nickname"
 							placeholder={signup.displayNamePlaceholder}
+							required
 						/>
 						<AuthField
 							id="email"
@@ -51,6 +56,7 @@ export default async function SignupPage() {
 							type="email"
 							autoComplete="email"
 							placeholder={signup.emailPlaceholder}
+							required
 						/>
 						<PasswordField
 							id="password"
@@ -61,6 +67,8 @@ export default async function SignupPage() {
 							hint={signup.passwordHint}
 							showLabel={dict.form.showPassword}
 							hideLabel={dict.form.hidePassword}
+							required
+							minLength={8}
 						/>
 						<PasswordField
 							id="confirmPassword"
@@ -69,6 +77,7 @@ export default async function SignupPage() {
 							placeholder="••••••••"
 							showLabel={dict.form.showPassword}
 							hideLabel={dict.form.hidePassword}
+							required
 						/>
 					</>
 				}

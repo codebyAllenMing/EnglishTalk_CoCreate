@@ -23,7 +23,11 @@ const nextConfig: NextConfig = {
 	}),
 	// src/asset.ts 讀這個值替 public/ 的圖片補前綴 —— next/image 在 unoptimized
 	// 模式下不會自己改寫 src，少了它靜態站上每張圖都會 404
-	env: { NEXT_PUBLIC_BASE_PATH: basePath },
+	env: {
+		NEXT_PUBLIC_BASE_PATH: basePath,
+		// src/api.ts 讀這個值打後端。dev 預設本機 apps/api；靜態匯出沒有後端，給空字串（見 src/api.ts）
+		NEXT_PUBLIC_API_ORIGIN: process.env.NEXT_PUBLIC_API_ORIGIN ?? (isStaticExport ? "" : "http://localhost:4000"),
+	},
 };
 
 export default nextConfig;

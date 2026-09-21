@@ -15,8 +15,8 @@ export async function generateMetadata(): Promise<Metadata> {
 /**
  * 個人首頁 —— 登入後的主畫面。
  *
- * ⚠️ 這一頁沒有任何存取保護。登入是假的（見 AuthForm 的 FAKE_AUTH），
- *    直接輸入網址就能進來。資料全部來自 FAKE_PROFILE。
+ * ⚠️ 這一頁沒有任何存取保護。登入已接真 API（見 src/auth/client.ts），但靜態匯出沒有 middleware，
+ *    直接輸入網址仍能進來；client 端的 session 檢查還沒做。資料全部來自 FAKE_PROFILE。
  *
  * 路由取名 /home 而非 /dashboard：landing 是給「還沒登入的人」看的，
  * 這裡才是登入後的家。命名照使用者的心智模型，不照技術慣例。

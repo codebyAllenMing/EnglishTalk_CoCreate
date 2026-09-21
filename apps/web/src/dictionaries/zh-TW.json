@@ -139,7 +139,14 @@
     },
     "form": {
         "showPassword": "顯示密碼",
-        "hidePassword": "隱藏密碼"
+        "hidePassword": "隱藏密碼",
+        "errors": {
+            "invalidCredentials": "Email 或密碼錯誤",
+            "emailTaken": "這個 Email 已經註冊過了",
+            "passwordTooShort": "密碼至少 8 個字元",
+            "network": "連不到伺服器，請稍後再試",
+            "unknown": "發生錯誤，請再試一次"
+        }
     },
     "profile": {
         "brand": {

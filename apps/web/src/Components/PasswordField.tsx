@@ -13,6 +13,8 @@ type Props = {
 	hideLabel: string;
 	placeholder?: string;
 	hint?: string;
+	required?: boolean;
+	minLength?: number;
 };
 
 /**
@@ -36,6 +38,8 @@ export default function PasswordField({
 	hideLabel,
 	placeholder,
 	hint,
+	required,
+	minLength,
 }: Props) {
 	const [visible, setVisible] = useState(false);
 	const ToggleIcon = visible ? EyeOff : Eye;
@@ -52,6 +56,8 @@ export default function PasswordField({
 					type={visible ? "text" : "password"}
 					autoComplete={autoComplete}
 					placeholder={placeholder}
+					required={required}
+					minLength={minLength}
 					aria-describedby={hint ? `${id}-hint` : undefined}
 					className={`${FIELD_INPUT} pr-11`}
 				/>

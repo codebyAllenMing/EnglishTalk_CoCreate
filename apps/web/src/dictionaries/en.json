@@ -139,7 +139,14 @@
     },
     "form": {
         "showPassword": "Show password",
-        "hidePassword": "Hide password"
+        "hidePassword": "Hide password",
+        "errors": {
+            "invalidCredentials": "Wrong email or password",
+            "emailTaken": "That email is already registered",
+            "passwordTooShort": "Password must be at least 8 characters",
+            "network": "Can't reach the server. Please try again in a moment.",
+            "unknown": "Something went wrong. Please try again."
+        }
     },
     "profile": {
         "brand": {

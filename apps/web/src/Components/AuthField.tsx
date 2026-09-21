@@ -9,6 +9,8 @@ type Props = {
 	icon: LucideIcon;
 	placeholder?: string;
 	hint?: string;
+	required?: boolean;
+	minLength?: number;
 };
 
 /**
@@ -32,6 +34,8 @@ export default function AuthField({
 	icon: Icon,
 	placeholder,
 	hint,
+	required,
+	minLength,
 }: Props) {
 	return (
 		<div>
@@ -45,6 +49,8 @@ export default function AuthField({
 					type={type}
 					autoComplete={autoComplete}
 					placeholder={placeholder}
+					required={required}
+					minLength={minLength}
 					aria-describedby={hint ? `${id}-hint` : undefined}
 					className={`${FIELD_INPUT} pr-3.5`}
 				/>
