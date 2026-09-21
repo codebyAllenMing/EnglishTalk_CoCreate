@@ -1,23 +1,30 @@
 "use client";
 
-import { Check, ChevronDown, Eye, X } from "lucide-react";
+import { Check, ChevronDown, Eye, Plus, X } from "lucide-react";
 import Link from "next/link";
 import { useId, useState, type ReactNode } from "react";
 import Avatar from "@/Components/UI/Avatar";
 import Card from "@/Components/UI/Card";
 import CountryFlag from "@/Components/UI/CountryFlag";
 import Dialog from "@/Components/UI/Dialog";
-import LangBadge from "@/Components/UI/LangBadge";
 import type { Dictionary } from "@/dictionaries";
 import type { AvatarChoice } from "../avatarChoices";
 import MonsterDetails from "../Monsters/MonsterDetails";
 import { fill, type Monster } from "../Monsters/monstersData";
-import type { CountryCode, GenderCode, InterestCode, LangCode, LevelCode } from "../profileData";
+import type { CountryCode, GenderCode, LangCode, LevelCode } from "../profileData";
 
 const NAME_MAX = 20;
 const BIO_MAX = 150;
+const INTEREST_MAX = 20;
+const INTERESTS_MAX = 10;
 /** 只有兩個（使用者 2026-09-21 決定） */
 const COUNTRIES: readonly CountryCode[] = ["TW", "US"];
+/**
+ * 語言欄位左側也放國旗（使用者 2026-09-21 指定，設計稿如此）。
+ * 全站其他地方的語言仍是「中 / EN」徽章 —— 只有這張表單跟國家欄位並排，
+ * 一邊國旗一邊徽章看起來像兩套系統。
+ */
+const LANG_FLAG: Record<LangCode, CountryCode> = { zh: "TW", en: "US" };
 
 export type ProfileDraft = {
 	/** 挑選清單的 id（allen），不是檔名 */
@@ -29,7 +36,8 @@ export type ProfileDraft = {
 	nativeLevel: LevelCode;
 	learning: LangCode;
 	learningLevel: LevelCode;
-	interests: InterestCode[];
+	/** 自由輸入的字串（使用者 2026-09-21：「讓他自己填」），字典那十二個只是建議 */
+	interests: string[];
 	bio: string;
 };
 
@@ -94,9 +102,18 @@ export default function SettingsForm({
 	// 不用在字典裡維護第二份翻譯
 	const regionNames = new Intl.DisplayNames([locale], { type: "region" });
 
-	const remainingInterests = (Object.keys(dict.interestOptions) as InterestCode[]).filter(
-		(code) => !draft.interests.includes(code),
-	);
+	const [pendingInterest, setPendingInterest] = useState("");
+	const hasInterest = (value: string) =>
+		draft.interests.some((i) => i.toLowerCase() === value.toLowerCase());
+	const addInterest = () => {
+		const value = pendingInterest.trim();
+		// 重複的直接清掉輸入框不報錯 —— 使用者的意圖已經達成（那個標籤在裡面）
+		if (value && !hasInterest(value) && draft.interests.length < INTERESTS_MAX) {
+			set({ interests: [...draft.interests, value] });
+		}
+		setPendingInterest("");
+	};
+	const interestSuggestions = Object.values(dict.interestOptions).filter((label) => !hasInterest(label));
 
 	// ⚠️ 假值：這兩項不在設定表單上，預覽只是要把外框填滿
 	const FAKE_PREVIEW = { roomSize: 4, freeAt: "20:00" };
@@ -201,7 +218,7 @@ export default function SettingsForm({
 							value={draft.native}
 							onChange={(value) => setNative(value as LangCode)}
 							options={Object.entries(langDict)}
-							leading={<LangBadge code={draft.native} />}
+							leading={<CountryFlag code={LANG_FLAG[draft.native]} />}
 						/>
 					</Field>
 
@@ -220,7 +237,7 @@ export default function SettingsForm({
 							value={draft.learning}
 							onChange={(value) => setLearning(value as LangCode)}
 							options={Object.entries(langDict)}
-							leading={<LangBadge code={draft.learning} />}
+							leading={<CountryFlag code={LANG_FLAG[draft.learning]} />}
 						/>
 					</Field>
 
@@ -243,20 +260,26 @@ export default function SettingsForm({
 						optional={dict.optional}
 						className="md:col-span-6"
 					>
-						{/* 標籤 + 一個「新增」下拉。設計稿只畫了右側的箭頭，這裡把
-						    「新增興趣…」的字露出來 —— 一顆孤零零的箭頭看不出能做什麼 */}
-						<div className="flex flex-wrap items-center gap-2 rounded-xl border border-ink-100 p-2">
-							{draft.interests.map((code) => (
+						{/*
+						 * 標籤 + 自由輸入。Enter 或 ＋ 新增；<datalist> 提供字典裡的十二個當建議，
+						 * 原生的、零 JS，打字時會跳出來，但**不限制**只能選它們。
+						 * 設計稿畫的是下拉，使用者 2026-09-21 改成「讓他自己填」。
+						 *
+						 * 輸入框自己的 focus ring 關掉，改由外框的 focus-within 顯示 ——
+						 * 整個框才是「這個欄位」，ring 套在框裡的小輸入框上會像跑版。
+						 */}
+						<div className="flex flex-wrap items-center gap-2 rounded-xl border border-ink-100 p-2 transition-colors focus-within:border-primary-400 hover:border-primary-200">
+							{draft.interests.map((label) => (
 								<span
-									key={code}
+									key={label}
 									className="flex items-center gap-1.5 rounded-lg bg-primary-50 py-1.5 pr-1.5 pl-3 text-sm font-semibold text-primary-600"
 								>
-									{dict.interestOptions[code]}
+									{label}
 									<button
 										type="button"
-										aria-label={fill(dict.removeInterest, { name: dict.interestOptions[code] })}
+										aria-label={fill(dict.removeInterest, { name: label })}
 										onClick={() =>
-											set({ interests: draft.interests.filter((c) => c !== code) })
+											set({ interests: draft.interests.filter((i) => i !== label) })
 										}
 										className="rounded-md p-0.5 transition-colors hover:bg-primary-100"
 									>
@@ -264,31 +287,61 @@ export default function SettingsForm({
 									</button>
 								</span>
 							))}
-							{remainingInterests.length > 0 && (
-								<span className="relative">
-									<select
-										id={`${id}-interests`}
-										value=""
-										onChange={(event) =>
-											set({
-												interests: [...draft.interests, event.target.value as InterestCode],
-											})
-										}
-										className="appearance-none bg-transparent py-1.5 pr-7 pl-2 text-sm font-semibold text-ink-400 transition-colors hover:text-primary-600"
-									>
-										<option value="" disabled>
-											{dict.addInterest}
-										</option>
-										{remainingInterests.map((code) => (
-											<option key={code} value={code}>
-												{dict.interestOptions[code]}
-											</option>
+							{draft.interests.length < INTERESTS_MAX && (
+								<span className="flex items-center gap-1">
+									{/*
+									 * 輸入框跟著字數變寬：一個隱形的 span 鏡射目前的值（空的時候鏡射
+									 * placeholder），跟 input 疊在同一個 grid 格子裡 —— 格子寬度由較寬的
+									 * 那個決定，input 再 w-full 填滿。這是 CSS 唯一能做到「寬度 = 內容」
+									 * 的方法，input 本身量不出自己的文字寬。
+									 * 鏡射的 span 要跟 input 同字體、同 padding，寬度才對得上。
+									 */}
+									{/* 淡底讓它讀起來是「可以打字的地方」，不然跟標籤並排像一段漏掉樣式的文字 */}
+									<span className="inline-grid rounded-lg bg-app transition-colors focus-within:bg-primary-50">
+										<span
+											aria-hidden="true"
+											className="invisible col-start-1 row-start-1 min-w-24 py-1.5 pr-3 pl-3 text-sm font-semibold whitespace-pre"
+										>
+											{pendingInterest || dict.addInterest}
+										</span>
+										<input
+											id={`${id}-interests`}
+											list={`${id}-interest-options`}
+											value={pendingInterest}
+											maxLength={INTEREST_MAX}
+											enterKeyHint="done"
+											placeholder={dict.addInterest}
+											onChange={(event) => setPendingInterest(event.target.value)}
+											onKeyDown={(event) => {
+												if (event.key !== "Enter") return;
+												// ⚠️ 注音 / 拼音等 IME 用 Enter 確認選字，那一下也是 keydown Enter，
+												//    但字還沒進 value（isComposing 為 true）。這時加標籤會把半截的
+												//    注音符號加進去。Safari 在 compositionend 之後才發 keydown、
+												//    isComposing 已經是 false，只剩 keyCode 229 能認，兩個都要看
+												if (event.nativeEvent.isComposing || event.keyCode === 229) return;
+												// 不讓 Enter 送出表單 —— 這一頁的 Enter 是「加標籤」
+												event.preventDefault();
+												addInterest();
+											}}
+											// 那個黑色 ▼ 是 Chrome 替有 list 屬性的 input 畫的原生 datalist 按鈕，
+											// 不能換色也不能移位。藏掉 —— 建議清單打字時照樣會跳出來，＋ 才是新增鈕
+											className="col-start-1 row-start-1 w-full bg-transparent py-1.5 pr-3 pl-3 text-sm font-semibold placeholder:font-normal placeholder:text-ink-300 focus:outline-none [&::-webkit-calendar-picker-indicator]:hidden"
+										/>
+									</span>
+									<datalist id={`${id}-interest-options`}>
+										{interestSuggestions.map((label) => (
+											<option key={label} value={label} />
 										))}
-									</select>
-									<ChevronDown
-										aria-hidden="true"
-										className="pointer-events-none absolute top-1/2 right-1.5 size-4 -translate-y-1/2 text-primary-500"
-									/>
+									</datalist>
+									<button
+										type="button"
+										aria-label={dict.addInterestButton}
+										disabled={!pendingInterest.trim()}
+										onClick={addInterest}
+										className="rounded-md p-1 text-primary-500 transition-colors hover:bg-primary-50 disabled:opacity-40"
+									>
+										<Plus aria-hidden="true" className="size-4" />
+									</button>
 								</span>
 							)}
 						</div>

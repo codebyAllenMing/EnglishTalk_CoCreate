@@ -50,7 +50,8 @@ export default async function SettingsPage() {
 					nativeLevel: p.nativeLevel,
 					learning: p.learningCode,
 					learningLevel: p.level,
-					interests: [...p.interests],
+					// 興趣是自由字串；假資料存代碼，這裡換成當前語系的文字
+					interests: p.interests.map((code) => s.interestOptions[code]),
 					bio: dict.profile.demo.bio,
 				}}
 				choices={FAKE_AVATAR_CHOICES}

@@ -293,12 +293,96 @@
                 "sports": "Sports",
                 "pets": "Pets",
                 "photography": "Photography"
-            }
+            },
+            "addInterestButton": "Add"
         }
     },
     "common": {
         "close": "Close",
         "cancel": "Cancel",
         "confirm": "Confirm"
+    },
+    "room": {
+        "title": "Talk Room",
+        "kind": {
+            "casual": "Casual"
+        },
+        "roomCode": "Room code: {code}",
+        "people": "{count} people",
+        "total": "{minutes} min total",
+        "you": "You",
+        "leave": "Leave room",
+        "leaveTitle": "Leave the room?",
+        "leaveHint": "The conversation keeps going without you. You can come back with the room code while it is still open.",
+        "leaveConfirm": "Leave",
+        "timer": {
+            "zh": "Mandarin Time",
+            "en": "English Time",
+            "swap": "Switch language",
+            "ended": "Time is up",
+            "switchIn": "Switching in {seconds}s",
+            "cancelSwap": "Cancel switch"
+        },
+        "controls": {
+            "mic": "Mic",
+            "camera": "Camera",
+            "whiteboard": "Whiteboard",
+            "reactions": "Reactions",
+            "on": "On",
+            "off": "Off",
+            "open": "Open",
+            "closed": "Closed",
+            "pickReaction": "Pick a reaction"
+        },
+        "board": {
+            "title": "Whiteboard",
+            "everyone": "Everyone can edit",
+            "reopen": "Reopen whiteboard",
+            "collapse": "Hide whiteboard",
+            "tools": {
+                "select": "Select",
+                "pen": "Pen",
+                "text": "Text",
+                "undo": "Undo",
+                "redo": "Redo"
+            }
+        },
+        "topic": {
+            "title": "Topic Card",
+            "hint": "Click to get a conversation topic!",
+            "next": "Draw another topic"
+        },
+        "chat": {
+            "title": "Chat",
+            "hint": "Tap a message to save a word from it",
+            "placeholder": "Type a message…",
+            "send": "Send",
+            "emoji": "Emoji"
+        },
+        "saveWord": {
+            "title": "Save to Word Bank",
+            "hint": "Pick the word you want to remember from this message.",
+            "from": "From the message",
+            "word": "Word or phrase",
+            "pos": "Part of speech",
+            "meaning": "Meaning",
+            "meaningPlaceholder": "In your own words (optional)",
+            "save": "Save word",
+            "posOptions": {
+                "n": "n.",
+                "v": "v.",
+                "adj": "adj.",
+                "adv": "adv.",
+                "phrase": "phrase",
+                "other": "other"
+            }
+        },
+        "wordBank": {
+            "title": "My Word Bank",
+            "empty": "Words you save from the chat show up here.",
+            "remove": "Remove {word}"
+        },
+        "endedTitle": "Room {code} has ended",
+        "endedHint": "Time is up — thanks for talking! See you in the next room."
     }
 }

@@ -293,12 +293,96 @@
                 "sports": "運動",
                 "pets": "寵物",
                 "photography": "攝影"
-            }
+            },
+            "addInterestButton": "新增"
         }
     },
     "common": {
         "close": "關閉",
         "cancel": "取消",
         "confirm": "確定"
+    },
+    "room": {
+        "title": "對話室",
+        "kind": {
+            "casual": "輕鬆聊"
+        },
+        "roomCode": "房號：{code}",
+        "people": "{count} 人",
+        "total": "共 {minutes} 分鐘",
+        "you": "你",
+        "leave": "離開房間",
+        "leaveTitle": "要離開房間嗎？",
+        "leaveHint": "對話會繼續進行。房間還開著的時候，你可以用房號再回來。",
+        "leaveConfirm": "離開",
+        "timer": {
+            "zh": "中文時間",
+            "en": "英文時間",
+            "swap": "切換語言",
+            "ended": "時間到",
+            "switchIn": "{seconds} 秒後切換",
+            "cancelSwap": "取消切換"
+        },
+        "controls": {
+            "mic": "麥克風",
+            "camera": "鏡頭",
+            "whiteboard": "白板",
+            "reactions": "反應",
+            "on": "開",
+            "off": "關",
+            "open": "展開",
+            "closed": "收起",
+            "pickReaction": "選一個反應"
+        },
+        "board": {
+            "title": "白板",
+            "everyone": "大家都能畫",
+            "reopen": "展開白板",
+            "collapse": "收起白板",
+            "tools": {
+                "select": "選取",
+                "pen": "畫筆",
+                "text": "文字",
+                "undo": "復原",
+                "redo": "重做"
+            }
+        },
+        "topic": {
+            "title": "話題卡",
+            "hint": "點一下抽個話題！",
+            "next": "換一個話題"
+        },
+        "chat": {
+            "title": "聊天",
+            "hint": "點訊息可以把裡面的字存起來",
+            "placeholder": "輸入訊息…",
+            "send": "送出",
+            "emoji": "表情"
+        },
+        "saveWord": {
+            "title": "存進單字庫",
+            "hint": "從這句話裡挑出你想記住的字。",
+            "from": "來源訊息",
+            "word": "單字或片語",
+            "pos": "詞性",
+            "meaning": "意思",
+            "meaningPlaceholder": "用你自己的話寫（選填）",
+            "save": "存起來",
+            "posOptions": {
+                "n": "名詞",
+                "v": "動詞",
+                "adj": "形容詞",
+                "adv": "副詞",
+                "phrase": "片語",
+                "other": "其他"
+            }
+        },
+        "wordBank": {
+            "title": "我的單字庫",
+            "empty": "從聊天裡存下來的字會出現在這裡。",
+            "remove": "移除 {word}"
+        },
+        "endedTitle": "{code} 房間的對話已結束",
+        "endedHint": "時間到了，辛苦了！下個房間見。"
     }
 }
