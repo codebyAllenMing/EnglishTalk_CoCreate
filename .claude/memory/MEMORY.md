@@ -10,3 +10,4 @@
 - [個人首頁狀態](profile-page-state.md) — 設計稿數據、已定決策與 11 隻頭像素材，開工前的完整脈絡
 - [對話室狀態](talk-room-state.md) — /room/[code] 的 mock、計時與 Word Bank 的定案、接後端的邊界
 - [後端第一步：登入與 DB](auth-backend-plan.md) — better-auth + Hono + Drizzle 骨架已蓋好、帳密登入 curl 跑通；怎麼跑、踩過的坑、前端還沒接
+- [交測前給啟動指令](feedback-test-handoff.md) — 每次要使用者測試都附 dev:api / dev 兩條指令，Docker 常駐不用提

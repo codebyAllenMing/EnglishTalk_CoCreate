@@ -1,4 +1,5 @@
 import type { Dictionary } from "@/dictionaries";
+import InitialScroll from "./InitialScroll";
 import SlotCard from "./SlotCard";
 import { SLOTS_PER_DAY, SLOT_HEIGHT, type Slot } from "./scheduleData";
 import type { WeekDay } from "./week";
@@ -43,10 +44,9 @@ const LABEL_EVERY = 4;
  *
  * ## 初始捲動位置
  *
- * 全天展開有 1632px，不捲的話打開只看到一片空的凌晨。用一小段 inline script 設
- * scrollTop —— 它跟著 HTML 一起送達、在 hydration 前就執行，畫面不會閃，
- * 而且整區維持 Server Component，不必為了一行 scrollTop 把週曆推進 client bundle。
- * 時機問題交給 ResizeObserver，見下方註解。
+ * 全天展開有 1632px，不捲的話打開只看到一片空的凌晨。捲動由 InitialScroll（client）
+ * 在 layout effect 裡做，時機問題見那裡的註解。
+ * 曾經是內嵌 <script>，client 端導頁時 React 建出來的 <script> 不會執行，改掉了。
  */
 export default function ScheduleGrid({
 	days,
@@ -142,27 +142,7 @@ export default function ScheduleGrid({
 				</div>
 			</div>
 
-			{/*
-			 * ⚠️ 不能只設一次就走。這段 script 在 HTML 解析到這裡就執行，但 Next.js 的
-			 *    dev 模式是用 JS 注入 CSS 的 —— 那一刻 max-h 還沒套用，容器的
-			 *    scrollHeight 等於 clientHeight，scrollTop 會被瀏覽器 clamp 成 0。
-			 *    production 的 CSS 是 head 裡的 blocking <link>，第一次就會成功。
-			 *
-			 *    所以先試一次，不成就用 ResizeObserver 等容器真的變得可捲動再設，
-			 *    設完立刻斷開。這比賭 rAF 的單一時機可靠 —— 不論 CSS 何時到位都接得住。
-			 */}
-			<script
-				dangerouslySetInnerHTML={{
-					__html:
-						`(function(){` +
-						`var e=document.getElementById(${JSON.stringify(SCROLL_ID)});if(!e)return;` +
-						`var f=function(){if(e.scrollHeight<=e.clientHeight)return false;e.scrollTop=${scrollTop};return true};` +
-						`if(f())return;` +
-						`if(typeof ResizeObserver!=="function")return;` +
-						`var o=new ResizeObserver(function(){if(f())o.disconnect()});o.observe(e)` +
-						`})()`,
-				}}
-			/>
+			<InitialScroll targetId={SCROLL_ID} top={scrollTop} />
 		</>
 	);
 }

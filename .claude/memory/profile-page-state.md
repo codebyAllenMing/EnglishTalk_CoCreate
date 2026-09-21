@@ -152,10 +152,17 @@ grid-template-rows:    auto repeat(48, 34px)
 
 ### 初始捲動（踩過的坑）
 
-全天展開 1632px，不捲的話打開只看到空白凌晨。用 inline script 設 `scrollTop`
-（跟著 HTML 一起送達、hydration 前執行、整區維持 Server Component）。
+全天展開 1632px，不捲的話打開只看到空白凌晨。由 `Schedule/InitialScroll.tsx`（client，不 render
+東西）在 **useLayoutEffect** 裡設 `scrollTop`（2026-09-21 改的）。
 
-⚠️⚠️ **不能只設一次。** Next.js **dev 模式的 CSS 是用 JS 注入的** —— script 執行那一刻
+⚠️ 原本是 inline `<script>`（跟 HTML 一起到、解析到就執行、零閃爍），但 **client 端導頁時
+React 用 DOM API 建的 `<script>` 不會執行**，還會在 Console 報紅字 —— 登入後的 `router.push`
+與側邊欄的 Link 都會踩到；以前沒發現是因為都直接打網址進 /home。
+layout effect 在繪製前跑，client 導頁零閃爍；整頁載入要等 hydration 才捲，JS 載入前會短暫看到凌晨，
+那是 React 的天性。要零閃爍得用 `useSyncExternalStore` 的 server snapshot 只在 SSR 輸出 script，
+目前覺得不值得。
+
+⚠️⚠️ **不能只設一次。** Next.js **dev 模式的 CSS 是用 JS 注入的** —— effect 執行那一刻
 `max-h` 還沒套用，`scrollHeight === clientHeight`，`scrollTop` 被瀏覽器 clamp 成 0。
 production 的 CSS 是 head 裡的 blocking `<link>`，第一次就會成功。
 **這是「dev 壞、prod 好」的差異，最難察覺。**
