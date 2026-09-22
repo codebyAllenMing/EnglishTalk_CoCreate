@@ -153,6 +153,9 @@ P2 的（白板、反應、話題卡、單字庫）各自獨立一個檔，延�
     `leftOf` 在 since 之前不倒數（開始前 5 分鐘進房看到整桶）；`requestSwap` 開始前忽略。
   - 驗過：ws 腳本（兩人同時收到 swapAt、再按取消、5 秒後 server 自己換邊並廣播、晚進來的人 hello 拿到換邊後狀態）+ 純函式邊界案例。
   - ⚠️ dev 坑：hub 的房是第一個人連上時用當時的 DB 列初始化，**重跑 seed 後要重啟 api**，不然 SEED09 的計時器停在舊時間。
+- **離開房間的攔截（2026-09-22）**：使用者誤按上一頁回到 home 後討論。只做 `beforeunload`（重新整理 / 關分頁 / 改網址，瀏覽器原生對話框，
+  放在 `RoomProvider`、結束後拿掉）；**不做上一頁的 history 陷阱**（手機 Safari 滑動返回會先走再跳回、壞掉前後頁語意），
+  改以「回去很容易」補：狀態都在 server，回 home 再點進去是原樣；待辦是週曆卡的「進入房間」按鈕 + home 頂部「有房間進行中」橫幅。
 - 還沒定：發表當天後端跑哪（本機 dev vs 部署）、視訊 LiveKit Cloud vs 四人 mesh。
 
 **How to apply:** 接後端前先讀這份確認 provider 的邊界。後端與部署的定案（LiveKit Cloud、tldraw

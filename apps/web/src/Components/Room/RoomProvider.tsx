@@ -110,6 +110,19 @@ export default function RoomProvider({ room, children }: { room: Room; children:
 		};
 	}, [state.ended]);
 
+	// 重新整理 / 關分頁 / 改網址前讓瀏覽器問一聲（使用者 2026-09-22 誤按上一頁後決定：只擋這種，不做 history 陷阱）。
+	// 文案與樣式是瀏覽器的、改不了；站內導頁（Leave 按鈕、時間到的導回 home）是 SPA 換頁，不會觸發。
+	useEffect(() => {
+		if (state.ended) return;
+		const ask = (event: BeforeUnloadEvent) => {
+			event.preventDefault();
+			// 舊版 Chrome / Safari 還看這個
+			event.returnValue = "";
+		};
+		window.addEventListener("beforeunload", ask);
+		return () => window.removeEventListener("beforeunload", ask);
+	}, [state.ended]);
+
 	// 這場已經存過的字（重新整理回來還在）。拉不到就空的，存字那一刻會再遇到同樣的錯
 	useEffect(() => {
 		let stale = false;
