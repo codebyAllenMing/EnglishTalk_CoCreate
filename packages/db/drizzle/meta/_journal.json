@@ -29,6 +29,13 @@
       "when": 1790061563728,
       "tag": "0003_rename_timestamps_to_date",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790062370677,
+      "tag": "0004_rooms",
+      "breakpoints": true
     }
   ]
 }

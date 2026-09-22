@@ -1,6 +1,6 @@
 ---
 name: data-model-decisions
-description: DB schema 的定案與延後項（2026-09-22 討論）：個人資訊進 Users、興趣 text[]、頭像 lookup 表、房間與代幣延後；home 各區塊的資料來源對照
+description: DB schema 的定案與延後項（2026-09-22 討論）：個人資訊進 Users、興趣 text[]、頭像 lookup 表、房間主單 / 子單結構已定未建、代幣延後；home 各區塊的資料來源對照
 metadata:
   type: project
 ---
@@ -34,11 +34,24 @@ metadata:
 
 ## 延後（使用者決定）
 
-- **房間 / 空檔 / 成員**（Rooms、RoomMembers、AvailabilitySlots）：使用者要**換模型另開一場討論架構**，
-  討論完再回 Fable 建。討論時的提案草稿：Rooms（code、hostId、startsAt、durationMinutes 20/40/60、
-  capacity 2–4、kind、title、langFrom/To、status；時段與人數建後不可改）、RoomMembers（role、
-  status requested/approved/rejected/left）、AvailabilitySlots（userId、startsAt、endsAt）。
-  ⚠️ 「open 空檔是否獨立於房間」還沒確認。
+- **房間**：使用者 2026-09-22 用「主單 / 子單」定了結構，**schema 已建**（`packages/db/src/schema/room.ts`、migration `0004_rooms`），
+  API 與前端還沒接：
+  - 主單 `Rooms`：`id`（流水號）、`code`（房號，網址用，server 產 6–8 碼大寫去易混字元，unique）、`hostId`、`title`、
+    `startDate`、`endDate`、`durationMinutes smallint`（20 / 40 / 60，DB check）、`capacity`（2–4，含房主）、
+    `roomType`（enum id：`ROOM_TYPES` 1 = en→zh、2 = zh→en，常數在 room.ts，不建 lookup 表）、`cancelDate`（null = 未取消）、
+    `createDate`、`updateDate`。
+    **建後不可改**（vault），所以 `duration` 與 `endDate` 冗餘沒有漂移風險：duration 是房主的輸入、endDate 由 server 算一次存起來給範圍查詢。
+    「額滿」與「已結束」不存，由子單數與 `endDate < now()` 推。
+  - 子單 `RoomMembers`：`id`、`roomId`、`userId`、`role`（host / member，text）、`status`（requested / approved / rejected / left，text；
+    跟 Users 的 level / gender 一樣存 text 碼、api 驗，只有 roomType 依使用者要求存數字）、
+    `createDate`、`updateDate`；`unique (roomId, userId)`，退出再申請走 `left → requested` 不開新列。
+    **房主自己也是一列**（role host、status approved，開房同一交易插入），「我的房」= `RoomMembers where userId = me`，
+    名額 = `count(approved) < capacity`。使用者原本子單放 `hostUserId`，改成主單 `hostId` + 房主子單列。
+    `left` = approved 後自己退出、席次還回去（使用者決定留）；房主退出 = 取消房間走 `cancelDate`，不走子單狀態。
+  - 規則放 app 層交易：同一人的房（host 或 approved）時間不能重疊（週曆不畫重疊）；申請與同意各檢查一次名額。
+  - ⚠️ **還沒拍板**：週曆黃色「開放時段」是不是「還沒有人加入的房」（這結構裡沒有空檔實體）。
+  - 週曆 = 這兩張表的投影：hosted = role host、session = role member 且 approved；前端 `Slot` 形狀不變，
+    一支 `GET /api/me/schedule?from&to` 回前後各一週。真房間 20 / 40 分鐘進來後 grid 30 分鐘格畫不出，要改按分鐘絕對定位。
 - **代幣**：獨立表，使用者視為「加裝武器」，等房間建好再上（ledger append-only + 物化餘額，vault E1）。
 - 評分 / 通知 / 推薦碼：P1–P2。
 
