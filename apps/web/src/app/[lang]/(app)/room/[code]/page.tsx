@@ -49,7 +49,7 @@ export default async function RoomPage({ params }: PageProps<"/[lang]/room/[code
 
 				<div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_24rem] xl:gap-5">
 					<div className="flex min-w-0 flex-col gap-4">
-						<VideoGrid youLabel={r.you} micLabel={r.controls.mic} camLabel={r.controls.camera} />
+						<VideoGrid youLabel={r.you} micLabel={r.controls.mic} camLabel={r.controls.camera} offlineLabel={r.offline} />
 						<Whiteboard code={code} locale={locale} dict={r.board} />
 						<ControlBar dict={r.controls} />
 					</div>

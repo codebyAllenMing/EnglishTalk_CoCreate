@@ -30,7 +30,8 @@ type Props = {
  * 一份清單只用一個受控的 Dialog（記「選中哪一則」），不是每則各掛一個。
  */
 export default function Chat({ locale, youLabel, dict, saveDict, closeLabel, cancelLabel }: Props) {
-	const { room, messages, sendMessage } = useRoom();
+	const { room, messages, sendMessage, chatStatus } = useRoom();
+	const connected = chatStatus === "online";
 	const [draft, setDraft] = useState("");
 	const [pending, setPending] = useState<ChatMessage | null>(null);
 	const listRef = useRef<HTMLDivElement>(null);
@@ -65,7 +66,7 @@ export default function Chat({ locale, youLabel, dict, saveDict, closeLabel, can
 							key={m.id}
 							message={m}
 							name={author.me ? youLabel : author.name}
-							avatar={author.id}
+							avatar={author.avatar}
 							lang={author.lang}
 							time={formatTime(toMinutes(m.at), locale)}
 							onPick={() => setPending(m)}
@@ -84,8 +85,9 @@ export default function Chat({ locale, youLabel, dict, saveDict, closeLabel, can
 				<div className="relative flex-1">
 					<input
 						value={draft}
-						placeholder={dict.placeholder}
+						placeholder={connected ? dict.placeholder : chatStatus === "error" ? dict.disconnected : dict.connecting}
 						aria-label={dict.placeholder}
+						disabled={!connected}
 						onChange={(event) => setDraft(event.target.value)}
 						onKeyDown={(event) => {
 							// 注音選字的 Enter 不是送出（見 SettingsForm 興趣欄的同一個坑）
@@ -101,7 +103,7 @@ export default function Chat({ locale, youLabel, dict, saveDict, closeLabel, can
 				<button
 					type="submit"
 					aria-label={dict.send}
-					disabled={!draft.trim()}
+					disabled={!draft.trim() || !connected}
 					className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary-500 text-white transition-colors hover:bg-primary-600 disabled:opacity-50"
 				>
 					<SendHorizontal aria-hidden="true" className="size-5" />

@@ -117,6 +117,22 @@ P2 的（白板、反應、話題卡、單字庫）各自獨立一個檔，延�
   https 頁面也不能開 ws://，所以到視訊那輪 web 與 api 要一起上 https：Next `next dev --experimental-https`（mkcert 自動產憑證，
   手機要裝 mkcert 的根憑證）或 Cloudflare Tunnel 配自己網域（兩個子網域、cookie same-site、WS 通）。程式碼全靠 env
   （`API_ORIGIN` / `WEB_ORIGIN` / `NEXT_PUBLIC_API_ORIGIN`），不用改。
+- **聊天已建（2026-09-22 晚）**，模組 `packages/live`（`@monstertalk/live`），跟白板同一個模型：
+  - `createLiveHub()` = `Map<code, Room{ clients, history }>`；**不做閒置銷毀**，只在 endDate + 5 分鐘銷毀（使用者定案：
+    房間開著的期間歷史完整；Zoom / Meet 是晚進來看不到，我們刻意不照它）。歷史 200 則、單則 500 字、只活在記憶體。
+  - 協定在 `src/protocol.ts`：client `{ type: "chat", text }`；server `hello { you, online, history }` / `chat { message }` / `presence { online }`。
+    之後計時器 switchAt 與反應走同一條，多加 type。
+  - `./node` 的 `attachLiveServer(server, { hub, origin, authorize })` 路徑 `/api/rooms/:code/live`，跟白板的 attach 並存；
+    authorize = verifySession → roomAccess → `roomUser()`（名字 / 頭像 / 母語）交給 hub 當 from。
+  - 前端 `Components/Room/useLive.ts`：hello 前 connecting（輸入框鎖）、退避重連 1/2/4/8 秒、連續五次失敗 error（「連線中斷，請重新整理」）；
+    送出不先塞本地，等廣播。`RoomProvider` 的 messages / sendMessage / online / chatStatus 來自它，`Chat.tsx` 只多鎖輸入框；
+    VideoGrid 沒連線的人淡化加「未連線」。RoomGate 組 Room 時 messages 是空的。
+  - 協定用 ws 腳本測過：hello / presence / 廣播含自己 / 空白與非 JSON 丟掉 / 申請中 403 / 晚進來拿到歷史 / 離開後 presence 更新。
+  - ⚠️ 測試時發現使用者的 `dev:api`（tsx watch）不在了，health 連不上；我起了一個 60 秒的臨時 api 跑測試後殺掉。
+  - ⚠️⚠️ **StrictMode 雙跑 effect 的 socket ref 坑**：第一條 socket 的 `onclose` 在第二條接上之後才觸發，無條件
+    `socketRef.current = null` 會蓋掉活著的那條 —— 畫面顯示已連線、送出卻沒反應。要 `if (socketRef.current === socket)` 才清。
+    Node 腳本測不出來（沒有 StrictMode），只有瀏覽器 dev 會中。
+  - Chat 泡泡的頭像要用 `participant.avatar`，不是 id（id 已經是 Users.id）。
 - 還沒定：發表當天後端跑哪（本機 dev vs 部署）、視訊 LiveKit Cloud vs 四人 mesh、單字入庫。
 
 **How to apply:** 接後端前先讀這份確認 provider 的邊界。後端與部署的定案（LiveKit Cloud、tldraw

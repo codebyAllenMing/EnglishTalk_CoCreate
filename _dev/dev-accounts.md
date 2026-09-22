@@ -66,7 +66,8 @@ docker exec monstertalk-postgres-1 psql -U monstertalk -d monstertalk -c 'select
 | SEED09 | allen | **跑 seed 那一刻**起 60 分 | 60 分 | 房主，luna / bobby 已加入，mia 申請中 | 紫；**進房測試用**，`/zh-TW/room/SEED09` |
 
 進房（白板等即時功能）只在時間窗內、且是子單裡 approved 的人才連得上。SEED09 每跑一次 seed 就重新從「現在」開始，
-測白板前先 `corepack pnpm db:seed`，再用 allen / luna / bobby 開 `/zh-TW/room/SEED09`；mia 是申請中，連白板會被拒。
+測白板與聊天前先 `corepack pnpm db:seed`，再用 allen / luna / bobby 開 `/zh-TW/room/SEED09`；mia 是申請中，進不了房。
+聊天只活在 api 行程的記憶體：api 重啟訊息就沒了，房間結束 5 分鐘後也清掉。
 
 審核流程用 **bobby** 登入：SEED02 的詳情裡有 mia 的申請，可以同意 / 拒絕。
 申請流程用 **mia** 登入：週曆上 SEED02 是「申請中」（可取消申請），SEED01 / 03 / 06 / 07 / 08 是黃卡。

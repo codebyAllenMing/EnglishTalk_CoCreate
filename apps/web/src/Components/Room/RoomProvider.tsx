@@ -2,7 +2,8 @@
 
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { LangCode } from "../Profile/profileData";
-import { toHHMM, type ChatMessage, type Room, type WordEntry } from "./roomData";
+import { type ChatMessage, type Room, type WordEntry } from "./roomData";
+import { useLive, type LiveStatus } from "./useLive";
 
 /** 給畫面看的：兩桶各剩幾秒、誰在跑、跑完沒、幾秒後要換 */
 type Timer = {
@@ -47,6 +48,10 @@ type RoomState = {
 	whiteboardOpen: boolean;
 	/** participantId → emoji。只有按了才出現，三秒後消失 */
 	reactions: Record<string, string>;
+	/** 聊天通道的狀態；connecting / offline 時輸入框鎖著 */
+	chatStatus: LiveStatus;
+	/** 現在連著即時通道的 userId（同一人多分頁算一個） */
+	online: string[];
 	messages: ChatMessage[];
 	words: WordEntry[];
 	topicIndex: number;
@@ -70,7 +75,7 @@ const REACTION_MS = 3000;
 
 /**
  * 對話室唯一的狀態層。畫面元件全部從這裡拿資料、透過這裡改資料 ——
- * 之後接 LiveKit / WebSocket 是換掉這個檔案裡的資料來源，畫面不動。
+ * 聊天與在線名單已經來自 useLive（自有 WS）；之後接 LiveKit 與計時器同步也是換這裡的資料來源，畫面不動。
  *
  * ## 計時器（照盤點 C1 的原則寫）
  *
@@ -105,7 +110,7 @@ export default function RoomProvider({ room, children }: { room: Room; children:
 	const [camOn, setCamOn] = useState(true);
 	const [whiteboardOpen, setWhiteboardOpen] = useState(true);
 	const [reactions, setReactions] = useState<Record<string, string>>({});
-	const [messages, setMessages] = useState(room.messages);
+	const live = useLive(room.code);
 	const [words, setWords] = useState(room.words);
 	const [topicIndex, setTopicIndex] = useState(0);
 	const reactionTimeouts = useRef(new Map<string, ReturnType<typeof setTimeout>>());
@@ -157,11 +162,8 @@ export default function RoomProvider({ room, children }: { room: Room; children:
 	};
 	const react = (emoji: string) => showReaction(me.id, emoji);
 
-	const sendMessage = (text: string) => {
-		const value = text.trim();
-		if (!value) return;
-		setMessages((m) => [...m, { id: `local-${Date.now()}`, from: me.id, at: toHHMM(new Date()), text: value }]);
-	};
+	// 只送出去，等 server 廣播回來才出現在畫面上（useLive）
+	const sendMessage = live.send;
 
 	const saveWord = (entry: Omit<WordEntry, "id">) =>
 		setWords((w) => [...w, { ...entry, id: `local-${Date.now()}` }]);
@@ -186,7 +188,9 @@ export default function RoomProvider({ room, children }: { room: Room; children:
 				camOn,
 				whiteboardOpen,
 				reactions,
-				messages,
+				chatStatus: live.status,
+				online: live.online,
+				messages: live.messages,
 				words,
 				topicIndex,
 				swapLang,

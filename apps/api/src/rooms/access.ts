@@ -38,3 +38,16 @@ export async function roomAccess(db: Db, userId: string, code: string, now = new
 
 	return { ok: true, room, role: member.role === "host" ? "host" : "member" };
 }
+
+export type RoomUser = { id: string; name: string; avatar: string; lang: string };
+
+/** 即時通道的握手要把「這個人是誰」交給 hub（訊息的 from、之後的反應） */
+export async function roomUser(db: Db, userId: string): Promise<RoomUser | null> {
+	const [row] = await db
+		.select({ id: schema.users.id, name: schema.users.name, avatar: schema.avatars.code, lang: schema.users.nativeLang })
+		.from(schema.users)
+		.innerJoin(schema.avatars, eq(schema.users.avatarId, schema.avatars.id))
+		.where(eq(schema.users.id, userId))
+		.limit(1);
+	return row ?? null;
+}

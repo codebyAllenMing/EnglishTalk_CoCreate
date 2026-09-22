@@ -31,7 +31,7 @@ type State = { status: "loading" } | { status: "ok"; room: Room } | { status: "d
  * ⚠️ 這裡擋不住直接開 WS 或直接打 API 的人 —— 那是 server 端 roomAccess 的事，白板握手與簽 token 各自再查。
  *
  * children 是 server 渲染好的房間畫面（RoomShell 等），等門開了才掛進 provider 底下。
- * 聊天、話題、單字還是 mock：訊息的 from 改指到真成員，畫面才對得上。
+ * 聊天從空的開始（歷史由 useLive 的 hello 補）；話題、單字還是 mock。
  */
 export default function RoomGate({ code, locale, dict, children }: Props) {
 	const router = useRouter();
@@ -119,10 +119,7 @@ function Countdown({
 	);
 }
 
-/**
- * API 的答案 → RoomProvider 要的 Room。成員是真的；聊天、話題、單字還是 mock，
- * mock 訊息的 from 輪流指到真成員，不然對不到頭像與名字。
- */
+/** API 的答案 → RoomProvider 要的 Room。成員是真的；聊天由 WS 來（這裡給空的）；話題、單字還是 mock */
 function toRoom(entry: RoomEntry & { ok: true }): Room {
 	const participants = entry.participants.map((p) => ({
 		id: p.id,
@@ -137,7 +134,7 @@ function toRoom(entry: RoomEntry & { ok: true }): Room {
 		startsAt: toLocalDateTime(new Date(entry.room.startDate)),
 		durationMinutes: entry.room.durationMinutes,
 		participants,
-		messages: FAKE_ROOM.messages.map((m, i) => ({ ...m, from: participants[i % participants.length]?.id ?? m.from })),
+		messages: [],
 		topics: FAKE_ROOM.topics,
 		words: FAKE_ROOM.words,
 	};

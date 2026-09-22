@@ -6,7 +6,7 @@ import LangBadge from "@/Components/UI/LangBadge";
 import type { Participant } from "./roomData";
 import { useRoom } from "./RoomProvider";
 
-type Props = { youLabel: string; micLabel: string; camLabel: string };
+type Props = { youLabel: string; micLabel: string; camLabel: string; /** 沒連著即時通道的人格子上的標 */ offlineLabel: string };
 
 /**
  * 2×2 視訊格。
@@ -19,12 +19,19 @@ type Props = { youLabel: string; micLabel: string; camLabel: string };
  * 自己那格的 mic / cam 跟著 ControlBar 的狀態走，別人的固定開著（假資料）。
  * 自己那格多一圈紫框 —— 「你」的字樣不夠一眼認出哪格是自己（使用者 2026-09-21）。
  */
-export default function VideoGrid({ youLabel, micLabel, camLabel }: Props) {
+export default function VideoGrid({ youLabel, micLabel, camLabel, offlineLabel }: Props) {
 	const { room } = useRoom();
 	return (
 		<div className="grid grid-cols-2 gap-3">
 			{room.participants.map((p) => (
-				<VideoTile key={p.id} participant={p} youLabel={youLabel} micLabel={micLabel} camLabel={camLabel} />
+				<VideoTile
+					key={p.id}
+					participant={p}
+					youLabel={youLabel}
+					micLabel={micLabel}
+					camLabel={camLabel}
+					offlineLabel={offlineLabel}
+				/>
 			))}
 		</div>
 	);
@@ -35,18 +42,25 @@ const BACKDROP: Record<string, string> = {
 	en: "from-lang-en/25 via-primary-50 to-secondary-100",
 };
 
-function VideoTile({ participant: p, youLabel, micLabel, camLabel }: { participant: Participant } & Props) {
-	const { micOn, camOn, reactions } = useRoom();
+function VideoTile({ participant: p, youLabel, micLabel, camLabel, offlineLabel }: { participant: Participant } & Props) {
+	const { micOn, camOn, reactions, online } = useRoom();
 	const mic = p.me ? micOn : true;
 	const cam = p.me ? camOn : true;
 	const reaction = reactions[p.id];
+	// 在線 = 連著即時通道；自己那格不看（自己還在 connecting 時不該標自己離線）
+	const isOffline = !p.me && !online.includes(p.id);
 
 	return (
 		<div
 			className={`relative aspect-video overflow-hidden rounded-2xl bg-linear-to-br ${BACKDROP[p.lang]} ${
 				cam ? "" : "grayscale-[.4]"
-			} ${p.me ? "ring-2 ring-primary-400 ring-offset-2 ring-offset-app" : ""}`}
+			} ${p.me ? "ring-2 ring-primary-400 ring-offset-2 ring-offset-app" : ""} ${isOffline ? "opacity-60" : ""}`}
 		>
+			{isOffline && (
+				<span className="absolute top-3 right-3 rounded-full bg-ink/60 px-2.5 py-1 text-[11px] font-extrabold text-white">
+					{offlineLabel}
+				</span>
+			)}
 			{/* 視訊流的替身。鏡頭關著時就是這個畫面 */}
 			<Avatar
 				src={`avatar-${p.avatar}`}

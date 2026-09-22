@@ -1,11 +1,13 @@
 import { Server as HttpServer } from "node:http";
 import { serve } from "@hono/node-server";
 import { verifySession } from "@monstertalk/auth";
+import { createLiveHub } from "@monstertalk/live";
+import { attachLiveServer, type UpgradeDecision as LiveDecision } from "@monstertalk/live/node";
 import { createWhiteboardHub } from "@monstertalk/whiteboard";
 import { attachWhiteboardServer, type UpgradeDecision } from "@monstertalk/whiteboard/node";
 import { createApp } from "./app.ts";
 import { loadEnv } from "./env.ts";
-import { roomAccess } from "./rooms/access.ts";
+import { roomAccess, roomUser } from "./rooms/access.ts";
 
 const env = loadEnv(process.env);
 const { app, auth, db } = createApp(env);
@@ -36,8 +38,31 @@ attachWhiteboardServer(server, {
 	},
 });
 
+/**
+ * 聊天（之後也是計時器、反應）的 WebSocket，路徑 /api/rooms/:code/live，同一道門，另外把人查出來交給 hub。
+ */
+const live = createLiveHub({ log: (m) => console.log(m) });
+attachLiveServer(server, {
+	hub: live,
+	origin: env.WEB_ORIGIN,
+	log: (m) => console.log(m),
+	authorize: async (req, code): Promise<LiveDecision> => {
+		const session = await verifySession(auth, new Headers({ cookie: req.headers.cookie ?? "" }));
+		if (!session) return { ok: false, status: 401, reason: "no session" };
+		const access = await roomAccess(db, session.user.id, code);
+		if (!access.ok) {
+			const status = access.reason === "notFound" ? 404 : access.reason === "cancelled" ? 410 : 403;
+			return { ok: false, status, reason: access.reason };
+		}
+		const user = await roomUser(db, session.user.id);
+		if (!user) return { ok: false, status: 403, reason: "no user" };
+		return { ok: true, endDate: access.room.endDate, user };
+	},
+});
+
 for (const signal of ["SIGINT", "SIGTERM"] as const) {
 	process.on(signal, () => {
+		live.closeAll();
 		whiteboard.closeAll();
 		server.close();
 		process.exit(0);

@@ -380,6 +380,7 @@
         "people": "{count} people",
         "total": "{minutes} min total",
         "you": "You",
+        "offline": "Not connected",
         "leave": "Leave room",
         "leaveTitle": "Leave the room?",
         "leaveHint": "The conversation keeps going without you. You can come back with the room code while it is still open.",
@@ -420,7 +421,9 @@
             "hint": "Tap a message to save a word from it",
             "placeholder": "Type a message…",
             "send": "Send",
-            "emoji": "Emoji"
+            "emoji": "Emoji",
+            "connecting": "Connecting…",
+            "disconnected": "Connection lost, please refresh"
         },
         "saveWord": {
             "title": "Save to Word Bank",
