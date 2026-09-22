@@ -12,3 +12,4 @@
 - [後端第一步：登入與 DB](auth-backend-plan.md) — better-auth + Hono + Drizzle 已蓋好、前端已接、db:seed 有 11 個測試帳號；怎麼跑、踩過的坑、下一步
 - [交測前給啟動指令](feedback-test-handoff.md) — 每次要使用者測試都附 dev:api / dev 兩條指令，Docker 常駐不用提
 - [DB schema 定案](data-model-decisions.md) — 個人資訊進 Users、興趣 text[]、頭像 lookup 表、presence 住 cache 不進 DB；房間與代幣延後、home 資料來源對照
+- [時間欄位命名 xxxDate](feedback-naming-timestamps.md) — createDate / updateDate / startDate / endDate，不用 xxxAt；better-auth 用 fields 對映、drizzle-kit 改名的做法

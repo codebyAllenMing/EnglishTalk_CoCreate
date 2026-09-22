@@ -28,7 +28,8 @@ metadata:
    自己也覺得會無限擴大；bitmask 也裝不下設定頁的自由輸入，故不採。
 3. **頭像 lookup 表 `Avatars(id smallint, code, name)`**，`Users.avatarId` FK 存數字，前端拿 code 對圖。
    之後擁有權 `UserAvatars` FK 過去；解鎖規則沒定前不建。
-4. 表名 PascalCase 複數、欄位 camelCase；時間 `timestamptz` 存 UTC（vault D3）。
+4. 表名 PascalCase 複數、欄位 camelCase、**時間欄位 `xxxDate`**（createDate / updateDate / startDate / endDate，見 [[feedback-naming-timestamps]]；
+   2026-09-22 migration 0003 把 better-auth 四張表的 13 個 `xxxAt` 全改掉）；時間 `timestamptz` 存 UTC（vault D3）。
 5. better-auth 佔了 `Sessions`，對話那一場一律叫 Room，不再出現第二個 Sessions。
 
 ## 延後（使用者決定）
@@ -61,7 +62,7 @@ metadata:
 - key 是 **sessionId** 不是 userId：同一人兩台裝置，A 登出只清 A；讀時按 userId 聚合，active 蓋過 idle。
 - 狀態機：active ─(5 分鐘沒動作 / 分頁背景)→ idle；心跳每 60 秒、狀態一變立刻一次；server TTL 兩分鐘沒心跳就消失。
   登出前與 `pagehide`（sendBeacon）立刻 `leave`。
-- `Users.lastSeenAt`（migration 0002）只在某人**最後一條 session 消失時寫一次**，給「最後上線 2 小時前」用。
+- `Users.lastSeenDate`（migration 0002 建、0003 改名）只在某人**最後一條 session 消失時寫一次**，給「最後上線 2 小時前」用。
 - API：`POST /api/me/presence {state}`、`POST /api/me/presence/leave`、`GET /api/presence` → `{ userId: state }`；
   `GET /api/users` 是別人的公開名單（排除自己、最多 50、無 email / 性別 / 興趣），跟 presence 分開拉（頻率差幾百倍）。
 - Find Monsters 已接：名單進頁一次、presence 每 30 秒（背景不拉）。卡片藥丸現在顯示線上中 / 閒置中 / 最後上線 / 尚未上線；
@@ -83,7 +84,7 @@ metadata:
 
 通知是純消費者，每一則都是房間 / 訊息 / 評分產生的事件，那些都還沒建，所以先不做；頂部列的鈴鐺與 `notifications: 2` 留假的到發表。
 到時候照這個形狀做、不用返工：
-- `Notifications(userId, type, refType, refId, payload jsonb, createdAt, readAt)`，**存資料不存文案**，文案前端依 type 從字典組（雙語）。
+- `Notifications(userId, type, refType, refId, payload jsonb, createDate, readDate)`，**存資料不存文案**，文案前端依 type 從字典組（雙語）。
 - 產生端統一走 `notify(userId, type, ref, payload)`，房間 / 訊息路由都呼叫它，之後加 email / push 只改這一處。
 - 送達：先 30 秒輪詢 `GET /api/notifications?unread=1`（跟 presence 同節奏），自有 WS 蓋好改推；徽章 = `readAt is null` 的 count，`PATCH /api/notifications/read`。
 - 第一則通知會是房主審核制的「申請加入 / 同意 / 拒絕」，房間路由建好時一起掛。

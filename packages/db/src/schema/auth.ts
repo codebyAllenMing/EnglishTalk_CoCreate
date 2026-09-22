@@ -4,8 +4,10 @@ import { avatars } from "./profile.ts";
 /**
  * better-auth 的四張核心表。
  *
- * 命名照專案慣例：資料表 PascalCase 複數、欄位 camelCase ——
- * better-auth 預設欄位就是 camelCase，表名則在 packages/auth 用 modelName 對過去。
+ * 命名照專案慣例：資料表 PascalCase 複數、欄位 camelCase、**時間欄位一律 `xxxDate`**
+ * （createDate / updateDate / expireDate / lastSeenDate），不用 better-auth 預設的 `xxxAt`。
+ * 表名與欄位名都在 packages/auth 用 modelName / fields 對回 better-auth 的名字（2026-09-22 改的，
+ * 使用者的慣例是 createDate / updateDate，當初照 better-auth 預設吃是疏漏）。
  * 欄位集合必須跟 better-auth 要的一致（多的可以、少的會在執行期炸），
  * 改動前先跑 `npx @better-auth/cli generate` 對照官方產出。
  *
@@ -24,8 +26,8 @@ export const users = pgTable("Users", {
 	emailVerified: boolean("emailVerified").notNull().default(false),
 	/** better-auth 給社群登入頭像 URL 用的；怪獸頭像走 avatarId，不放這裡 */
 	image: text("image"),
-	createdAt: timestamp("createdAt").notNull().defaultNow(),
-	updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+	createDate: timestamp("createDate").notNull().defaultNow(),
+	updateDate: timestamp("updateDate").notNull().defaultNow(),
 
 	// ---- 個人資料 ----
 	/** FK 到 Avatars 目錄，新帳號預設第一隻 */
@@ -46,17 +48,17 @@ export const users = pgTable("Users", {
 	 * 最後一次在線上的時間，給「最後上線 2 小時前」用。**不是**線上狀態 ——
 	 * 線上狀態住在 api 的 presence cache（會過期的東西不進 DB），這欄只在某人變成離線時寫一次。
 	 */
-	lastSeenAt: timestamp("lastSeenAt", { withTimezone: true }),
+	lastSeenDate: timestamp("lastSeenDate", { withTimezone: true }),
 });
 
 export const sessions = pgTable(
 	"Sessions",
 	{
 		id: text("id").primaryKey(),
-		expiresAt: timestamp("expiresAt").notNull(),
+		expireDate: timestamp("expireDate").notNull(),
 		token: text("token").notNull().unique(),
-		createdAt: timestamp("createdAt").notNull().defaultNow(),
-		updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+		createDate: timestamp("createDate").notNull().defaultNow(),
+		updateDate: timestamp("updateDate").notNull().defaultNow(),
 		ipAddress: text("ipAddress"),
 		userAgent: text("userAgent"),
 		userId: text("userId")
@@ -79,12 +81,12 @@ export const accounts = pgTable(
 		accessToken: text("accessToken"),
 		refreshToken: text("refreshToken"),
 		idToken: text("idToken"),
-		accessTokenExpiresAt: timestamp("accessTokenExpiresAt"),
-		refreshTokenExpiresAt: timestamp("refreshTokenExpiresAt"),
+		accessTokenExpireDate: timestamp("accessTokenExpireDate"),
+		refreshTokenExpireDate: timestamp("refreshTokenExpireDate"),
 		scope: text("scope"),
 		password: text("password"),
-		createdAt: timestamp("createdAt").notNull().defaultNow(),
-		updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+		createDate: timestamp("createDate").notNull().defaultNow(),
+		updateDate: timestamp("updateDate").notNull().defaultNow(),
 	},
 	(t) => [index("Accounts_userId_idx").on(t.userId)],
 );
@@ -96,9 +98,9 @@ export const verifications = pgTable(
 		id: text("id").primaryKey(),
 		identifier: text("identifier").notNull(),
 		value: text("value").notNull(),
-		expiresAt: timestamp("expiresAt").notNull(),
-		createdAt: timestamp("createdAt").notNull().defaultNow(),
-		updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+		expireDate: timestamp("expireDate").notNull(),
+		createDate: timestamp("createDate").notNull().defaultNow(),
+		updateDate: timestamp("updateDate").notNull().defaultNow(),
 	},
 	(t) => [index("Verifications_identifier_idx").on(t.identifier)],
 );

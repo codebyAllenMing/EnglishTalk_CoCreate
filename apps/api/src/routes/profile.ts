@@ -67,7 +67,7 @@ export function profileRoutes(auth: Auth, db: Db) {
 		const { avatar: _code, ...fields } = parsed.value;
 		await db
 			.update(schema.users)
-			.set({ ...fields, avatarId: avatar[0].id, updatedAt: new Date() })
+			.set({ ...fields, avatarId: avatar[0].id, updateDate: new Date() })
 			.where(eq(schema.users.id, c.var.user.id));
 
 		const profile = await readProfile(db, c.var.user.id);

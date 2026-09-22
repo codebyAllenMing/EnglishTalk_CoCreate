@@ -206,7 +206,7 @@ function Form({
 		learning: draft.learning,
 		level: draft.learningLevel,
 		presence: "active",
-		lastSeenAt: null,
+		lastSeenDate: null,
 		bio: draft.bio,
 	};
 

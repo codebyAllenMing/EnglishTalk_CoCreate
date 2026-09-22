@@ -99,7 +99,7 @@ for (const u of SEED_USERS) {
 			country,
 			interests: u.interests,
 			bio: u.bio,
-			updatedAt: new Date(),
+			updateDate: new Date(),
 		})
 		.where(eq(schema.users.email, email));
 }

@@ -18,7 +18,7 @@ export type Monster = {
 	/** null = 離線 */
 	presence: PresenceState | null;
 	/** 離線時「最後上線」用；從沒上線過是 null */
-	lastSeenAt: string | null;
+	lastSeenDate: string | null;
 	/** 自我介紹。使用者自己寫的內容，不進字典、不翻譯 */
 	bio: string;
 };
@@ -32,7 +32,7 @@ export function fromPublicUser(user: PublicUser, presence: PresenceMap): Monster
 		learning: user.learningLang,
 		level: user.learningLevel,
 		presence: presence[user.id] ?? null,
-		lastSeenAt: user.lastSeenAt,
+		lastSeenDate: user.lastSeenDate,
 		bio: user.bio,
 	};
 }

@@ -28,10 +28,10 @@ export const PRESENCE_TTL_MS = 2 * 60 * 1000;
 
 export type MemoryPresenceOptions = {
 	/**
-	 * 某個 user 的最後一條 session 消失（過期或登出）時呼叫，拿去寫 Users.lastSeenAt。
+	 * 某個 user 的最後一條 session 消失（過期或登出）時呼叫，拿去寫 Users.lastSeenDate。
 	 * 只在「這個人真的離線了」那一刻寫一次，不是每次心跳都敲 DB。
 	 */
-	onOffline?: (userId: string, lastSeenAt: Date) => void;
+	onOffline?: (userId: string, lastSeenDate: Date) => void;
 	now?: () => number;
 };
 

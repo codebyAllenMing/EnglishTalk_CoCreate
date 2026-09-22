@@ -43,7 +43,7 @@ corepack pnpm db:seed
 ## 直接看資料庫
 
 ```bash
-docker exec monstertalk-postgres-1 psql -U monstertalk -d monstertalk -c 'select name, email, "nativeLang", "learningLang" from "Users" order by "createdAt";'
+docker exec monstertalk-postgres-1 psql -U monstertalk -d monstertalk -c 'select name, email, "nativeLang", "learningLang" from "Users" order by "createDate";'
 ```
 
 或 `corepack pnpm db:studio` 開 Drizzle Studio。

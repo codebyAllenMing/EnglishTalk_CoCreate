@@ -76,6 +76,6 @@ export function describePresence(monster: Monster, locale: string, dict: Diction
 	if (monster.presence === "idle") return { icon: Moon, text: dict.idle };
 	return {
 		icon: Clock,
-		text: monster.lastSeenAt ? fill(dict.lastSeen, { time: formatLastSeen(monster.lastSeenAt, locale) }) : dict.neverSeen,
+		text: monster.lastSeenDate ? fill(dict.lastSeen, { time: formatLastSeen(monster.lastSeenDate, locale) }) : dict.neverSeen,
 	};
 }

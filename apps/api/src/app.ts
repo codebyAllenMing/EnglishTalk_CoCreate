@@ -23,13 +23,13 @@ export function createApp(env: Env) {
 		trustedOrigins: [env.WEB_ORIGIN],
 	});
 
-	// 線上狀態的 cache（dev：行程內；prod：換 Durable Object）。某人真的離線時才寫一次 lastSeenAt
+	// 線上狀態的 cache（dev：行程內；prod：換 Durable Object）。某人真的離線時才寫一次 lastSeenDate
 	const presence = createMemoryPresence({
-		onOffline: (userId, lastSeenAt) => {
+		onOffline: (userId, lastSeenDate) => {
 			db.update(schema.users)
-				.set({ lastSeenAt })
+				.set({ lastSeenDate })
 				.where(eq(schema.users.id, userId))
-				.catch((error: unknown) => console.error("lastSeenAt update failed", error));
+				.catch((error: unknown) => console.error("lastSeenDate update failed", error));
 		},
 	});
 

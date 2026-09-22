@@ -59,7 +59,7 @@ export type PublicUser = {
 	learningLevel: LevelCode;
 	bio: string;
 	/** ISO 字串；從沒上線過是 null */
-	lastSeenAt: string | null;
+	lastSeenDate: string | null;
 };
 
 /** 除了自己以外的人，最多 50 筆；線上狀態另外從 /api/presence 拿 */

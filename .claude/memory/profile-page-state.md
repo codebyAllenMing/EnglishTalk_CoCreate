@@ -14,7 +14,7 @@ metadata:
 > （鏡射 DB 的 Avatars 表，`owned` 仍是假的 `FAKE_OWNED`）。ProfileCard 已是 client 元件（載到前畫骨架）。
 > **Find Monsters 也接真資料了**（同日稍晚）：名單 `GET /api/users`、線上狀態 `GET /api/presence` 每 30 秒；
 > `fakeMonsters.json` / `FAKE_MONSTERS` 已刪。卡片藥丸與面板改顯示線上狀態，「房間最多 N 人」「下次有空」「名額」
-> 拿掉等房間的表。`Monster` 型別多了 `avatar` / `presence` / `lastSeenAt`，少了 `online` / `roomSize` / `freeAt` / `slotsOpen`。
+> 拿掉等房間的表。`Monster` 型別多了 `avatar` / `presence` / `lastSeenDate`，少了 `online` / `roomSize` / `freeAt` / `slotsOpen`。
 > 個人資料卡的語言列：不放「中 / EN」徽章、列尾放語言的國旗（`LANG_FLAG` 抽到 profileData.ts）；程度徽章帶語言名。
 > 本檔其餘關於「假資料」的描述以這段為準。
 

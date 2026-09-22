@@ -12,7 +12,7 @@ export type PublicUser = {
 	learningLang: string;
 	learningLevel: string;
 	bio: string;
-	lastSeenAt: string | null;
+	lastSeenDate: string | null;
 };
 
 /** 名單一次最多這麼多；超過再做 server 端篩選與分頁（現在 11 個人，篩選在 client） */
@@ -34,15 +34,15 @@ export function usersRoutes(auth: Auth, db: Db) {
 				learningLang: schema.users.learningLang,
 				learningLevel: schema.users.learningLevel,
 				bio: schema.users.bio,
-				lastSeenAt: schema.users.lastSeenAt,
+				lastSeenDate: schema.users.lastSeenDate,
 			})
 			.from(schema.users)
 			.innerJoin(schema.avatars, eq(schema.users.avatarId, schema.avatars.id))
 			.where(ne(schema.users.id, c.var.user.id))
-			.orderBy(schema.users.createdAt)
+			.orderBy(schema.users.createDate)
 			.limit(LIMIT);
 
-		const users: PublicUser[] = rows.map((r) => ({ ...r, lastSeenAt: r.lastSeenAt?.toISOString() ?? null }));
+		const users: PublicUser[] = rows.map((r) => ({ ...r, lastSeenDate: r.lastSeenDate?.toISOString() ?? null }));
 		return c.json(users);
 	});
 

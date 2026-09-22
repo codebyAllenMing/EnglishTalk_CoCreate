@@ -18,6 +18,9 @@ export type AuthOptions = {
  * api 的 /api/auth/* 交給 auth.handler；其他服務（WS 握手、tldraw、房間服務簽 LiveKit token）
  * 只需要 verifySession —— 都吃同一張 cookie。
  */
+/** 四張表都有的兩欄，better-auth 名 → DB 欄位名 */
+const TIMESTAMPS = { createdAt: "createDate", updatedAt: "updateDate" } as const;
+
 export function createAuth({ db, secret, baseURL, trustedOrigins }: AuthOptions) {
 	return betterAuth({
 		secret,
@@ -33,16 +36,26 @@ export function createAuth({ db, secret, baseURL, trustedOrigins }: AuthOptions)
 				Verifications: schema.verifications,
 			},
 		}),
-		// 表名走專案慣例（PascalCase 複數），欄位維持 better-auth 預設的 camelCase
-		user: { modelName: "Users" },
+		// 表名走專案慣例（PascalCase 複數）；時間欄位走使用者慣例 xxxDate，
+		// 用 fields 把 better-auth 的 xxxAt 對到 DB 的欄位名（key 是 better-auth 的名字、value 是 DB 的）。
+		// API 回傳給前端的 user / session 仍是 better-auth 的名字（createdAt），只有 DB 那層不同。
+		user: { modelName: "Users", fields: TIMESTAMPS },
 		session: {
 			modelName: "Sessions",
+			fields: { ...TIMESTAMPS, expiresAt: "expireDate" },
 			// 「短效 access + refresh」在 better-auth 的對應：
 			// cookie 內快取一份簽過名的 session 五分鐘，期間不查 DB；過期才回 DB 驗 Sessions 那一列
 			cookieCache: { enabled: true, maxAge: 5 * 60 },
 		},
-		account: { modelName: "Accounts" },
-		verification: { modelName: "Verifications" },
+		account: {
+			modelName: "Accounts",
+			fields: {
+				...TIMESTAMPS,
+				accessTokenExpiresAt: "accessTokenExpireDate",
+				refreshTokenExpiresAt: "refreshTokenExpireDate",
+			},
+		},
+		verification: { modelName: "Verifications", fields: { ...TIMESTAMPS, expiresAt: "expireDate" } },
 		emailAndPassword: {
 			enabled: true,
 			// MVP 先不做 email 驗證與密碼重設（見 .claude/memory/auth-backend-plan.md）
