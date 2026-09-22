@@ -35,7 +35,8 @@ metadata:
 ## 延後（使用者決定）
 
 - **房間**：使用者 2026-09-22 用「主單 / 子單」定了結構，**schema 已建**（`packages/db/src/schema/room.ts`、migration `0004_rooms`），
-  API 與前端還沒接：
+  **API 已有 `GET /api/me/schedule?from&to` 與 `POST /api/rooms`**（`apps/api/src/routes/rooms.ts`，2026-09-22），
+  週曆已接；開房 Dialog、取消、別人的房、申請 / 審核還沒有：
   - 主單 `Rooms`：`id`（流水號）、`code`（房號，網址用，server 產 6–8 碼大寫去易混字元，unique）、`hostId`、`title`、
     `startDate`、`endDate`、`durationMinutes smallint`（20 / 40 / 60，DB check）、`capacity`（2–4，含房主）、
     `roomType`（enum id：`ROOM_TYPES` 1 = en→zh、2 = zh→en，常數在 room.ts，不建 lookup 表）、`cancelDate`（null = 未取消）、
@@ -49,9 +50,14 @@ metadata:
     名額 = `count(approved) < capacity`。使用者原本子單放 `hostUserId`，改成主單 `hostId` + 房主子單列。
     `left` = approved 後自己退出、席次還回去（使用者決定留）；房主退出 = 取消房間走 `cancelDate`，不走子單狀態。
   - 規則放 app 層交易：同一人的房（host 或 approved）時間不能重疊（週曆不畫重疊）；申請與同意各檢查一次名額。
-  - ⚠️ **還沒拍板**：週曆黃色「開放時段」是不是「還沒有人加入的房」（這結構裡沒有空檔實體）。
-  - 週曆 = 這兩張表的投影：hosted = role host、session = role member 且 approved；前端 `Slot` 形狀不變，
-    一支 `GET /api/me/schedule?from&to` 回前後各一週。真房間 20 / 40 分鐘進來後 grid 30 分鐘格畫不出，要改按分鐘絕對定位。
+  - **「開放時段」拿掉了**（2026-09-22 拍板）：v1.0 邀請制留下的概念，房主制下沒有它的角色；沒有空檔實體，只有 Rooms。
+  - POST /rooms：手寫驗證（title ≤ 40、startDate 整分且在未來、duration / capacity / roomType 列舉）→ 先抽一個沒用過的 6 碼房號
+    （字母表去 0 O 1 I）→ 交易內查重疊（我 approved 的房、未取消、`start < to && end > from`）→ 插主單 + 房主子單。
+    重疊回 409 `{ error: "overlap" }`，驗證回 400 `{ error: "invalid", field }`。
+  - 週曆的 API 回傳 `ScheduleItem`：id / code / kind（hosted = role host、session = role member）/ title / startDate / endDate（ISO UTC）
+    / durationMinutes / capacity / seats { taken, total } / from / to（roomType 展開，前端不碰 enum id）。
+  - seed 每次重建 5 間 `SEED*` 房（相對本週），不動使用者自己開的。
+  - 週曆 = 這兩張表的投影，前端一次拉三週、切週只篩選；格子已改 10 分鐘一格（見 [[profile-page-state]]）。
 - **代幣**：獨立表，使用者視為「加裝武器」，等房間建好再上（ledger append-only + 物化餘額，vault E1）。
 - 評分 / 通知 / 推薦碼：P1–P2。
 

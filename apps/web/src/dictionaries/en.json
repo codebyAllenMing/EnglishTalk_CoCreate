@@ -206,25 +206,21 @@
         "schedule": {
             "title": "My Schedule",
             "hostRoom": "Host a room",
-            "openSlot": "Open a time slot",
-            "open": "Open",
-            "seats": "seats",
+            "untitled": "Room",
             "prevWeek": "Previous week",
             "nextWeek": "Next week",
             "legend": {
-                "open": "Your open time",
                 "session": "Your sessions",
                 "hosted": "Room you host"
             },
             "timezone": "All times shown in your local time",
-            "openSlotHint": "Pick the hours you're free to chat. Others can then book you.",
             "detail": {
                 "type": "Type",
                 "time": "Time",
                 "languages": "Languages",
-                "participants": "Participants"
-            },
-            "createSlot": "Create slot"
+                "participants": "Participants",
+                "code": "Room code"
+            }
         },
         "monsters": {
             "title": "Find Conversation Monsters",

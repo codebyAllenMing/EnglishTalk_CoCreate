@@ -8,6 +8,7 @@ import type { Env } from "./env.ts";
 import { createMemoryPresence } from "./presence/store.ts";
 import { presenceRoutes } from "./routes/presence.ts";
 import { profileRoutes } from "./routes/profile.ts";
+import { roomsRoutes } from "./routes/rooms.ts";
 import { usersRoutes } from "./routes/users.ts";
 
 /**
@@ -60,6 +61,8 @@ export function createApp(env: Env) {
 	// 別人的名單與線上狀態，兩支分開：名單變動少、狀態每 30 秒被拉一次
 	app.route("/api", usersRoutes(auth, db));
 	app.route("/api", presenceRoutes(auth, presence));
+	// 房間：GET /api/me/schedule（週曆）、POST /api/rooms（開房）
+	app.route("/api", roomsRoutes(auth, db));
 
 	return app;
 }

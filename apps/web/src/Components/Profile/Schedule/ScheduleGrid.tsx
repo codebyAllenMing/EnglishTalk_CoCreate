@@ -1,7 +1,7 @@
 import type { Dictionary } from "@/dictionaries";
 import InitialScroll from "./InitialScroll";
 import SlotCard from "./SlotCard";
-import { SLOTS_PER_DAY, SLOT_HEIGHT, type Slot } from "./scheduleData";
+import { SLOTS_PER_DAY, SLOT_HEIGHT, SLOT_MINUTES, type Slot } from "./scheduleData";
 import type { WeekDay } from "./week";
 
 type Props = {
@@ -17,11 +17,11 @@ type Props = {
 
 const TIME_COL = "4rem";
 const SCROLL_ID = "schedule-scroll";
-/** 每 2 小時一條水平線與一個時間標籤 = 4 格 */
-const LABEL_EVERY = 4;
+/** 每 2 小時一條水平線與一個時間標籤（一格 10 分鐘 = 12 格） */
+const LABEL_EVERY = 120 / SLOT_MINUTES;
 
 /**
- * 週曆網格。一天 48 格（30 分鐘一格）全部展開，外框限高、內部捲動。
+ * 週曆網格。一天 144 格（10 分鐘一格，20 / 40 / 60 分鐘的房才都畫得準）全部展開，外框限高、內部捲動。
  *
  * ## 三個 sticky 缺一不可
  *
@@ -44,7 +44,7 @@ const LABEL_EVERY = 4;
  *
  * ## 初始捲動位置
  *
- * 全天展開有 1632px，不捲的話打開只看到一片空的凌晨。捲動由 InitialScroll（client）
+ * 全天展開有 1728px，不捲的話打開只看到一片空的凌晨。捲動由 InitialScroll（client）
  * 在 layout effect 裡做，時機問題見那裡的註解。
  * 曾經是內嵌 <script>，client 端導頁時 React 建出來的 <script> 不會執行，改掉了。
  */
@@ -128,9 +128,9 @@ export default function ScheduleGrid({
 						/>
 					))}
 
-					{slots.map(({ slot, day }, i) => (
+					{slots.map(({ slot, day }) => (
 						<SlotCard
-							key={i}
+							key={slot.code}
 							slot={slot}
 							day={day}
 							locale={locale}

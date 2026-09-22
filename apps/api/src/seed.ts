@@ -1,7 +1,7 @@
-import { eq } from "drizzle-orm";
+import { eq, like } from "drizzle-orm";
 import { createAuth, isAPIError } from "@monstertalk/auth";
 import { createDb, schema } from "@monstertalk/db";
-import type { Country, Lang, Level } from "@monstertalk/db/schema";
+import type { Country, Lang, Level, RoomDuration, RoomMemberStatus, RoomTypeId } from "@monstertalk/db/schema";
 import { loadEnv } from "./env.ts";
 
 /**
@@ -11,7 +11,8 @@ import { loadEnv } from "./env.ts";
  *   corepack pnpm db:seed          → 全部 <id>@example.com，密碼一律 1qaz@WSX
  *
  * 可重複執行：帳號已存在就跳過建立，**密碼與個人資料每次都覆寫回這裡的值**，
- * 所以在設定頁亂改（或改了密碼）之後想還原就重跑一次。不刪任何東西。
+ * 所以在設定頁亂改（或改了密碼）之後想還原就重跑一次。
+ * 房間（測週曆用）是相對「本週」排的，每次重跑先刪掉自己建的 SEED* 房再建；使用者自己開的房不動。
  * 建帳號走 better-auth 的 server-side API（auth.api.signUpEmail）而不是直接 insert，
  * 密碼 hash 與 Accounts 那一列才會跟真的註冊一模一樣；個人資料欄位 better-auth 不認識，用 Drizzle 直接 update。
  */
@@ -60,6 +61,9 @@ const auth = createAuth({
 const ctx = await auth.$context;
 const avatarIds = new Map((await db.select().from(schema.avatars)).map((a) => [a.code, a.id]));
 
+/** SEED_USERS 的 id → Users.id，建房間時要用 */
+const userIds = new Map<string, string>();
+
 let created = 0;
 let skipped = 0;
 for (const u of SEED_USERS) {
@@ -81,6 +85,7 @@ for (const u of SEED_USERS) {
 
 	const [row] = await db.select({ id: schema.users.id }).from(schema.users).where(eq(schema.users.email, email));
 	if (!row) throw new Error(`${email} 建立後找不到`);
+	userIds.set(u.id, row.id);
 	// 密碼也重設：hash 用 better-auth 自己的（scrypt），存法跟註冊時一樣，登入才驗得過
 	await ctx.internalAdapter.updatePassword(row.id, await ctx.password.hash(PASSWORD));
 
@@ -105,4 +110,60 @@ for (const u of SEED_USERS) {
 }
 
 console.log(`\n建立 ${created} 個、既有 ${skipped} 個，密碼與個人資料已寫入。密碼一律 ${PASSWORD}`);
+
+// ---- 房間（測週曆用）----
+
+type SeedRoom = {
+	code: string;
+	host: string;
+	title: string;
+	/** 相對本週週一的天數（可以是負的 = 上週、≥ 7 = 下週） */
+	day: number;
+	/** 當地時間 "HH:MM" */
+	time: string;
+	duration: RoomDuration;
+	capacity: number;
+	roomType: RoomTypeId;
+	members: { id: string; status: RoomMemberStatus }[];
+};
+
+/** roomType：1 = en → zh、2 = zh → en。allen 視角：SEED01 / 05 是他開的，02 / 03 是他加入的，04 申請中（週曆不顯示） */
+const SEED_ROOMS: readonly SeedRoom[] = [
+	{ code: "SEED01", host: "allen", title: "English practice", day: 1, time: "20:00", duration: 40, capacity: 2, roomType: 2, members: [{ id: "luna", status: "approved" }] },
+	{ code: "SEED02", host: "bobby", title: "Small group room", day: 3, time: "21:00", duration: 60, capacity: 4, roomType: 1, members: [{ id: "allen", status: "approved" }, { id: "luna", status: "approved" }, { id: "mia", status: "requested" }] },
+	{ code: "SEED03", host: "luna", title: "Movie night chat", day: 5, time: "19:00", duration: 60, capacity: 3, roomType: 1, members: [{ id: "allen", status: "approved" }] },
+	{ code: "SEED04", host: "alex", title: "Weekly check-in", day: 9, time: "20:00", duration: 20, capacity: 2, roomType: 2, members: [{ id: "allen", status: "requested" }] },
+	{ code: "SEED05", host: "allen", title: "", day: -4, time: "12:00", duration: 20, capacity: 2, roomType: 2, members: [] },
+];
+
+// 本週週一 00:00（本機時區）。getDay() 週日是 0，所以週日要往回推 6 天
+const today = new Date();
+const monday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - ((today.getDay() + 6) % 7));
+function at(day: number, time: string): Date {
+	const [h = 0, m = 0] = time.split(":").map(Number);
+	return new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + day, h, m);
+}
+
+await db.delete(schema.rooms).where(like(schema.rooms.code, "SEED%"));
+for (const r of SEED_ROOMS) {
+	const hostId = userIds.get(r.host);
+	if (!hostId) throw new Error(`SEED_ROOMS 的 host ${r.host} 不在 SEED_USERS 裡`);
+	const startDate = at(r.day, r.time);
+	const endDate = new Date(startDate.getTime() + r.duration * 60_000);
+	const [room] = await db
+		.insert(schema.rooms)
+		.values({ code: r.code, hostId, title: r.title, startDate, endDate, durationMinutes: r.duration, capacity: r.capacity, roomType: r.roomType })
+		.returning({ id: schema.rooms.id });
+	if (!room) throw new Error(`${r.code} insert 沒有回傳列`);
+	await db.insert(schema.roomMembers).values([
+		{ roomId: room.id, userId: hostId, role: "host", status: "approved" },
+		...r.members.map((m) => {
+			const userId = userIds.get(m.id);
+			if (!userId) throw new Error(`SEED_ROOMS 的成員 ${m.id} 不在 SEED_USERS 裡`);
+			return { roomId: room.id, userId, role: "member", status: m.status };
+		}),
+	]);
+	console.log(`+ ${r.code} ${r.host.padEnd(6)} ${startDate.toLocaleString("zh-TW")}  ${r.duration} 分  ${r.title || "(無標題)"}`);
+}
+console.log(`房間 ${SEED_ROOMS.length} 間已重建（相對本週）。`);
 process.exit(0);

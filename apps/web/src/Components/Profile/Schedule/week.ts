@@ -53,7 +53,7 @@ export function formatTime(minutes: number, locale: string): string {
 }
 
 /** Date → "YYYY-MM-DD"。不用 toISOString，那會先轉 UTC 而在台灣時間的凌晨倒退一天。 */
-function toISODate(d: Date): string {
+export function toISODate(d: Date): string {
 	const pad = (n: number) => String(n).padStart(2, "0");
 	return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }

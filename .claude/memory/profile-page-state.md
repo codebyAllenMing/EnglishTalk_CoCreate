@@ -122,6 +122,17 @@ metadata:
 
 ## My Schedule 週曆
 
+> **2026-09-22 接真資料**：`ScheduleBoard`（client）自己打 `GET /api/me/schedule?from&to`（`src/schedule/client.ts`），
+> 一次三週、切週在範圍內只篩選、超出才重打；起始週用 `useSyncExternalStore`（server snapshot null → 骨架，
+> client 才算本週），不再由 server 傳 `initialWeekStart`。`fakeSchedule.json` / `getFakeSchedule` 已刪。
+> **「開放時段」按鈕與黃色 open 卡拿掉**（v1.0 邀請制留下的概念，房主制下沒有角色），`SlotKind` 剩 hosted / session。
+> **格子改 10 分鐘一格 12px**（`SLOT_MINUTES = 10`、`SLOT_HEIGHT = 12`）：房只有 20 / 40 / 60 分鐘，30 的格線畫不出 20 與 40；
+> `SlotCard` 依長度決定畫幾行（20 分只有標題、40 加時間、60 才有語言列與人數）。
+> ⚠️ 修了一個舊 bug：卡片的 gridRow 原本寫「起始格 + 1」，但第一列是表頭，所有卡都畫早了一格（30 分鐘）；現在是 +2。
+> 跨當地午夜的房裁在當天底。「開設聊天室」按鈕仍純視覺，開房 Dialog 下一輪；seed 有 5 間 SEED* 房（見 `_dev/dev-accounts.md`）。
+> 以下是原本靜態 mock 時期的紀錄，數字（48 格 / 34px / 1632px）已過時，其餘決策仍有效。
+
+
 **自己畫，不用日曆套件**（2026-08-27 決定）。關鍵理由：**這個週曆沒有事件重疊**，
 每格最多一張卡，而重疊佈局演算法正是套件最主要的價值。也沒有拖拉、月/日視圖切換、
 跨日或全天事件。附帶好處是整區維持 Server Component（套件幾乎都 client-only），

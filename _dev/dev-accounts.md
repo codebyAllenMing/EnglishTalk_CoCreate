@@ -47,3 +47,33 @@ docker exec monstertalk-postgres-1 psql -U monstertalk -d monstertalk -c 'select
 ```
 
 或 `corepack pnpm db:studio` 開 Drizzle Studio。
+
+## 房間（測週曆用）
+
+`db:seed` 會建 5 間相對**本週**的房（房號 `SEED01`–`SEED05`），每次重跑先刪這五間再建，你自己開的房不動。
+以 allen 登入看週曆：
+
+| 房號 | 房主 | 時間（本週） | 長度 | allen 的角色 | 週曆上 |
+|---|---|---|---|---|---|
+| SEED01 | allen | 週二 20:00 | 40 分 | 房主，luna 已加入 | 紫（你開設的） |
+| SEED02 | bobby | 週四 21:00 | 60 分 | 已同意加入（3/4，mia 申請中） | 綠（你的對話） |
+| SEED03 | luna | 週六 19:00 | 60 分 | 已同意加入 | 綠 |
+| SEED04 | alex | 下週三 20:00 | 20 分 | 申請中（未同意） | **不顯示** |
+| SEED05 | allen | 上週四 12:00 | 20 分 | 房主，沒標題、沒人加入 | 紫（上一週） |
+
+用 curl 開一間房（先登入拿 cookie）：
+
+```bash
+J=/tmp/jar.txt
+curl -s -c $J -H "Origin: http://localhost:6531" -H "Content-Type: application/json" \
+  -d '{"email":"allen@example.com","password":"1qaz@WSX"}' http://localhost:4000/api/auth/sign-in/email > /dev/null
+curl -s -b $J -H "Origin: http://localhost:6531" -H "Content-Type: application/json" \
+  -d '{"title":"curl 開的房","startDate":"2026-09-25T12:00:00.000Z","durationMinutes":40,"capacity":3,"roomType":2}' \
+  http://localhost:4000/api/rooms
+```
+
+清掉自己測試開的房（SEED 的留著）：
+
+```bash
+docker exec monstertalk-postgres-1 psql -U monstertalk -d monstertalk -c "delete from \"Rooms\" where code not like 'SEED%';"
+```

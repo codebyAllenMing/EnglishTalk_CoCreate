@@ -206,25 +206,21 @@
         "schedule": {
             "title": "我的行程",
             "hostRoom": "開設聊天室",
-            "openSlot": "開放時段",
-            "open": "開放中",
-            "seats": "人",
+            "untitled": "聊天室",
             "prevWeek": "上一週",
             "nextWeek": "下一週",
             "legend": {
-                "open": "你的開放時段",
                 "session": "你的對話",
                 "hosted": "你開設的聊天室"
             },
             "timezone": "所有時間以你的當地時間顯示",
-            "openSlotHint": "選擇你有空聊天的時段，其他人就能來預約。",
             "detail": {
                 "type": "類型",
                 "time": "時間",
                 "languages": "語言",
-                "participants": "人數"
-            },
-            "createSlot": "建立時段"
+                "participants": "人數",
+                "code": "房號"
+            }
         },
         "monsters": {
             "title": "尋找對話怪獸",

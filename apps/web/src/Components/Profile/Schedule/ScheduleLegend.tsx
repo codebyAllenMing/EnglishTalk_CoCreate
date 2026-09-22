@@ -5,13 +5,12 @@ type Props = { dict: Dictionary["profile"]["schedule"] };
 
 /** 圖例的色塊要跟 SlotCard 的 TONE 對得上，改配色時兩邊一起改 */
 const SWATCH: Record<SlotKind, string> = {
-	open: "bg-token/25",
-	session: "bg-secondary-100",
 	hosted: "bg-primary-100",
+	session: "bg-secondary-100",
 };
 
 export default function ScheduleLegend({ dict }: Props) {
-	const items: SlotKind[] = ["open", "session", "hosted"];
+	const items: SlotKind[] = ["hosted", "session"];
 
 	return (
 		<div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 px-1 text-xs text-ink-500">
