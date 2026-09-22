@@ -94,3 +94,5 @@ wrangler 4.86 OAuth 已登入（`water6240@gmail.com`）；cloudflared 有憑證
 - vault 的 `tech-inventory` 要改 —— **使用者說一聲才動**
 
 **How to apply:** 改 schema 一律 `db:generate` 產 migration 再 `db:migrate`，不手改 DB；secret 只放 `.env.local` / Workers secret。
+
+- 2026-09-22：`apps/web` 開始相依 workspace 套件（`@monstertalk/live/timer`，計時器純邏輯跟 server 共用），next.config 有 `transpilePackages: ["@monstertalk/live"]`；共用檔不能帶 `.ts` 副檔名的 import。

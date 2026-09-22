@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { TimerState } from "@monstertalk/live/timer";
 import { wsUrl } from "@/api";
 import { toHHMM, type ChatMessage } from "./roomData";
 
@@ -9,24 +10,30 @@ export type LiveStatus = "connecting" | "online" | "offline" | "error";
 /** 跟 packages/live 的 protocol.ts 同形狀（server 那邊的 at 是 ISO，這裡轉成畫面用的 "HH:MM"） */
 type WireMessage = { id: string; from: string; at: string; text: string };
 type ServerMessage =
-	| { type: "hello"; you: string; online: string[]; history: WireMessage[] }
+	| { type: "hello"; you: string; online: string[]; history: WireMessage[]; timer: TimerState; now: number }
 	| { type: "chat"; message: WireMessage }
-	| { type: "presence"; online: string[] };
+	| { type: "presence"; online: string[] }
+	| { type: "timer"; timer: TimerState };
 
 const MAX_FAILURES = 5;
 const BACKOFF_MS = [1000, 2000, 4000, 8000];
 
 /**
- * 房間的即時通道（聊天 + 在線名單）。連 `/api/rooms/:code/live`，握手用 cookie，server 那邊查子單與時間窗。
+ * 房間的即時通道（聊天 + 在線名單 + 計時器）。連 `/api/rooms/:code/live`，握手用 cookie，server 那邊查子單與時間窗。
  *
  * - 送出不先塞本地，等 server 廣播回來才出現：一份來源，順序跟大家一致。
  * - 斷線退避重連（1、2、4、8 秒），重連後再收一次 hello，歷史整份換掉；連續失敗五次就放棄，status = error。
  * - 收到 `hello` 之前 status 是 connecting，輸入框鎖著。
+ * - 計時器：server 是權威時鐘，這裡只存它最後一次廣播的狀態（timer）與時差（offset = server now − 本機 now）。
+ *   剩幾秒由 RoomProvider 用 settle() 從 `Date.now() + offset` 推，server 平常不送任何東西。
  */
 export function useLive(code: string) {
 	const [status, setStatus] = useState<LiveStatus>("connecting");
 	const [online, setOnline] = useState<string[]>([]);
 	const [messages, setMessages] = useState<ChatMessage[]>([]);
+	/** null = 還沒收到 hello */
+	const [timer, setTimer] = useState<TimerState | null>(null);
+	const [offset, setOffset] = useState(0);
 	const socketRef = useRef<WebSocket | null>(null);
 
 	useEffect(() => {
@@ -54,11 +61,15 @@ export function useLive(code: string) {
 					failures = 0;
 					setOnline(data.online);
 					setMessages(data.history.map(fromWire));
+					setOffset(data.now - Date.now());
+					setTimer(data.timer);
 					setStatus("online");
 				} else if (data.type === "chat") {
 					setMessages((m) => [...m, fromWire(data.message)]);
 				} else if (data.type === "presence") {
 					setOnline(data.online);
+				} else if (data.type === "timer") {
+					setTimer(data.timer);
 				}
 			};
 			socket.onclose = () => {
@@ -93,7 +104,14 @@ export function useLive(code: string) {
 		socket.send(JSON.stringify({ type: "chat", text: value }));
 	}, []);
 
-	return { status, online, messages, send };
+	/** 按 ⇄：只送出去，狀態等 server 廣播回來（再按一次 server 會當成取消） */
+	const swap = useCallback(() => {
+		const socket = socketRef.current;
+		if (!socket || socket.readyState !== WebSocket.OPEN) return;
+		socket.send(JSON.stringify({ type: "swap" }));
+	}, []);
+
+	return { status, online, messages, timer, offset, send, swap };
 }
 
 function fromWire(m: WireMessage): ChatMessage {

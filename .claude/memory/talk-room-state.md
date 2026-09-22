@@ -138,6 +138,21 @@ P2 的（白板、反應、話題卡、單字庫）各自獨立一個檔，延�
   `removeWord(id: number)` 軟刪成功才移除。`SaveWordDialog` 的 pos 是 enum id（`WORD_POS` 在 `src/words/client.ts`，跟 db 同一份手抄），
   duplicate 時框不關、顯示 `saveWord.duplicate`。`fakeRoom.json` 的 words 拿掉、`Room` 型別沒有 words 了。
   用 curl 驗過：401 / 409 duplicate（含大小寫與前後空白）/ 400 各欄位 / 403 非成員 / 404 不存在 / 刪別人的 404 / 刪過再存是新列。
+- **計時器同步（2026-09-22 定案並建好）**：權威時鐘在 server，走**同一條** `live` WS（使用者：「一次開太多 ws 對瀏覽器並不太友善」），
+  用訊息的 `type` 在後端分流。定案：
+  - 房間 `startDate` 自動起跑，不管有沒有人進來；since = startDate，總長 = durationMinutes 對半。
+  - **先跑「要學習的」那一語 = roomType 的 `to`**（開房表單預設 from = 房主母語、to = 房主學習中；zh → en 的房先跑英文）。
+  - ⇄ 任何人都能按、全房同步、5 秒緩衝；再按一次取消（誰按都行）。
+  - 協定：client `{ type: "swap" }`；server `timer { timer }`，`hello` 多帶 `timer` 與 `now`（server ms，client 算時差）。
+  - `settle()` 搬到 packages/live 共用：server 收 swap 先結算再改；server 也要在 swapAt / 桶歸零那一刻自己結算並廣播；client 用同一支從牆鐘推。
+  - `authorize` 多回 startDate / durationMinutes / 先跑的語言；api 重啟就重建成「從 startDate 跑到現在、沒切過」。
+  - 前端 `LanguageTimer` 不動，`RoomProvider` 的 swapLang 改送訊息、timer 狀態改從 useLive 來。
+  - 做法：純邏輯在 `packages/live/src/timer.ts`（**不能 import 任何東西**，web 直接吃這份 TS 原始碼），
+    exports 加 `./timer`；web 加 `@monstertalk/live: workspace:*` + next.config `transpilePackages`（第一次讓 web 相依 workspace 套件）。
+    hub 每間房多 `timer` + `timerTimer`（setTimeout 到 nextEventAt 自己結算並廣播）。`Room` 型別多 `firstLang`（entry.room.to）。
+    `leftOf` 在 since 之前不倒數（開始前 5 分鐘進房看到整桶）；`requestSwap` 開始前忽略。
+  - 驗過：ws 腳本（兩人同時收到 swapAt、再按取消、5 秒後 server 自己換邊並廣播、晚進來的人 hello 拿到換邊後狀態）+ 純函式邊界案例。
+  - ⚠️ dev 坑：hub 的房是第一個人連上時用當時的 DB 列初始化，**重跑 seed 後要重啟 api**，不然 SEED09 的計時器停在舊時間。
 - 還沒定：發表當天後端跑哪（本機 dev vs 部署）、視訊 LiveKit Cloud vs 四人 mesh。
 
 **How to apply:** 接後端前先讀這份確認 provider 的邊界。後端與部署的定案（LiveKit Cloud、tldraw

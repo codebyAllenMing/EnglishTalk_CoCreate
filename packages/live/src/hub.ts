@@ -1,4 +1,5 @@
-import type { ChatMessage, LiveUser, ServerMessage } from "./protocol.ts";
+import type { ChatMessage, ClientMessage, LiveUser, ServerMessage } from "./protocol.ts";
+import { initialTimer, nextEventAt, requestSwap, settle, type TimerInit, type TimerState } from "./timer.ts";
 
 /** 最小的 socket 介面：ws 套件與 Cloudflare 的 WebSocket 都有這三個 */
 export type SocketLike = {
@@ -25,6 +26,8 @@ export type LiveConnection = {
 	/** 握手時查好的人，訊息的 from 用它的 id */
 	user: LiveUser;
 	endDate: Date;
+	/** 計時器的起點：房間的 startDate / 時長 / 先跑哪一語。第一個人連上時拿來初始化，之後的人不看 */
+	timer: TimerInit;
 };
 
 export type LiveHub = {
@@ -35,14 +38,28 @@ export type LiveHub = {
 };
 
 type Client = { socket: SocketLike; user: LiveUser };
-type Room = { clients: Set<Client>; history: ChatMessage[]; endTimer: ReturnType<typeof setTimeout> };
+type Room = {
+	clients: Set<Client>;
+	history: ChatMessage[];
+	endTimer: ReturnType<typeof setTimeout>;
+	/** 權威的計時器狀態；只在 swap / 到點結算時改 */
+	timer: TimerState;
+	/** 下一次主動結算（swapAt 或桶歸零）的 setTimeout */
+	timerTimer: ReturnType<typeof setTimeout> | null;
+};
+
+/** 主動結算的 setTimeout 多等一點，免得 timer 早到幾毫秒、settle 說「還沒」又立刻重排 */
+const SETTLE_MARGIN_MS = 20;
 
 /**
- * 房間即時通道的 hub：`Map<房號, Room>`，一間房一組 socket 清單與一份訊息歷史，廣播只在自己那一組。
+ * 房間即時通道的 hub：`Map<房號, Room>`，一間房一組 socket 清單、一份訊息歷史、一份計時器狀態，廣播只在自己那一組。
  *
  * 跟白板 hub 同一個模型，差別在生命週期：**不做閒置銷毀**，只在 endDate + grace 銷毀 ——
  * 所有人離開再回來歷史還在（使用者 2026-09-22 定案：房間開著的期間歷史要完整）。
  * 訊息只活在記憶體，行程重啟就沒了；要留下來是另一張 RoomMessages 表的事，協定不用動。
+ *
+ * 計時器：server 是權威時鐘，但**不每秒廣播**。狀態只在 swap 進來、swapAt 到點、桶歸零時改一次並廣播，
+ * client 拿狀態用同一支 settle() 從牆鐘推。行程重啟後狀態重建成「從 startDate 跑到現在、沒切過」。
  *
  * 這一層不認識 auth、DB：誰能連由呼叫端（node.ts 的 authorize）決定。
  */
@@ -66,38 +83,75 @@ export function createLiveHub(options: LiveHubOptions = {}): LiveHub {
 		}
 	};
 
+	/** 把 server 的 timer 排到下一個事件點；到點結算、有變就廣播、再排下一個 */
+	const scheduleTimer = (code: string, room: Room) => {
+		if (room.timerTimer) clearTimeout(room.timerTimer);
+		room.timerTimer = null;
+		const at = nextEventAt(room.timer);
+		if (at === null) return;
+		room.timerTimer = setTimeout(
+			() => {
+				room.timerTimer = null;
+				if (rooms.get(code) !== room) return;
+				const next = settle(room.timer, Date.now());
+				if (next !== room.timer) {
+					room.timer = next;
+					broadcast(room, { type: "timer", timer: next });
+				}
+				scheduleTimer(code, room);
+			},
+			Math.max(0, at - Date.now()) + SETTLE_MARGIN_MS,
+		);
+	};
+
 	const destroy = (code: string) => {
 		const room = rooms.get(code);
 		if (!room) return;
 		rooms.delete(code);
 		clearTimeout(room.endTimer);
+		if (room.timerTimer) clearTimeout(room.timerTimer);
 		for (const client of room.clients) client.socket.close(1000, "room ended");
 		log(`live ${code} closed (${rooms.size} left)`);
 	};
 
-	const get = (code: string, endDate: Date): Room => {
+	const get = (code: string, endDate: Date, init: TimerInit): Room => {
 		const existing = rooms.get(code);
 		if (existing) return existing;
 		const untilEnd = Math.max(0, endDate.getTime() + graceAfterEndMs - Date.now());
-		const room: Room = { clients: new Set(), history: [], endTimer: setTimeout(() => destroy(code), untilEnd) };
+		const room: Room = {
+			clients: new Set(),
+			history: [],
+			endTimer: setTimeout(() => destroy(code), untilEnd),
+			timer: settle(initialTimer(init), Date.now()),
+			timerTimer: null,
+		};
 		rooms.set(code, room);
+		scheduleTimer(code, room);
 		log(`live ${code} opened (${rooms.size} total)`);
 		return room;
 	};
 
 	return {
-		connect({ code, socket, user, endDate }) {
-			const room = get(code, endDate);
+		connect({ code, socket, user, endDate, timer }) {
+			const room = get(code, endDate, timer);
 			const client: Client = { socket, user };
 			room.clients.add(client);
 
 			socket.addEventListener("message", (event) => {
-				const text = parseChat(event.data, textLimit);
-				if (text === null) return;
-				const message: ChatMessage = { id: crypto.randomUUID(), from: user.id, at: new Date().toISOString(), text };
-				room.history.push(message);
-				if (room.history.length > historyLimit) room.history.splice(0, room.history.length - historyLimit);
-				broadcast(room, { type: "chat", message });
+				const msg = parseMessage(event.data, textLimit);
+				if (!msg) return;
+				if (msg.type === "chat") {
+					const message: ChatMessage = { id: crypto.randomUUID(), from: user.id, at: new Date().toISOString(), text: msg.text };
+					room.history.push(message);
+					if (room.history.length > historyLimit) room.history.splice(0, room.history.length - historyLimit);
+					broadcast(room, { type: "chat", message });
+				} else if (msg.type === "swap") {
+					const next = requestSwap(room.timer, Date.now());
+					if (next === room.timer) return;
+					room.timer = next;
+					broadcast(room, { type: "timer", timer: next });
+					scheduleTimer(code, room);
+				}
 			});
 
 			const leave = () => {
@@ -108,7 +162,17 @@ export function createLiveHub(options: LiveHubOptions = {}): LiveHub {
 			socket.addEventListener("close", leave);
 			socket.addEventListener("error", leave);
 
-			socket.send(JSON.stringify({ type: "hello", you: user.id, online: online(room), history: room.history } satisfies ServerMessage));
+			const now = Date.now();
+			room.timer = settle(room.timer, now);
+			const hello: ServerMessage = {
+				type: "hello",
+				you: user.id,
+				online: online(room),
+				history: room.history,
+				timer: room.timer,
+				now,
+			};
+			socket.send(JSON.stringify(hello));
 			broadcast(room, { type: "presence", online: online(room) });
 		},
 		size: () => rooms.size,
@@ -119,8 +183,11 @@ export function createLiveHub(options: LiveHubOptions = {}): LiveHub {
 	};
 }
 
-/** 只認 { type: "chat", text }；去頭尾空白、空的與超長的丟掉（超長截斷會讓對方看到半句，不如不送） */
-function parseChat(data: unknown, textLimit: number): string | null {
+/**
+ * 只認協定裡的兩種 client 訊息，其他丟掉。
+ * chat：去頭尾空白、空的與超長的丟掉（超長截斷會讓對方看到半句，不如不送）。
+ */
+function parseMessage(data: unknown, textLimit: number): ClientMessage | null {
 	const raw = typeof data === "string" ? data : data instanceof Uint8Array ? new TextDecoder().decode(data) : null;
 	if (raw === null) return null;
 	let parsed: unknown;
@@ -129,8 +196,10 @@ function parseChat(data: unknown, textLimit: number): string | null {
 	} catch {
 		return null;
 	}
-	if (typeof parsed !== "object" || parsed === null || !("type" in parsed) || parsed.type !== "chat") return null;
+	if (typeof parsed !== "object" || parsed === null || !("type" in parsed)) return null;
+	if (parsed.type === "swap") return { type: "swap" };
+	if (parsed.type !== "chat") return null;
 	const text = "text" in parsed && typeof parsed.text === "string" ? parsed.text.trim() : "";
 	if (!text || text.length > textLimit) return null;
-	return text;
+	return { type: "chat", text };
 }

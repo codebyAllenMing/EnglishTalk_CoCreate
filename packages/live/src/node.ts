@@ -3,9 +3,10 @@ import type { Duplex } from "node:stream";
 import { WebSocketServer } from "ws";
 import type { LiveHub } from "./hub.ts";
 import type { LiveUser } from "./protocol.ts";
+import type { TimerInit } from "./timer.ts";
 
 export type UpgradeDecision =
-	| { ok: true; endDate: Date; user: LiveUser }
+	| { ok: true; endDate: Date; user: LiveUser; timer: TimerInit }
 	/** HTTP 狀態碼直接回給握手：401 沒登入、403 不是成員 / 不在時間窗、404 房不存在、410 已取消 */
 	| { ok: false; status: 401 | 403 | 404 | 410; reason: string };
 
@@ -52,7 +53,7 @@ export function attachLiveServer(server: Server, options: AttachOptions): void {
 			(decision) => {
 				if (!decision.ok) return reject(socket, decision.status, decision.reason);
 				wss.handleUpgrade(req, socket, head, (ws) => {
-					hub.connect({ code, socket: ws, user: decision.user, endDate: decision.endDate });
+					hub.connect({ code, socket: ws, user: decision.user, endDate: decision.endDate, timer: decision.timer });
 				});
 			},
 			(error: unknown) => {

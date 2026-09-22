@@ -11,6 +11,8 @@ const isStaticExport = process.env.GITHUB_PAGES === "true";
 const basePath = isStaticExport ? "/EnglishTalk_CoCreate" : "";
 
 const nextConfig: NextConfig = {
+	// 計時器的純邏輯（settle）跟 server 共用同一份 TS 原始碼，要 Next 幫忙轉譯 workspace 套件
+	transpilePackages: ["@monstertalk/live"],
 	...(isStaticExport && {
 		output: "export",
 		// project pages 的網址是 user.github.io/<repo>，少了這個前綴所有資源都會 404

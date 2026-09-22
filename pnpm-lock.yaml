@@ -44,6 +44,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@monstertalk/live':
+        specifier: workspace:*
+        version: link:../../packages/live
       '@tldraw/sync':
         specifier: ^5.4.2
         version: 5.4.2(@floating-ui/dom@1.8.0)(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)

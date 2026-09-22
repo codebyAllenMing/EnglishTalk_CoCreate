@@ -69,6 +69,11 @@ docker exec monstertalk-postgres-1 psql -U monstertalk -d monstertalk -c 'select
 測白板與聊天前先 `corepack pnpm db:seed`，再用 allen / luna / bobby 開 `/zh-TW/room/SEED09`；mia 是申請中，進不了房。
 聊天只活在 api 行程的記憶體：api 重啟訊息就沒了，房間結束 5 分鐘後也清掉。
 
+計時器：從房間 startDate 自動起跑（SEED09 = 跑 seed 那一刻 − 5 分），先跑 roomType 的 to（SEED09 是 zh → en，先跑英文），
+全房同步；任何人按 ⇄ 大家都看到 5 秒倒數，再按一次取消。
+⚠️ **重跑 seed 後要重啟 dev:api**：hub 裡的 SEED09 是第一個人連上時用當時的 startDate 建的，重跑 seed 只換 DB 那一列，
+hub 不知道，計時器會停在舊的時間。
+
 單字庫：進 SEED09 點任一則聊天泡泡存字，面板立刻出現、重新整理還在；同一個字（不分大小寫）再存會顯示「已經在你的單字庫裡了」；
 刪掉後可以再存。mia 打 `/api/rooms/SEED09/words` 會是 403。
 

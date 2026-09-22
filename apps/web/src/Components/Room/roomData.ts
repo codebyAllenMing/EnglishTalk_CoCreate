@@ -31,6 +31,8 @@ export type Room = {
 	/** 本地時間，不帶時區 —— 跟週曆的 parseLocalDate 同一個約定 */
 	startsAt: string;
 	durationMinutes: number;
+	/** 計時器先跑哪一語 = roomType 的 to（要學習的那一語）。hello 來之前的占位畫面用 */
+	firstLang: LangCode;
 	participants: Participant[];
 	messages: ChatMessage[];
 	topics: Topic[];
@@ -48,6 +50,7 @@ export type Room = {
 export const FAKE_ROOM: Room = {
 	...raw,
 	kind: raw.kind as RoomKind,
+	firstLang: "en",
 	participants: raw.participants.map((p) => ({ ...p, avatar: p.id, lang: p.lang as LangCode })),
 };
 

@@ -7,6 +7,7 @@ import { createWhiteboardHub } from "@monstertalk/whiteboard";
 import { attachWhiteboardServer, type UpgradeDecision } from "@monstertalk/whiteboard/node";
 import { createApp } from "./app.ts";
 import { loadEnv } from "./env.ts";
+import { ROOM_TYPES } from "@monstertalk/db/schema";
 import { roomAccess, roomUser } from "./rooms/access.ts";
 
 const env = loadEnv(process.env);
@@ -39,7 +40,8 @@ attachWhiteboardServer(server, {
 });
 
 /**
- * 聊天（之後也是計時器、反應）的 WebSocket，路徑 /api/rooms/:code/live，同一道門，另外把人查出來交給 hub。
+ * 聊天 + 計時器（之後也是反應）的 WebSocket，路徑 /api/rooms/:code/live，同一道門，另外把人查出來交給 hub。
+ * 計時器從房間 startDate 自動起跑、先跑 roomType 的 to（要學習的那一語）。
  */
 const live = createLiveHub({ log: (m) => console.log(m) });
 attachLiveServer(server, {
@@ -56,7 +58,17 @@ attachLiveServer(server, {
 		}
 		const user = await roomUser(db, session.user.id);
 		if (!user) return { ok: false, status: 403, reason: "no user" };
-		return { ok: true, endDate: access.room.endDate, user };
+		const type = ROOM_TYPES.find((t) => t.id === access.room.roomType);
+		return {
+			ok: true,
+			endDate: access.room.endDate,
+			user,
+			timer: {
+				startDate: access.room.startDate.getTime(),
+				durationMinutes: access.room.durationMinutes,
+				firstLang: type?.to ?? "en",
+			},
+		};
 	},
 });
 

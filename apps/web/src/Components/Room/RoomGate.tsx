@@ -133,6 +133,7 @@ function toRoom(entry: RoomEntry & { ok: true }): Room {
 		kind: "casual",
 		startsAt: toLocalDateTime(new Date(entry.room.startDate)),
 		durationMinutes: entry.room.durationMinutes,
+		firstLang: entry.room.to,
 		participants,
 		messages: [],
 		topics: FAKE_ROOM.topics,
