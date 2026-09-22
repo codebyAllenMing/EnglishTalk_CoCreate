@@ -37,6 +37,9 @@ metadata:
   沒登入 `router.replace` 去 login；連不到 API 記成 `unreachable`、**不導走**（dev 沒開 api 與 GitHub Pages
   都還能看 mock）。children 一律先 render 不等結果（等的話 hydration 對不上、每次進頁都閃）。
   **這是體驗不是安全**，HTML 本來就是公開靜態檔。`useSession()` 給下游拿 user。
+- **反向守門 `src/auth/SignedInRedirect.tsx`**（2026-09-22）：已登入的人打 /login 或 /signup 直接
+  `router.replace` 到 /home。掛在 `AuthShell`（兩頁都只經過那裡），表單照常先畫、mount 後問一次
+  get-session；連不到 API 不做事。不跟 SessionProvider 合併 —— 方向相反、共用不了。
 - **登出在頂部列的帳號選單** `Components/Profile/AccountMenu.tsx`（client）：頭像 + 名字 / email（來自 session）+ 登出。
   用 React state 不用 Popover API（top layer 定位對不準頭像，anchor positioning 瀏覽器沒齊）；
   點外面 / Esc 關閉自己接。登出後導去 **landing** 不是 login。頭像以 ReactNode 從 TopBar 傳入，next/image 留在 server。
@@ -112,9 +115,10 @@ Forgot password、Apple 登入），實際只有 520px，垂直空間少了四�
 也接近設計稿手機版把三隻都畫進框裡的意思。
 桌機再翻回下層（`sm:z-0 sm:opacity-100`）。
 
-## Client Component 只有三個
+## Client Component 只有四個
 
-`AuthForm`（送出攔截 + 密碼一致性 + 打 API）、`LocaleSwitch`（保留路徑）、`PasswordField`（顯示切換）。
+`AuthForm`（送出攔截 + 密碼一致性 + 打 API）、`LocaleSwitch`（保留路徑）、`PasswordField`（顯示切換）、
+`SignedInRedirect`（已登入導回 home，不畫東西）。
 其餘全是 Server Component —— 這不只是潔癖，lucide 的 icon 在 Server Component 裡是
 **建置期 render 成靜態 SVG**，完全不進 client bundle；一旦某個元件跨到 client，
 它用到的 icon 就得跟著打包。實測 Mail / User 只在 HTML 裡，Eye / EyeOff / Lock 才在 chunk 裡。
