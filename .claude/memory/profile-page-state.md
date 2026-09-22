@@ -129,7 +129,11 @@ metadata:
 > **格子改 10 分鐘一格 12px**（`SLOT_MINUTES = 10`、`SLOT_HEIGHT = 12`）：房只有 20 / 40 / 60 分鐘，30 的格線畫不出 20 與 40；
 > `SlotCard` 依長度決定畫幾行（20 分只有標題、40 加時間、60 才有語言列與人數）。
 > ⚠️ 修了一個舊 bug：卡片的 gridRow 原本寫「起始格 + 1」，但第一列是表頭，所有卡都畫早了一格（30 分鐘）；現在是 +2。
-> 跨當地午夜的房裁在當天底。「開設聊天室」按鈕仍純視覺，開房 Dialog 下一輪；seed 有 5 間 SEED* 房（見 `_dev/dev-accounts.md`）。
+> 跨當地午夜的房裁在當天底。seed 有 5 間 SEED* 房（見 `_dev/dev-accounts.md`）。
+> **開房 Dialog `Schedule/HostRoomDialog.tsx`**（client，住在 ScheduleBoard 標題列，要拿 onCreated）：標題 / 日期 / 開始時間（:00 / :30 的 select，
+> 今天已過的時間灰掉）/ 時長 / 人數 / 語言方向三組藥丸（Segmented）。用 Dialog 的**受控模式**：每次打開重算預設值
+> （下一個至少 15 分鐘後的半點、方向 = 母語 → 學習語言）。前端只擋「時間已過」，重疊 / 驗證看後端錯誤碼顯示 `schedule.host.*` 文案。
+> 建好：toast、新房塞進已載入的 slots、可見週切到那間房的週（範圍外則切週自然重拉）。欄位樣式抄設定頁的 INPUT 字串（那邊沒匯出）。
 > 以下是原本靜態 mock 時期的紀錄，數字（48 格 / 34px / 1632px）已過時，其餘決策仍有效。
 
 

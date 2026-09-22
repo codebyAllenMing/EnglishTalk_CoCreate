@@ -120,3 +120,16 @@ export function formatWeekRange(weekStart: string, locale: string) {
 
 	return { range: `${fmt.format(start)} – ${fmt.format(end)}`, year: years };
 }
+
+/** 該日期所在那週的星期一 */
+export function weekStartOf(iso: string): string {
+	const d = parseLocalDate(iso);
+	const day = d.getDay();
+	d.setDate(d.getDate() + (day === 0 ? -6 : 1 - day));
+	return toISODate(d);
+}
+
+/** 兩個週一相差幾週（b − a，b 在後面是正的） */
+export function weeksBetween(a: string, b: string): number {
+	return Math.round((parseLocalDate(b).getTime() - parseLocalDate(a).getTime()) / (7 * 86_400_000));
+}

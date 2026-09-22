@@ -220,6 +220,26 @@
                 "languages": "語言",
                 "participants": "人數",
                 "code": "房號"
+            },
+            "host": {
+                "title": "開設聊天室",
+                "hint": "選好時間，其他怪獸就能申請加入。",
+                "roomTitle": "標題",
+                "optional": "（選填）",
+                "roomTitlePlaceholder": "例如：English practice",
+                "date": "日期",
+                "time": "開始時間",
+                "duration": "時長",
+                "minutes": "{n} 分鐘",
+                "capacity": "人數上限",
+                "people": "{n} 人",
+                "type": "語言方向",
+                "create": "建立聊天室",
+                "created": "聊天室建好了",
+                "past": "開始時間已經過了",
+                "overlap": "這個時間你已經有其他聊天室了",
+                "invalid": "資料有誤，請檢查後再試",
+                "network": "連不到伺服器，請稍後再試"
             }
         },
         "monsters": {

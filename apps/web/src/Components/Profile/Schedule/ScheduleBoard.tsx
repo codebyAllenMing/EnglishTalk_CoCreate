@@ -3,21 +3,28 @@
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import type { Dictionary } from "@/dictionaries";
-import { getSchedule } from "@/schedule/client";
+import { getSchedule, type ScheduleItem } from "@/schedule/client";
+import HostRoomDialog from "./HostRoomDialog";
 import ScheduleGrid from "./ScheduleGrid";
 import { initialScrollTop, slotsInWeek, toSlot, type Slot } from "./scheduleData";
-import { buildWeek, currentWeekStart, formatWeekRange, parseLocalDate, shiftWeek, todayIndexIn } from "./week";
+import {
+	buildWeek,
+	currentWeekStart,
+	formatWeekRange,
+	parseLocalDate,
+	shiftWeek,
+	todayIndexIn,
+	weekStartOf,
+	weeksBetween,
+} from "./week";
 
 type Props = {
 	locale: string;
 	dict: Dictionary["profile"]["schedule"];
+	lang: Dictionary["profile"]["lang"];
 	closeLabel: string;
+	cancelLabel: string;
 	soonNote: string;
-	/**
-	 * 標題列右側的動作按鈕。由 Server Component 渲染好傳進來 ——
-	 * header 的結構得在 client（日期範圍要跟著切週變），但按鈕內容不必跟著搬。
-	 */
-	actions: React.ReactNode;
 };
 
 /** 一次載入的範圍：這週的前一週到後一週，共三週。切週在範圍內只是換篩選條件，超出才重打 */
@@ -51,8 +58,14 @@ const serverHasNoToday = () => null;
  * ## 初始捲動只算一次
  *
  * 第一批資料到的時候依當週最早的房定捲動位置，之後切週不再動 —— 使用者捲到哪就在哪。
+ *
+ * ## 開房之後
+ *
+ * HostRoomDialog 住在標題列（它要拿到 onCreated，所以跟資料同一層）。新房落在載入範圍內就直接塞進 slots，
+ * 不重打；然後把可見週切到那間房所在的週 —— 開了一間下下週的房卻什麼都沒看到，會以為沒建成。
+ * 落在範圍外的話切週本身就會觸發重拉，新房會在那批資料裡。
  */
-export default function ScheduleBoard({ locale, dict, closeLabel, soonNote, actions }: Props) {
+export default function ScheduleBoard({ locale, dict, lang, closeLabel, cancelLabel, soonNote }: Props) {
 	const weekStart = useSyncExternalStore(subscribeNever, currentWeekStart, serverHasNoToday);
 	const [offset, setOffset] = useState(0);
 	const [loaded, setLoaded] = useState<Loaded | null>(null);
@@ -83,6 +96,24 @@ export default function ScheduleBoard({ locale, dict, closeLabel, soonNote, acti
 			cancelled = true;
 		};
 	}, [visibleWeek, loaded]);
+
+	const handleCreated = (item: ScheduleItem) => {
+		const slot = toSlot(item);
+		setLoaded((prev) =>
+			prev && slot.date >= prev.from && slot.date < prev.to ? { ...prev, slots: [...prev.slots, slot] } : prev,
+		);
+		if (weekStart) setOffset(weeksBetween(weekStart, weekStartOf(slot.date)));
+	};
+	const actions = (
+		<HostRoomDialog
+			locale={locale}
+			dict={dict}
+			lang={lang}
+			closeLabel={closeLabel}
+			cancelLabel={cancelLabel}
+			onCreated={handleCreated}
+		/>
+	);
 
 	if (!visibleWeek) {
 		return (

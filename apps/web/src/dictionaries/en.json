@@ -220,6 +220,26 @@
                 "languages": "Languages",
                 "participants": "Participants",
                 "code": "Room code"
+            },
+            "host": {
+                "title": "Host a room",
+                "hint": "Pick a time and other monsters can ask to join.",
+                "roomTitle": "Title",
+                "optional": "(optional)",
+                "roomTitlePlaceholder": "e.g. English practice",
+                "date": "Date",
+                "time": "Start time",
+                "duration": "Length",
+                "minutes": "{n} min",
+                "capacity": "Max people",
+                "people": "{n} people",
+                "type": "Language direction",
+                "create": "Create room",
+                "created": "Room created",
+                "past": "That start time has already passed",
+                "overlap": "You already have a room at that time",
+                "invalid": "Something's off, please check the form",
+                "network": "Can't reach the server, please try again"
             }
         },
         "monsters": {

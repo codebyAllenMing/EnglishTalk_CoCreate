@@ -36,7 +36,7 @@ metadata:
 
 - **房間**：使用者 2026-09-22 用「主單 / 子單」定了結構，**schema 已建**（`packages/db/src/schema/room.ts`、migration `0004_rooms`），
   **API 已有 `GET /api/me/schedule?from&to` 與 `POST /api/rooms`**（`apps/api/src/routes/rooms.ts`，2026-09-22），
-  週曆已接；開房 Dialog、取消、別人的房、申請 / 審核還沒有：
+  週曆與開房 Dialog 已接；取消、別人的房、申請 / 審核還沒有：
   - 主單 `Rooms`：`id`（流水號）、`code`（房號，網址用，server 產 6–8 碼大寫去易混字元，unique）、`hostId`、`title`、
     `startDate`、`endDate`、`durationMinutes smallint`（20 / 40 / 60，DB check）、`capacity`（2–4，含房主）、
     `roomType`（enum id：`ROOM_TYPES` 1 = en→zh、2 = zh→en，常數在 room.ts，不建 lookup 表）、`cancelDate`（null = 未取消）、
