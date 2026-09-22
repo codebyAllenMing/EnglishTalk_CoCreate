@@ -15,6 +15,12 @@ const nextConfig: NextConfig = {
 	transpilePackages: ["@monstertalk/live"],
 	// dev server 被非 localhost 的 host 打到（區網 IP 給手機、Cloudflare Tunnel 的網域）時 HMR / _next 資源要放行
 	allowedDevOrigins: ["192.168.*.*", "talk.allenmingstudio.com"],
+	// dev 經 Cloudflare Tunnel 時，邊緣會照副檔名把 /_next/static 的 js / css 快取 4 小時（dev 的 chunk 名稱不帶內容 hash），
+	// 手機一直拿到舊版（2026-09-23 撞到）。明講 no-store 讓 Cloudflare 不快取；正式 build 的 /_next/static Next 會自己蓋成 immutable
+	async headers() {
+		if (isStaticExport) return [];
+		return [{ source: "/_next/static/:path*", headers: [{ key: "Cache-Control", value: "no-store, must-revalidate" }] }];
+	},
 	...(isStaticExport && {
 		output: "export",
 		// project pages 的網址是 user.github.io/<repo>，少了這個前綴所有資源都會 404

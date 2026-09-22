@@ -188,8 +188,12 @@ P2 的（白板、反應、話題卡、單字庫）各自獨立一個檔，延�
   next.config `allowedDevOrigins: ["192.168.*.*", "talk.allenmingstudio.com"]`；`.env.local` 的 WEB_ORIGIN 已多列 tunnel 網域。
   **還沒跑的兩條 Cloudflare 寫入指令（要使用者確認）**：`cloudflared tunnel create monstertalk`、`cloudflared tunnel route dns monstertalk talk.allenmingstudio.com`，
   跑完把 id 填進 config.yml，再 `cloudflared tunnel --config _dev/tunnel/config.yml run`。
+  → 2026-09-23 使用者自己跑了兩條指令，tunnel 建好（id 3fb86b89…）、DNS 加好，經 tunnel 的登入 / 進房 / SFU session / wss 都驗過。
+  ⚠️ **Cloudflare 邊緣會快取 dev 的 `/_next/static` js / css 4 小時**（cf-cache-status MISS → 之後 HIT，瀏覽器也拿到 max-age=14400），
+  手機一直拿到舊版、hydration 錯怎麼修都在。next.config `headers()` 對 `/_next/static/:path*` 送 `no-store, must-revalidate`；
+  已快取的要開儀表板 Development Mode 或等過期。手機測試 UI 改動前先確認 `cf-cache-status` 不是 HIT。
 - 待做：Find Monsters「通話中」用 live 連線當依據。
-- 還沒定：發表當天後端跑哪（本機 dev vs 部署）。
+- 發表當天後端：Mac mini + tunnel（2026-09-23 定，見 [[deploy-mac-mini]]）。
 
 **How to apply:** 接後端前先讀這份確認 provider 的邊界。後端與部署的定案（LiveKit Cloud、tldraw
 自架在 Durable Objects、自有 WS、Neon）在 [[auth-backend-plan]]；白板換 tldraw 時只動 `Whiteboard.tsx`。

@@ -208,6 +208,16 @@
             "hostRoom": "開設聊天室",
             "untitled": "聊天室",
             "cancelledRoom": "此房間已被取消",
+            "view": {
+                "calendar": "日曆",
+                "list": "列表"
+            },
+            "list": {
+                "today": "今天",
+                "empty": "這一週沒有房間",
+                "joined": "已加入",
+                "open": "可加入"
+            },
             "enter": {
                 "button": "進入房間",
                 "before": "開始前 5 分鐘可進入",

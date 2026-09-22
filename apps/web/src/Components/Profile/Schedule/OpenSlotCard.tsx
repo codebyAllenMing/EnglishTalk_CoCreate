@@ -24,6 +24,8 @@ type Props = {
 	onJoined: (item: ScheduleItem) => void;
 	/** 點開才發現房主已經取消了：關掉框之後把它從週曆拿掉 */
 	onGone: (code: string) => void;
+	/** grid = 週曆上的格子（預設）；row = 列表模式的一列。對話框同一套 */
+	variant?: "grid" | "row";
 };
 
 type ErrorKey = "full" | "overlap" | "started" | "failed";
@@ -51,7 +53,7 @@ type Seats = OpenRoom["seats"];
  * 黃卡是進頁時拉的，房主中途取消了它還在。點開時後端回 410 cancelled 就顯示「此房間已被取消」，
  * 關掉框才把那間從週曆拿掉（gone）—— 框開著的時候拿掉，這個元件會直接 unmount、框就消失了。
  */
-export default function OpenSlotCard({ slot, day, locale, dict, closeLabel, cancelLabel, onJoined, onGone }: Props) {
+export default function OpenSlotCard({ slot, day, locale, dict, closeLabel, cancelLabel, onJoined, onGone, variant = "grid" }: Props) {
 	const o = dict.open;
 	const { toast } = useToast();
 	const [open, setOpen] = useState(false);
@@ -157,6 +159,33 @@ export default function OpenSlotCard({ slot, day, locale, dict, closeLabel, canc
 
 	return (
 		<>
+			{variant === "row" ? (
+				<button
+					type="button"
+					onClick={openDialog}
+					className="flex w-full flex-col gap-1 rounded-xl bg-token/20 px-3 py-2.5 text-left text-ink transition-colors hover:bg-token/40"
+				>
+					<span className="flex w-full items-center gap-2">
+						<span className="text-xs font-extrabold text-ink-600 tabular-nums">{rangeText}</span>
+						<span className="ml-auto shrink-0 rounded-full bg-token/50 px-2 py-0.5 text-[11px] font-extrabold text-ink">{dict.list.open}</span>
+					</span>
+					<span className="line-clamp-2 w-full text-sm leading-snug font-extrabold">{cardTitle}</span>
+					{single && first ? (
+						<span className="flex items-center gap-1.5 text-xs text-ink-500">
+							<span>{first.host.name}</span>
+							<LangBadge code={first.from} className="size-4.5 text-[8px]" />
+							<ArrowRight aria-hidden="true" className="size-3 text-ink-400" />
+							<LangBadge code={first.to} className="size-4.5 text-[8px]" />
+							<span className="ml-1 flex items-center gap-1 font-extrabold text-secondary-600">
+								<Users aria-hidden="true" className="size-3.5" />
+								{first.seats.taken}/{first.seats.total}
+							</span>
+						</span>
+					) : (
+						<span className="text-xs text-ink-500">{o.pick}</span>
+					)}
+				</button>
+			) : (
 			<button
 				type="button"
 				onClick={openDialog}
@@ -171,6 +200,7 @@ export default function OpenSlotCard({ slot, day, locale, dict, closeLabel, canc
 				)}
 				{minutes >= 60 && single && first && <LangLine room={first} />}
 			</button>
+			)}
 
 			<Dialog
 				open={open}

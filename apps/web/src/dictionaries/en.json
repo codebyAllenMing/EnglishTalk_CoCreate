@@ -208,6 +208,16 @@
             "hostRoom": "Host a room",
             "untitled": "Room",
             "cancelledRoom": "This room has been cancelled",
+            "view": {
+                "calendar": "Calendar",
+                "list": "List"
+            },
+            "list": {
+                "today": "Today",
+                "empty": "No rooms this week",
+                "joined": "Joined",
+                "open": "Open"
+            },
             "enter": {
                 "button": "Enter room",
                 "before": "Opens 5 minutes before start",

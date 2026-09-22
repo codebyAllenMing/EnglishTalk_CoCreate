@@ -38,10 +38,10 @@ export default async function HomePage() {
 			beforeNav={card}
 			afterNav={<InviteCard />}
 			mobileTop={
-				<>
+				<div className="flex flex-col gap-5">
 					{next("")}
 					{card}
-				</>
+				</div>
 			}
 			mobileBottom={<InviteCard />}
 		>

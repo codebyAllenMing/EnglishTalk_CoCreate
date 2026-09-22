@@ -1,11 +1,13 @@
 "use client";
 
-import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, List } from "lucide-react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import type { Dictionary } from "@/dictionaries";
 import { getOpenRooms, getSchedule, type OpenRoom, type ScheduleItem } from "@/schedule/client";
 import HostRoomDialog from "./HostRoomDialog";
 import ScheduleGrid from "./ScheduleGrid";
+import ScheduleList from "./ScheduleList";
+import { getServerView, getView, setView, subscribe, type ScheduleView } from "./viewStore";
 import { initialScrollTop, openSlots, slotsInWeek, toSlot, type MineSlot, type Slot } from "./scheduleData";
 import {
 	buildWeek,
@@ -73,6 +75,8 @@ export default function ScheduleBoard({ locale, dict, lang, closeLabel, cancelLa
 	const [offset, setOffset] = useState(0);
 	const [loaded, setLoaded] = useState<Loaded | null>(null);
 	const [scrollTop, setScrollTop] = useState<number | null>(null);
+	/** 日曆 / 列表；null = SSR（畫骨架）。手機預設列表、桌機預設日曆，切過記在 localStorage */
+	const view = useSyncExternalStore(subscribe, getView, getServerView);
 	/** 卡片上的「進行中」綠點用，30 秒對一次就夠；null = 還沒 mount */
 	const [now, setNow] = useState<number | null>(null);
 
@@ -142,17 +146,20 @@ export default function ScheduleBoard({ locale, dict, lang, closeLabel, cancelLa
 			prev ? { ...prev, mine: prev.mine.map((s) => (s.code === item.code ? toSlot(item) : s)) } : prev,
 		);
 	const actions = (
-		<HostRoomDialog
-			locale={locale}
-			dict={dict}
-			lang={lang}
-			closeLabel={closeLabel}
-			cancelLabel={cancelLabel}
-			onCreated={handleAdded}
-		/>
+		<>
+			<ViewToggle view={view} dict={dict.view} />
+			<HostRoomDialog
+				locale={locale}
+				dict={dict}
+				lang={lang}
+				closeLabel={closeLabel}
+				cancelLabel={cancelLabel}
+				onCreated={handleAdded}
+			/>
+		</>
 	);
 
-	if (!visibleWeek) {
+	if (!visibleWeek || view === null) {
 		return (
 			<>
 				<Header title={dict.title} actions={actions} />
@@ -177,30 +184,58 @@ export default function ScheduleBoard({ locale, dict, lang, closeLabel, cancelLa
 				</p>
 			</Header>
 
-			<div className="flex items-start gap-1.5 sm:gap-2">
-				<WeekButton label={dict.prevWeek} onClick={() => setOffset(offset - 1)}>
-					<ChevronLeft aria-hidden="true" className="size-4" />
-				</WeekButton>
+			{view === "list" ? (
+				<>
+					{/* 列表模式：箭頭放上面一列，列表吃滿寬（手機兩邊各 50px 的箭頭太佔位） */}
+					<div className="mb-3 flex items-center justify-between gap-2">
+						<WeekButton label={dict.prevWeek} onClick={() => setOffset(offset - 1)}>
+							<ChevronLeft aria-hidden="true" className="size-4" />
+						</WeekButton>
+						<span className="text-sm font-semibold text-ink-400">{range}</span>
+						<WeekButton label={dict.nextWeek} onClick={() => setOffset(offset + 1)}>
+							<ChevronRight aria-hidden="true" className="size-4" />
+						</WeekButton>
+					</div>
+					<ScheduleList
+						days={days}
+						slots={visibleSlots}
+						todayIndex={todayIndexIn(visibleWeek)}
+						locale={locale}
+						dict={dict}
+						closeLabel={closeLabel}
+						cancelLabel={cancelLabel}
+						onRemoved={handleRemoved}
+						onAdded={handleAdded}
+						onUpdated={handleUpdated}
+						now={now}
+					/>
+				</>
+			) : (
+				<div className="flex items-start gap-1.5 sm:gap-2">
+					<WeekButton label={dict.prevWeek} onClick={() => setOffset(offset - 1)}>
+						<ChevronLeft aria-hidden="true" className="size-4" />
+					</WeekButton>
 
-				<ScheduleGrid
-					days={days}
-					slots={visibleSlots}
-					todayIndex={todayIndexIn(visibleWeek)}
-					locale={locale}
-					dict={dict}
-					closeLabel={closeLabel}
-					cancelLabel={cancelLabel}
-					onRemoved={handleRemoved}
-					onAdded={handleAdded}
-					onUpdated={handleUpdated}
-					scrollTop={scrollTop ?? initialScrollTop([])}
-					now={now}
-				/>
+					<ScheduleGrid
+						days={days}
+						slots={visibleSlots}
+						todayIndex={todayIndexIn(visibleWeek)}
+						locale={locale}
+						dict={dict}
+						closeLabel={closeLabel}
+						cancelLabel={cancelLabel}
+						onRemoved={handleRemoved}
+						onAdded={handleAdded}
+						onUpdated={handleUpdated}
+						scrollTop={scrollTop ?? initialScrollTop([])}
+						now={now}
+					/>
 
-				<WeekButton label={dict.nextWeek} onClick={() => setOffset(offset + 1)}>
-					<ChevronRight aria-hidden="true" className="size-4" />
-				</WeekButton>
-			</div>
+					<WeekButton label={dict.nextWeek} onClick={() => setOffset(offset + 1)}>
+						<ChevronRight aria-hidden="true" className="size-4" />
+					</WeekButton>
+				</div>
+			)}
 		</>
 	);
 }
@@ -228,5 +263,35 @@ function WeekButton({ label, onClick, children }: { label: string; onClick: () =
 		>
 			{children}
 		</button>
+	);
+}
+
+/** 日曆 / 列表兩段式切換 */
+function ViewToggle({ view, dict }: { view: ScheduleView | null; dict: Dictionary["profile"]["schedule"]["view"] }) {
+	const options: { key: ScheduleView; label: string; icon: typeof CalendarDays }[] = [
+		{ key: "calendar", label: dict.calendar, icon: CalendarDays },
+		{ key: "list", label: dict.list, icon: List },
+	];
+	return (
+		<div role="group" className="flex rounded-full bg-app p-1">
+			{options.map(({ key, label, icon: Icon }) => {
+				const active = view === key;
+				return (
+					<button
+						key={key}
+						type="button"
+						aria-pressed={active}
+						onClick={() => setView(key)}
+						className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-extrabold transition-colors ${
+							active ? "bg-surface text-primary-600 shadow-sm" : "text-ink-400 hover:text-ink"
+						}`}
+					>
+						<Icon aria-hidden="true" className="size-4" />
+						<span className="hidden sm:inline">{label}</span>
+						<span className="sr-only sm:hidden">{label}</span>
+					</button>
+				);
+			})}
+		</div>
 	);
 }

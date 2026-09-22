@@ -37,6 +37,8 @@ type Props = {
 	onUpdated: (item: ScheduleItem) => void;
 	/** 牆鐘（30 秒一次），卡片上畫「進行中」；null = 還沒 mount */
 	now: number | null;
+	/** grid = 週曆上的格子（預設）；row = 列表模式的一列。對話框同一套 */
+	variant?: "grid" | "row";
 };
 
 type Detail =
@@ -83,7 +85,13 @@ const TONE: Record<"hosted" | "session" | "requested", string> = {
 	requested: "border border-dashed border-secondary-400 bg-secondary-50 py-0 text-ink hover:bg-secondary-100",
 };
 
-export default function SlotCard({ slot, day, locale, dict, closeLabel, onRemoved, onUpdated, now }: Props) {
+const ROW_TONE: Record<"hosted" | "session" | "requested", string> = {
+	hosted: "bg-primary-50 hover:bg-primary-100",
+	session: "bg-secondary-50 hover:bg-secondary-100",
+	requested: "border border-dashed border-secondary-400 bg-secondary-50/60 hover:bg-secondary-100",
+};
+
+export default function SlotCard({ slot, day, locale, dict, closeLabel, onRemoved, onUpdated, now, variant = "grid" }: Props) {
 	const { user } = useSession();
 	const { toast } = useToast();
 	const [open, setOpen] = useState(false);
@@ -210,8 +218,43 @@ export default function SlotCard({ slot, day, locale, dict, closeLabel, onRemove
 	const entry = joined && clock !== null ? entryState(slot.start, slot.end, clock) : null;
 	const liveOnCard = joined && now !== null && now >= slot.start - ENTRY_LEAD && now < slot.end;
 
+	const tag = requested ? dict.pending.tag : slot.kind === "hosted" ? dict.detail.host : dict.list.joined;
+
 	return (
 		<>
+			{variant === "row" ? (
+				<button
+					type="button"
+					onClick={openDialog}
+					className={`flex w-full flex-col gap-1 rounded-xl px-3 py-2.5 text-left transition-colors ${ROW_TONE[tone]}`}
+				>
+					<span className="flex w-full items-center gap-2">
+						<span className="flex items-center gap-1.5 text-xs font-extrabold text-ink-600 tabular-nums">
+							{liveOnCard && (
+								<span aria-label={dict.enter.live} title={dict.enter.live} className="size-2 shrink-0 rounded-full bg-secondary-500" />
+							)}
+							{time}
+						</span>
+						<span
+							className={`ml-auto shrink-0 rounded-full px-2 py-0.5 text-[11px] font-extrabold ${
+								requested ? "bg-secondary-100 text-secondary-700" : slot.kind === "hosted" ? "bg-primary-100 text-primary-600" : "bg-secondary-100 text-secondary-700"
+							}`}
+						>
+							{tag}
+						</span>
+					</span>
+					<span className="line-clamp-2 w-full text-sm leading-snug font-extrabold">{title}</span>
+					<span className="flex items-center gap-1.5 text-xs text-ink-500">
+						<LangBadge code={slot.from} className="size-4.5 text-[8px]" />
+						<ArrowRight aria-hidden="true" className="size-3 text-ink-400" />
+						<LangBadge code={slot.to} className="size-4.5 text-[8px]" />
+						<span className="ml-1 flex items-center gap-1 font-extrabold text-secondary-600">
+							<Users aria-hidden="true" className="size-3.5" />
+							{slot.seats.taken}/{slot.seats.total}
+						</span>
+					</span>
+				</button>
+			) : (
 			<button
 				type="button"
 				onClick={openDialog}
@@ -244,6 +287,7 @@ export default function SlotCard({ slot, day, locale, dict, closeLabel, onRemove
 					</span>
 				)}
 			</button>
+			)}
 
 			<Dialog
 				open={open}

@@ -134,6 +134,9 @@ docker exec monstertalk-postgres-1 psql -U monstertalk -d monstertalk -c 'delete
   3. 手機開 `https://talk.allenmingstudio.com`；Mac 上測的時候也用這個網址（localhost 的頁面對 tunnel 的 API 是跨站，cookie 不會送）。
   4. `.env.local` 的 `WEB_ORIGIN` 已經多列了這個網域；前端的 API origin 遇到真網域會自動走同 origin，不用設 `NEXT_PUBLIC_API_ORIGIN`。
   5. 手機用 4G 才會考驗 NAT 穿透；同一個 Wi-Fi 直連。
+  6. ⚠️ **Cloudflare 會把 `/_next/static` 的 js / css 在邊緣與瀏覽器各快取 4 小時**（dev 的 chunk 名稱不帶內容 hash），手機會一直拿到舊版。
+     next.config 已對這些路徑送 `no-store`；但邊緣已經快取的要等過期或**在儀表板開 Development Mode**（Caching → Configuration），
+     手機那邊關掉分頁重開。看 `curl -sD - -o /dev/null https://talk…/_next/static/chunks/<檔名>` 的 `cf-cache-status`：DYNAMIC / BYPASS 才對，HIT 就是舊的。
 - **手機用區網 IP**（不經 tunnel，要裝 mkcert 根憑證）：
   1. 前端改跑 `corepack pnpm --filter web exec next dev --port 6531 -H 192.168.x.x --experimental-https`（Next 會重產含那個 IP 的憑證）。
   2. `.env.local` 的 `WEB_ORIGIN` 多列一個 `https://192.168.x.x:6531`（逗號分隔），重啟 api。

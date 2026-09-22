@@ -1,0 +1,17 @@
+# Mac mini 正式 build 用的 tunnel 設定（發表用；跟 config.yml 的差別：origin 是 http，https 由 Cloudflare 邊緣負責）。
+# 一個 hostname、路徑分流：/api/* 與 /health 進 api（4000），其餘進 Next（6531）。
+#
+#   credentials-file 是這條 tunnel 的金鑰，在建 tunnel 的那台（MacBook）的 ~/.cloudflared/3fb86b89-….json，
+#   AirDrop 到 Mac mini 的 ~/.cloudflared/ 底下（不進 git），然後把下面的 <HOME> 換成 mini 上的家目錄。
+#
+#   跑：cloudflared tunnel --config _dev/tunnel/config.mini.yml run
+#   常駐：sudo cloudflared --config "$PWD/_dev/tunnel/config.mini.yml" service install
+tunnel: 3fb86b89-348b-4604-9e69-1f3239f5c6af
+credentials-file: <HOME>/.cloudflared/3fb86b89-348b-4604-9e69-1f3239f5c6af.json
+ingress:
+  - hostname: talk.allenmingstudio.com
+    path: ^/(api/.*|health)$
+    service: http://localhost:4000
+  - hostname: talk.allenmingstudio.com
+    service: http://localhost:6531
+  - service: http_status:404

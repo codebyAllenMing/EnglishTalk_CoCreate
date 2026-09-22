@@ -1,3 +1,5 @@
+// iOS Chrome 會在表單欄位塞 __gcruniqueid 屬性，dev 的 hydration 比對會報不一致（2026-09-23 手機測試撞到），
+// 所以 SSR 會畫出來的 input / select / textarea 都加 suppressHydrationWarning；只壓屬性差異、跟程式無關。
 import type { LucideIcon } from "lucide-react";
 import { FIELD_HINT, FIELD_ICON, FIELD_INPUT, FIELD_LABEL } from "@/fieldStyles";
 
@@ -44,6 +46,7 @@ export default function AuthField({
 			</label>
 			<div className="relative">
 				<input
+					suppressHydrationWarning
 					id={id}
 					name={id}
 					type={type}

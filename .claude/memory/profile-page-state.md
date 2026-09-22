@@ -383,3 +383,13 @@ seriously.」，但 Nav 與登入頁都已經是 **MonsterTalk**。側邊欄 log
 - `NextRoomCard`（home 最上面）：手機放在個人資料卡之前、桌機主欄最上面，兩處互斥各掛一次、共用同一個 promise。
   自己打 `getSchedule(now − 2h, now + 7d)`，挑已加入且沒結束的最近一場：進行中綠底 + 進入；一小時內倒數；更晚顯示時間 + 「查看」捲到 `#schedule`；
   同一天還有別場多一行「另有 N 場」；沒預約整張不畫。字典 `profile.schedule.enter.*`、`profile.schedule.next.*`。
+
+## 週曆的列表模式（2026-09-23 建）
+
+使用者：「手機版看日曆其實很不友善，我的行程要可以切換：日曆 / 列表」。定案：範圍跟日曆一樣按週翻（使用者：「查詢的條件跟日曆一樣沒關係」）；
+黃卡（可加入）也列；預設手機列表、桌機日曆，切過記 localStorage（我假設的，使用者沒反對）。
+- `viewStore.ts`：useSyncExternalStore 的小 store（server snapshot null → 畫骨架；client 讀 localStorage `schedule.view`，沒有就看 `max-width: 1023px`）。
+- `ScheduleBoard`：標題列多 `ViewToggle`（兩段式，手機只剩圖示），`view === "list"` 換成 `ScheduleList`；列表模式的週箭頭移到上面一列（左箭頭、範圍、右箭頭），列表吃滿寬（使用者：真手機比模擬器窄）。
+- `ScheduleList`：同一週的 slots 依日期分組、空日不畫、今天有標；每列是 `SlotCard` / `OpenSlotCard` 的 `variant="row"`
+  （時間兩行、標題、語言、人數、右邊狀態標：房主 / 已加入 / 申請中 / 可加入；進行中綠點），對話框跟日曆完全同一套。
+- 字典 `profile.schedule.view.*`、`profile.schedule.list.*`。

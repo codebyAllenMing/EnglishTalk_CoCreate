@@ -1,3 +1,5 @@
+// iOS Chrome 會在表單欄位塞 __gcruniqueid 屬性，dev 的 hydration 比對會報不一致（2026-09-23 手機測試撞到），
+// 所以 SSR 會畫出來的 input / select / textarea 都加 suppressHydrationWarning；只壓屬性差異、跟程式無關。
 import { ChevronDown, Search } from "lucide-react";
 import type { Dictionary } from "@/dictionaries";
 import type { LangCode, LevelCode } from "../profileData";
@@ -69,6 +71,7 @@ export default function MonsterFilters({ filter, onChange, dict, langDict, level
 
 			<div className="relative min-w-40 flex-1 sm:max-w-64">
 				<input
+					suppressHydrationWarning
 					type="search"
 					value={filter.query}
 					onChange={(event) => set({ query: event.target.value })}
@@ -101,6 +104,7 @@ function Select({
 	return (
 		<div className="relative shrink-0">
 			<select
+				suppressHydrationWarning
 				value={value}
 				aria-label={label}
 				onChange={(event) => onChange(event.target.value)}

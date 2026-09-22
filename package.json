@@ -10,6 +10,7 @@
         "dev:api": "pnpm --filter api dev",
         "build": "pnpm --filter web build",
         "start": "pnpm --filter web start",
+        "start:api": "pnpm --filter api start",
         "lint": "pnpm --filter web lint",
         "typecheck": "pnpm --filter api --filter @monstertalk/auth --filter @monstertalk/db typecheck",
         "db:generate": "pnpm --filter @monstertalk/db db:generate",

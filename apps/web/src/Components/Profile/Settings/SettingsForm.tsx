@@ -1,5 +1,7 @@
 "use client";
 
+// iOS Chrome 會在表單欄位塞 __gcruniqueid 屬性，dev 的 hydration 比對會報不一致（2026-09-23 手機測試撞到），
+// 所以 SSR 會畫出來的 input / select / textarea 都加 suppressHydrationWarning；只壓屬性差異、跟程式無關。
 import { Check, ChevronDown, Eye, Plus, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -262,6 +264,7 @@ function Form({
 						className="md:col-span-2"
 					>
 						<input
+							suppressHydrationWarning
 							id={`${id}-name`}
 							value={draft.name}
 							maxLength={NAME_MAX}
@@ -387,6 +390,7 @@ function Form({
 											{pendingInterest || dict.addInterest}
 										</span>
 										<input
+											suppressHydrationWarning
 											id={`${id}-interests`}
 											list={`${id}-interest-options`}
 											value={pendingInterest}
@@ -437,6 +441,7 @@ function Form({
 					>
 						<div className="relative">
 							<textarea
+								suppressHydrationWarning
 								id={`${id}-bio`}
 								rows={3}
 								value={draft.bio}
@@ -578,6 +583,7 @@ function Select({
 				</span>
 			)}
 			<select
+				suppressHydrationWarning
 				id={id}
 				value={value}
 				onChange={(event) => onChange(event.target.value)}

@@ -98,26 +98,27 @@ export default function NextRoomCard({ locale, dict, className = "" }: Props) {
 				)}
 			</div>
 
-			<div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
-				<div className="min-w-0 flex-1">
-					<p className="truncate text-base font-extrabold">{room.title || dict.untitled}</p>
-					<p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ink-500">
-						<span>
-							{day} {time}
-						</span>
-						<span className="flex items-center gap-1">
-							<LangBadge code={room.from} className="size-5 text-[9px]" />
-							<ArrowRight aria-hidden="true" className="size-3 text-ink-400" />
-							<LangBadge code={room.to} className="size-5 text-[9px]" />
-						</span>
-						<span className="font-mono tracking-wider text-ink-400">{room.code}</span>
-					</p>
-				</div>
+			<div className="mt-2 min-w-0">
+				<p className="truncate text-base font-extrabold">{room.title || dict.untitled}</p>
+				<p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ink-500">
+					<span>
+						{day} {time}
+					</span>
+					<span className="flex items-center gap-1">
+						<LangBadge code={room.from} className="size-5 text-[9px]" />
+						<ArrowRight aria-hidden="true" className="size-3 text-ink-400" />
+						<LangBadge code={room.to} className="size-5 text-[9px]" />
+					</span>
+					<span className="font-mono tracking-wider text-ink-400">{room.code}</span>
+				</p>
+			</div>
 
+			{/* 動作自己一列：手機寬度不夠跟標題擠，桌機靠右 */}
+			<div className="mt-3 flex sm:justify-end">
 				{live ? (
 					<Link
 						href={`/${locale}/room/${room.code}`}
-						className="rounded-full bg-secondary-500 px-5 py-2.5 text-sm font-extrabold text-white transition-colors hover:bg-secondary-600"
+						className="w-full rounded-full bg-secondary-500 px-5 py-2.5 text-center text-sm font-extrabold text-white transition-colors hover:bg-secondary-600 sm:w-auto"
 					>
 						{dict.enter.button}
 					</Link>
@@ -125,14 +126,14 @@ export default function NextRoomCard({ locale, dict, className = "" }: Props) {
 					<button
 						type="button"
 						disabled
-						className="rounded-full bg-ink-100 px-5 py-2.5 text-sm font-extrabold text-ink-400 tabular-nums"
+						className="w-full rounded-full bg-ink-100 px-5 py-2.5 text-sm font-extrabold text-ink-400 tabular-nums sm:w-auto"
 					>
 						{fill(dict.enter.opensIn, { time: formatCountdown(entry.opensIn) })}
 					</button>
 				) : (
 					<a
 						href="#schedule"
-						className="rounded-full bg-primary-50 px-5 py-2.5 text-sm font-extrabold text-primary-600 transition-colors hover:bg-primary-100"
+						className="w-full rounded-full bg-primary-50 px-5 py-2.5 text-center text-sm font-extrabold text-primary-600 transition-colors hover:bg-primary-100 sm:w-auto"
 					>
 						{dict.next.view}
 					</a>

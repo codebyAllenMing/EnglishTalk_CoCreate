@@ -1,5 +1,7 @@
 "use client";
 
+// iOS Chrome 會在表單欄位塞 __gcruniqueid 屬性，dev 的 hydration 比對會報不一致（2026-09-23 手機測試撞到），
+// 所以 SSR 會畫出來的 input / select / textarea 都加 suppressHydrationWarning；只壓屬性差異、跟程式無關。
 import { ChevronDown, Users } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import Dialog from "@/Components/UI/Dialog";
@@ -148,6 +150,7 @@ export default function HostRoomDialog({ locale, dict, lang, closeLabel, cancelL
 							<Star />
 						</label>
 						<input
+							suppressHydrationWarning
 							id="room-title"
 							type="text"
 							required
@@ -166,6 +169,7 @@ export default function HostRoomDialog({ locale, dict, lang, closeLabel, cancelL
 								<Star />
 							</label>
 							<input
+								suppressHydrationWarning
 								id="room-date"
 								type="date"
 								required
@@ -182,6 +186,7 @@ export default function HostRoomDialog({ locale, dict, lang, closeLabel, cancelL
 							</label>
 							<div className="relative">
 								<select
+									suppressHydrationWarning
 									id="room-time"
 									value={draft.minutes}
 									onChange={(event) => patch({ minutes: Number(event.target.value) })}

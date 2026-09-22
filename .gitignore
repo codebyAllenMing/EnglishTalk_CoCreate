@@ -53,3 +53,6 @@ assets/build/
 # Python
 __pycache__/
 *.py[cod]
+
+# Mac mini 常駐服務的 log
+_dev/mini/logs/*.log

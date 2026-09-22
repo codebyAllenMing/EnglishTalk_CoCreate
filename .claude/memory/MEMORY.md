@@ -9,6 +9,7 @@
 - [登入註冊頁狀態](auth-pages-state.md) — 三頁完成、已接 better-auth API（fetch 包裝、錯誤碼對應、Origin 坑）、RWD 踩坑，設計稿落差清單
 - [個人首頁狀態](profile-page-state.md) — 設計稿數據、週曆全部改動、進房入口（卡片對話框按鈕 + 接下來的房間卡）
 - [對話室狀態](talk-room-state.md) — /room/[code]：進房兩層守門（server 必擋）、tldraw 白板、自有 WS 聊天 + 計時器同步、單字接 DB、視訊走 Cloudflare Realtime SFU；剩 Tunnel 手機測試與格子切換
+- [發表用部署：Mac mini + Tunnel](deploy-mac-mini.md) — 正式 build + pm2 + Docker Postgres，步驟在 _dev/mini/README.md；Workers 搬家延到發表後
 - [後端第一步：登入與 DB](auth-backend-plan.md) — better-auth + Hono + Drizzle 已蓋好、前端已接、db:seed 有 11 個測試帳號；怎麼跑、踩過的坑、下一步
 - [交測前給啟動指令](feedback-test-handoff.md) — 每次要使用者測試都附 dev:api / dev 兩條指令，Docker 常駐不用提
 - [DB schema 定案](data-model-decisions.md) — 個人資訊進 Users、興趣 text[]、頭像 lookup 表、presence 住 cache 不進 DB；房間主單 / 子單已建；Word Bank `Words` 表已建（isDelete、存過要擋、pos enum id）
