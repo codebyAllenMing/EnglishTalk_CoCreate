@@ -1,10 +1,11 @@
 "use client";
 
-import { Mic, MicOff, Play, Video, VideoOff } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { Maximize2, Mic, MicOff, Minimize2, Play, Video, VideoOff } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import Avatar from "@/Components/UI/Avatar";
 import LangBadge from "@/Components/UI/LangBadge";
 import type { Dictionary } from "@/dictionaries";
+import { fill } from "../Profile/Monsters/monstersData";
 import type { Participant } from "./roomData";
 import { useRoom } from "./RoomProvider";
 
@@ -28,9 +29,19 @@ type Props = {
  * 自己那格多一圈紫框 —— 「你」的字樣不夠一眼認出哪格是自己（使用者 2026-09-21）。
  *
  * 遠端 <video> 帶聲音，直接開網址（沒有使用者手勢）會被自動播放政策擋 → 蓋一顆「點一下開始」。
+ *
+ * ## 放大模式（使用者 2026-09-22 定案的 P2）
+ *
+ * 每格左上角一顆 ⤢ 按鈕（使用者：「應該要給一個放大縮小的按鈕，而不是點視窗放大」）→ 那格全寬當主畫面、其他縮成下面一排
+ * 1/3 寬的小格；主畫面那顆變 ⤡，按了回 2×2。純手動、不跟聲音、各看各的（focus 只在這裡的 state，不進 provider）。
+ * **同一個 grid 改 span 與 order，不搬 DOM**，<video> 不會重掛、不閃。
+ * 手機的小格塞不下兩顆燈，sm 以下藏掉、名字縮小；⤢ 一定留著，那是換主畫面的唯一入口。
  */
 export default function VideoGrid({ youLabel, micLabel, camLabel, offlineLabel, dict }: Props) {
 	const { room, video, resumeVideo } = useRoom();
+	const [focusId, setFocusId] = useState<string | null>(null);
+	// 被放大的人離開房間名單（理論上不會，成員是固定的）就回 2×2
+	const focused = focusId !== null && room.participants.some((p) => p.id === focusId) ? focusId : null;
 	const notice =
 		video.status === "denied"
 			? dict.denied
@@ -47,7 +58,7 @@ export default function VideoGrid({ youLabel, micLabel, camLabel, offlineLabel, 
 					{notice}
 				</p>
 			)}
-			<div className="relative grid grid-cols-2 gap-3">
+			<div className={`relative grid gap-3 ${focused ? "grid-cols-3" : "grid-cols-2"}`}>
 				{room.participants.map((p) => (
 					<VideoTile
 						key={p.id}
@@ -56,6 +67,11 @@ export default function VideoGrid({ youLabel, micLabel, camLabel, offlineLabel, 
 						micLabel={micLabel}
 						camLabel={camLabel}
 						offlineLabel={offlineLabel}
+						mode={focused === null ? "grid" : focused === p.id ? "main" : "small"}
+						toggleLabel={
+							focused === p.id ? dict.unfocus : fill(dict.focus, { name: p.me ? youLabel : p.name })
+						}
+						onToggle={() => setFocusId((current) => (current === p.id ? null : p.id))}
 					/>
 				))}
 				{video.needsGesture && (
@@ -117,14 +133,20 @@ const BACKDROP: Record<string, string> = {
 	en: "from-lang-en/25 via-primary-50 to-secondary-100",
 };
 
+type TileMode = "grid" | "main" | "small";
+
 function VideoTile({
 	participant: p,
 	youLabel,
 	micLabel,
 	camLabel,
 	offlineLabel,
-}: { participant: Participant } & Omit<Props, "dict">) {
-	const { micOn, camOn, reactions, online, video, videoBlocked } = useRoom();
+	mode,
+	toggleLabel,
+	onToggle,
+}: { participant: Participant; mode: TileMode; toggleLabel: string; onToggle: () => void } & Omit<Props, "dict">) {
+	const { micOn, camOn, reactions, online, video, videoBlocked, toggleMic, toggleCam } = useRoom();
+	const small = mode === "small";
 	const state = video.media[p.id];
 	const stream = p.me ? video.localStream : video.remote[p.id];
 	// 別人的開關讀廣播來的狀態；還沒送過（沒推、沒權限）就當關著
@@ -139,8 +161,26 @@ function VideoTile({
 		<div
 			className={`relative aspect-video overflow-hidden rounded-2xl bg-linear-to-br ${BACKDROP[p.lang]} ${
 				cam ? "" : "grayscale-[.4]"
-			} ${p.me ? "ring-2 ring-primary-400 ring-offset-2 ring-offset-app" : ""} ${isOffline ? "opacity-60" : ""}`}
+			} ${p.me ? "ring-2 ring-primary-400 ring-offset-2 ring-offset-app" : ""} ${isOffline ? "opacity-60" : ""} ${
+				mode === "main" ? "order-first col-span-3" : ""
+			}`}
 		>
+			{/* 放大 / 縮小：左上角，右上角留給「未連線」標與反應泡泡 */}
+			<button
+				type="button"
+				aria-label={toggleLabel}
+				title={toggleLabel}
+				onClick={onToggle}
+				className={`absolute z-10 flex items-center justify-center rounded-full bg-ink/60 text-white backdrop-blur-sm transition-colors hover:bg-primary-500 ${
+					small ? "top-1.5 left-1.5 size-7" : "top-3 left-3 size-8"
+				}`}
+			>
+				{mode === "main" ? (
+					<Minimize2 aria-hidden="true" className="size-4" />
+				) : (
+					<Maximize2 aria-hidden="true" className="size-4" />
+				)}
+			</button>
 			{isOffline && (
 				<span className="absolute top-3 right-3 rounded-full bg-ink/60 px-2.5 py-1 text-[11px] font-extrabold text-white">
 					{offlineLabel}
@@ -190,14 +230,20 @@ function VideoTile({
 				</span>
 			)}
 
-			<div className="absolute inset-x-2 bottom-2 flex items-center gap-2">
-				<span className="flex items-center gap-1.5 rounded-full bg-ink/60 py-1 pr-1.5 pl-3 text-sm font-extrabold text-white backdrop-blur-sm">
+			<div className={`absolute inset-x-2 bottom-2 flex items-center gap-2 ${small ? "inset-x-1.5 bottom-1.5" : ""}`}>
+				<span
+					className={`flex items-center gap-1.5 rounded-full bg-ink/60 font-extrabold text-white backdrop-blur-sm ${
+						small ? "py-0.5 pr-1 pl-2 text-xs sm:py-1 sm:pr-1.5 sm:pl-3 sm:text-sm" : "py-1 pr-1.5 pl-3 text-sm"
+					}`}
+				>
 					{p.me ? youLabel : p.name}
-					<LangBadge code={p.lang} className="size-6 text-[10px]" />
+					<LangBadge code={p.lang} className={small ? "hidden size-6 text-[10px] sm:flex" : "size-6 text-[10px]"} />
 				</span>
-				<span className="ml-auto flex items-center gap-1.5">
-					<Status on={mic} label={micLabel} onIcon={Mic} offIcon={MicOff} />
-					<Status on={cam} label={camLabel} onIcon={Video} offIcon={VideoOff} />
+				{/* 小格在手機塞不下兩顆燈：sm 以下藏掉 */}
+				<span className={`ml-auto items-center gap-1.5 ${small ? "hidden sm:flex" : "flex"}`}>
+					{/* 自己那格的兩顆可以按（跟 ControlBar 同一個開關）；別人的只是狀態燈 */}
+					<Status on={mic} label={micLabel} onIcon={Mic} offIcon={MicOff} onClick={p.me ? toggleMic : undefined} />
+					<Status on={cam} label={camLabel} onIcon={Video} offIcon={VideoOff} onClick={p.me ? toggleCam : undefined} />
 				</span>
 			</div>
 		</div>
@@ -209,20 +255,34 @@ function Status({
 	label,
 	onIcon: On,
 	offIcon: Off,
+	onClick,
 }: {
 	on: boolean;
 	label: string;
 	onIcon: typeof Mic;
 	offIcon: typeof Mic;
+	/** 有給就是按鈕（自己那格），沒給就是純狀態燈（別人的） */
+	onClick?: () => void;
 }) {
 	const Icon = on ? On : Off;
+	const className = `flex size-8 items-center justify-center rounded-full backdrop-blur-sm ${
+		on ? "bg-ink/60 text-secondary-300" : "bg-danger/80 text-white"
+	}`;
+	if (onClick) {
+		return (
+			<button
+				type="button"
+				aria-label={label}
+				aria-pressed={on}
+				onClick={onClick}
+				className={`${className} transition-colors hover:bg-primary-500 hover:text-white`}
+			>
+				<Icon aria-hidden="true" className="size-4" />
+			</button>
+		);
+	}
 	return (
-		<span
-			title={label}
-			className={`flex size-8 items-center justify-center rounded-full backdrop-blur-sm ${
-				on ? "bg-ink/60 text-secondary-300" : "bg-danger/80 text-white"
-			}`}
-		>
+		<span title={label} className={className}>
 			<Icon aria-hidden="true" className="size-4" />
 		</span>
 	);

@@ -386,7 +386,9 @@
             "denied": "No camera or microphone access. Others will only see your avatar.",
             "unavailable": "Video isn't set up yet. Use chat and the whiteboard for now.",
             "failed": "Couldn't connect video. Refresh to try again.",
-            "tapToPlay": "Tap to start audio and video"
+            "tapToPlay": "Tap to start audio and video",
+            "focus": "Enlarge {name}",
+            "unfocus": "Back to grid"
         },
         "leave": "Leave room",
         "leaveTitle": "Leave the room?",

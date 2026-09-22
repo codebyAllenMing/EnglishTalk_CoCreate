@@ -168,13 +168,22 @@ P2 的（白板、反應、話題卡、單字庫）各自獨立一個檔，延�
     transceiver、trackName = kind → 等 ICE connected → 廣播 media。別人的 media 進來就拉 audio / video（Cloudflare 給 offer、我答 answer → renegotiate），
     離線或換 session 就 `tracks/close force`。**所有 SDP 往返排隊（queue）**，Cloudflare 一次只能一個 renegotiation。
     **ontrack 靠 mid → userId 的對照分流，要在 setRemoteDescription 之前登記**。mic / cam = `track.enabled` + 廣播，關鏡頭不關 track（免 renegotiate）。
-    live 重連後（hub 是新 client）再送一次 media。拒絕權限 / 未設定 / 連不上都不擋房間，VideoGrid 上方畫提示。
+    拒絕權限 / 未設定 / 連不上都不擋房間，VideoGrid 上方畫提示。
+    **三個 race 的對策**（使用者切語言時撞到 Cloudflare 的 `not_found_track_error` / `empty_track_error`）：
+    (1) 發布端 ICE 連上後再等 `getStats` 的 outbound-rtp 兩種 kind 都 packetsSent > 0 才廣播 sessionId（最多 5 秒）；
+    (2) 拉到這兩種錯退避重拉（0.5 → 8 秒五次，`c.retries` 排程、到點再進 queue），中間 console.warn、用完才 reportError；
+    (3) live WS 從 offline / error 回到 online 就 `restart()`（generation +1，main effect 重跑開新 session）——api 重啟後記憶體的 session 擁有者對照沒了，
+    拉流拿到 403 notYourSession 也走 restart；400（api 不認對方的 session）就等對方重新廣播。
   - `VideoGrid`：有串流且 cam 開 → `<video>`（自己靜音 + 鏡像），否則頭像；別人的 `<video>` 在 cam 關時仍掛著（display none）讓聲音繼續。
     遠端聲音被自動播放政策擋（直接開網址沒手勢）→ 蓋一顆「點一下開始」，點了所有 `<video>` 重試 play。
   - `RoomProvider` 的 micOn / camOn / toggleMic / toggleCam 改由 useSfu 管；多 `video` 狀態與 `videoBlocked` / `resumeVideo`。
   - curl 驗過：開 session 201（真的打 Cloudflare）、申請中 403、別人的 sid 403、body 壞 400、拉不存在的 session 400、假 SDP 502 帶 Cloudflare 錯誤、不存在的房 404。
-    瀏覽器端的推拉流我沒法在 Node 測，靠使用者兩個帳號實測。
-- 待做：Tunnel 手機測試（vault 筆記第 2 節，兩條 Cloudflare 指令要確認）、格子切換（P2）、Find Monsters「通話中」用 live 連線當依據。
+    瀏覽器端的推拉流使用者 2026-09-22 深夜用 allen / luna / bobby 三個帳號實測：畫面互看 OK。
+  - 自己那格（「你」）的 mic / cam 圖示是按鈕（使用者：「我點我自己的也一樣點不下去」→ 改成可按，跟 ControlBar 同一個開關）；別人的是純狀態燈。
+- **格子放大模式（2026-09-22 建）**：每格**左上角一顆 ⤢ 按鈕**（使用者：「應該要給一個放大縮小的按鈕，而不是點視窗放大」，原本整格可點已拿掉）→ 全寬當主畫面、其他縮成一排 1/3 寬小格，主畫面那顆變 ⤡ 按了回 2×2。純手動、各看各的（`focusId` 只在 VideoGrid 的 state）。
+  同一個 grid 改 `grid-cols-3` + 主畫面 `order-first col-span-3`，不搬 DOM 所以 <video> 不重掛。右上角留給「未連線」標與反應泡泡。
+  小格在 sm 以下藏兩顆燈、名字縮小；手機預設仍 2×2（使用者同意跟桌機一致）。字典 `room.video.focus / unfocus`。
+- 待做：Tunnel 手機測試（vault 筆記第 2 節，兩條 Cloudflare 指令要確認）、Find Monsters「通話中」用 live 連線當依據。
 - 還沒定：發表當天後端跑哪（本機 dev vs 部署）。
 
 **How to apply:** 接後端前先讀這份確認 provider 的邊界。後端與部署的定案（LiveKit Cloud、tldraw
