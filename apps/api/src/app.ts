@@ -23,7 +23,7 @@ export function createApp(env: Env) {
 		db,
 		secret: env.BETTER_AUTH_SECRET,
 		baseURL: env.API_ORIGIN,
-		trustedOrigins: [env.WEB_ORIGIN],
+		trustedOrigins: env.WEB_ORIGINS,
 	});
 
 	// 線上狀態的 cache（dev：行程內；prod：換 Durable Object）。某人真的離線時才寫一次 lastSeenDate
@@ -45,7 +45,7 @@ export function createApp(env: Env) {
 	app.use(
 		"/api/*",
 		cors({
-			origin: env.WEB_ORIGIN,
+			origin: env.WEB_ORIGINS,
 			credentials: true,
 			allowHeaders: ["Content-Type"],
 			allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { signIn, signUp, type AuthErrorCode } from "@/auth/client";
+import { readNext, safeNext } from "@/auth/next";
 import type { Dictionary } from "@/dictionaries";
 
 type Props = {
@@ -10,6 +11,8 @@ type Props = {
 	mode: "login" | "signup";
 	fields: ReactNode;
 	submitLabel: string;
+	locale: string;
+	/** 成功後去哪；網址有 `?next=`（同站同語系）就以它為準 */
 	redirectTo: string;
 	/** 錯誤碼 → 文案，由 Server Component 從字典取好傳進來 */
 	errors: Dictionary["form"]["errors"];
@@ -26,7 +29,7 @@ type Props = {
  *
  * 成功後轉頁；失敗把訊息放在按鈕上方。送出中鎖按鈕，避免連點打兩次 sign-up。
  */
-export default function AuthForm({ mode, fields, submitLabel, redirectTo, errors, mismatchMessage }: Props) {
+export default function AuthForm({ mode, fields, submitLabel, locale, redirectTo, errors, mismatchMessage }: Props) {
 	const router = useRouter();
 	const [pending, setPending] = useState(false);
 	const [error, setError] = useState<AuthErrorCode | null>(null);
@@ -67,7 +70,7 @@ export default function AuthForm({ mode, fields, submitLabel, redirectTo, errors
 
 				if (result.ok) {
 					// 不解鎖按鈕：轉頁前多按一次也不該再打一次 API
-					router.push(redirectTo);
+					router.push(safeNext(readNext(), locale, redirectTo));
 					return;
 				}
 				setError(result.code);

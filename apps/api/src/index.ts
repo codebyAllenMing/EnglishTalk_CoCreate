@@ -1,4 +1,6 @@
-import { Server as HttpServer } from "node:http";
+import { readFileSync } from "node:fs";
+import { createServer as createHttpsServer } from "node:https";
+import { resolve } from "node:path";
 import { serve } from "@hono/node-server";
 import { verifySession } from "@monstertalk/auth";
 import { createLiveHub } from "@monstertalk/live";
@@ -13,21 +15,36 @@ import { roomAccess, roomUser } from "./rooms/access.ts";
 const env = loadEnv(process.env);
 const { app, auth, db } = createApp(env);
 
-const server = serve({ fetch: app.fetch, port: env.API_PORT }, (info) => {
-	console.log(`api listening on http://localhost:${info.port}`);
-});
+/**
+ * dev 一律走 https（使用者習慣；視訊的 getUserMedia 在 localhost 以外也非 https 不可）。
+ * 憑證跟前端共用 Next `--experimental-https` 用 mkcert 產的那一份（apps/web/certificates/），路徑由 .env.local 的 TLS_* 指定；
+ * 沒給就是 http（prod 上 Workers 不經過這裡）。
+ */
+const REPO_ROOT = resolve(import.meta.dirname, "../../..");
+const tls = env.TLS && {
+	cert: readFileSync(resolve(REPO_ROOT, env.TLS.cert)),
+	key: readFileSync(resolve(REPO_ROOT, env.TLS.key)),
+};
+const scheme = tls ? "https" : "http";
+const server = tls
+	? serve({ fetch: app.fetch, port: env.API_PORT, createServer: createHttpsServer, serverOptions: tls }, (info) => {
+			console.log(`api listening on ${scheme}://localhost:${info.port}`);
+		})
+	: serve({ fetch: app.fetch, port: env.API_PORT }, (info) => {
+			console.log(`api listening on ${scheme}://localhost:${info.port}`);
+		});
 
 /**
  * 白板的 WebSocket 掛在同一個 http server 上（路徑 /api/rooms/:code/whiteboard）。
  * 這裡是安全層：cookie 驗 session → roomAccess 查子單與時間窗，任何一關沒過握手就被拒，
  * 直接開 WS 的人在這裡被擋掉。頁面那層的判斷只是體驗。
  */
-// serve() 的型別是 http / http2 / https 的聯集，實際上不給 createServer 就是 http.Server；upgrade 事件只在這型別上有
-if (!(server instanceof HttpServer)) throw new Error("expected an http.Server for WebSocket upgrades");
+// serve() 的型別是 http / http2 / https 的聯集；attach 只要 upgrade 事件，http.Server 與 https.Server 都有
+if (!("on" in server)) throw new Error("expected an http(s).Server for WebSocket upgrades");
 const whiteboard = createWhiteboardHub({ log: (m) => console.log(m) });
 attachWhiteboardServer(server, {
 	hub: whiteboard,
-	origin: env.WEB_ORIGIN,
+	origin: env.WEB_ORIGINS,
 	log: (m) => console.log(m),
 	authorize: async (req, code): Promise<UpgradeDecision> => {
 		const session = await verifySession(auth, new Headers({ cookie: req.headers.cookie ?? "" }));
@@ -46,7 +63,7 @@ attachWhiteboardServer(server, {
 const live = createLiveHub({ log: (m) => console.log(m) });
 attachLiveServer(server, {
 	hub: live,
-	origin: env.WEB_ORIGIN,
+	origin: env.WEB_ORIGINS,
 	log: (m) => console.log(m),
 	authorize: async (req, code): Promise<LiveDecision> => {
 		const session = await verifySession(auth, new Headers({ cookie: req.headers.cookie ?? "" }));

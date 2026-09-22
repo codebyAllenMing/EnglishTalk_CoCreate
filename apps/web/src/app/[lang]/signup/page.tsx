@@ -32,6 +32,7 @@ export default async function SignupPage() {
 	return (
 		<AuthShell title={signup.title} subtitle={signup.subtitle} backHome={signup.backHome} monster="stand">
 			<AuthForm
+				locale={locale}
 				mode="signup"
 				submitLabel={signup.submit}
 				redirectTo={`/${locale}/home`}

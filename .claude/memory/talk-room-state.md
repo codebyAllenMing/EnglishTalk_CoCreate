@@ -156,7 +156,8 @@ P2 的（白板、反應、話題卡、單字庫）各自獨立一個檔，延�
 - **離開房間的攔截（2026-09-22）**：使用者誤按上一頁回到 home 後討論。只做 `beforeunload`（重新整理 / 關分頁 / 改網址，瀏覽器原生對話框，
   放在 `RoomProvider`、結束後拿掉）；**不做上一頁的 history 陷阱**（手機 Safari 滑動返回會先走再跳回、壞掉前後頁語意），
   改以「回去很容易」補：狀態都在 server，回 home 再點進去是原樣；待辦是週曆卡的「進入房間」按鈕 + home 頂部「有房間進行中」橫幅。
-- 還沒定：發表當天後端跑哪（本機 dev vs 部署）、視訊 LiveKit Cloud vs 四人 mesh。
+- https 前置 2026-09-22 做完（dev 一律 https，見 [[auth-backend-plan]]）。視訊三條路（mesh / LiveKit Cloud / Cloudflare Realtime）已攤開，我傾向 mesh（訊號走 live WS 加 `rtc` 轉發、Google STUN、跨網路再加 Cloudflare 免費 TURN），等使用者決定。
+- 還沒定：發表當天後端跑哪（本機 dev vs 部署）、視訊引擎。
 
 **How to apply:** 接後端前先讀這份確認 provider 的邊界。後端與部署的定案（LiveKit Cloud、tldraw
 自架在 Durable Objects、自有 WS、Neon）在 [[auth-backend-plan]]；白板換 tldraw 時只動 `Whiteboard.tsx`。

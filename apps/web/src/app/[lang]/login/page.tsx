@@ -27,6 +27,7 @@ export default async function LoginPage() {
 	return (
 		<AuthShell title={login.title} subtitle={login.subtitle} backHome={login.backHome} monster="wave">
 			<AuthForm
+				locale={locale}
 				mode="login"
 				submitLabel={login.submit}
 				redirectTo={`/${locale}/home`}

@@ -3,7 +3,6 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import LocaleSwitch from "@/Components/LocaleSwitch";
 import { asset } from "@/asset";
-import SignedInRedirect from "@/auth/SignedInRedirect";
 import { getDictionary, getLocale, locales } from "@/dictionaries";
 
 type Props = {
@@ -47,8 +46,7 @@ type Props = {
  *
  * 手機版只留青綠：另外兩隻在窄螢幕上會整隻被卡片蓋掉，載了也看不到。
  *
- * 已登入的人打這兩頁會被 SignedInRedirect 送回 /home。放在這層而不是各頁，
- * 因為兩頁都只經過這裡，而且它跟外框一樣是「兩頁必須一致」的東西。
+ * 已登入的人打這兩頁會被送回 /home —— 那是根 layout 的 SignedInRedirect（入口守門）在做，這裡不用管。
  *
  * ## 兩個 RWD 決定
  *
@@ -78,7 +76,6 @@ export default async function AuthShell({ title, subtitle, backHome, monster, ch
 		 *    且捲不到。`overflow-x: clip` 只管水平，而且 clip 不建立捲動容器。
 		 */
 		<main className="relative flex min-h-dvh flex-col items-center justify-start overflow-x-clip px-5 pt-10 pb-24 sm:justify-center-safe sm:py-12">
-			<SignedInRedirect locale={locale} />
 			<Image
 				src={asset("/images/auth-background.webp")}
 				alt=""

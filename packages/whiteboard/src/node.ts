@@ -1,4 +1,4 @@
-import type { IncomingMessage, Server } from "node:http";
+import type { IncomingMessage } from "node:http";
 import type { Duplex } from "node:stream";
 import { WebSocketServer } from "ws";
 import type { WhiteboardHub } from "./hub.ts";
@@ -10,8 +10,8 @@ export type UpgradeDecision =
 
 export type AttachOptions = {
 	hub: WhiteboardHub;
-	/** 只接受這個 Origin 的握手（瀏覽器一定會帶） */
-	origin: string;
+	/** 只接受這些 Origin 的握手（瀏覽器一定會帶）；dev 用 https 時 localhost 與區網 IP 可以同時列 */
+	origin: string | string[];
 	/**
 	 * 誰能連。這裡是安全層：頁面那層的檢查擋不住直接開 WS 的人，這一關一定要查 DB。
 	 * 收到 request（有 cookie）與房號，回能不能連與房間結束時間。
@@ -20,6 +20,11 @@ export type AttachOptions = {
 	/** 從 URL path 取房號；預設 /api/rooms/:code/whiteboard */
 	matchPath?: (pathname: string) => string | null;
 	log?: (message: string) => void;
+};
+
+/** http.Server 與 https.Server 都行：只用得到 upgrade 事件 */
+export type UpgradeServer = {
+	on(event: "upgrade", listener: (req: IncomingMessage, socket: Duplex, head: Buffer) => void): unknown;
 };
 
 const DEFAULT_PATH = /^\/api\/rooms\/([^/]+)\/whiteboard$/;
@@ -39,8 +44,9 @@ const STATUS_TEXT: Record<number, string> = {
  *
  * 路徑對不上的 upgrade 不碰（留給之後的聊天 WS 或別的 handler）。
  */
-export function attachWhiteboardServer(server: Server, options: AttachOptions): void {
-	const { hub, origin, authorize } = options;
+export function attachWhiteboardServer(server: UpgradeServer, options: AttachOptions): void {
+	const { hub, authorize } = options;
+	const origins = new Set(Array.isArray(options.origin) ? options.origin : [options.origin]);
 	const matchPath = options.matchPath ?? ((pathname: string) => DEFAULT_PATH.exec(pathname)?.[1] ?? null);
 	const log = options.log ?? (() => undefined);
 	const wss = new WebSocketServer({ noServer: true });
@@ -56,7 +62,7 @@ export function attachWhiteboardServer(server: Server, options: AttachOptions): 
 		const code = matchPath(url.pathname);
 		if (!code) return;
 
-		if (req.headers.origin !== origin) return reject(socket, 403, "origin");
+		if (!req.headers.origin || !origins.has(req.headers.origin)) return reject(socket, 403, "origin");
 		const sessionId = url.searchParams.get("sessionId");
 		if (!sessionId) return reject(socket, 400, "sessionId");
 

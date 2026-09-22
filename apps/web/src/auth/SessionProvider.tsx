@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { getSession, type SessionUser } from "./client";
+import { currentPath, loginPath } from "./next";
 
 export type SessionState =
 	/** 第一次 render 與查詢中：server HTML 與 client 首次 render 都是這個，不會 hydration mismatch */
@@ -51,7 +52,8 @@ export default function SessionProvider({ locale, children }: Props) {
 			(user) => {
 				if (cancelled) return;
 				if (user) setState({ status: "signedIn", user });
-				else router.replace(`/${locale}/login`);
+				// 帶著現在的路徑去 login，登入後回來（深連結：把房間網址貼給沒登入的人）
+				else router.replace(loginPath(locale, currentPath()));
 			},
 			() => {
 				if (!cancelled) setState({ status: "unreachable", user: null });

@@ -6,8 +6,8 @@
 ## 啟動
 
 ```bash
-corepack pnpm dev:api     # api  http://localhost:4000
-corepack pnpm dev         # web  http://localhost:6531
+corepack pnpm dev:api     # api  https://localhost:4000
+corepack pnpm dev         # web  https://localhost:6531
 ```
 
 Docker 沒起來的話：`docker compose up -d`。第一次或 schema 有改：`corepack pnpm db:migrate` 再 `corepack pnpm db:seed`。
@@ -84,20 +84,20 @@ hub 不知道，計時器會停在舊的時間。
 
 ```bash
 J=/tmp/jar.txt
-curl -s -c $J -H "Origin: http://localhost:6531" -H "Content-Type: application/json" \
-  -d '{"email":"allen@example.com","password":"1qaz@WSX"}' http://localhost:4000/api/auth/sign-in/email > /dev/null
-curl -s -b $J -H "Origin: http://localhost:6531" -H "Content-Type: application/json" \
+curl -s -c $J -H "Origin: https://localhost:6531" -H "Content-Type: application/json" \
+  -d '{"email":"allen@example.com","password":"1qaz@WSX"}' https://localhost:4000/api/auth/sign-in/email > /dev/null
+curl -s -b $J -H "Origin: https://localhost:6531" -H "Content-Type: application/json" \
   -d '{"title":"curl 開的房","startDate":"2026-09-25T12:00:00.000Z","durationMinutes":40,"capacity":3,"roomType":2}' \
-  http://localhost:4000/api/rooms
+  https://localhost:4000/api/rooms
 ```
 
 用 curl 存字 / 看整本（接在上面登入之後）：
 
 ```bash
-curl -s -b $J -H "Origin: http://localhost:6531" -H "Content-Type: application/json" \
+curl -s -b $J -H "Origin: https://localhost:6531" -H "Content-Type: application/json" \
   -d '{"word":"obsessed","pos":3,"meaning":"really like","example":"I am obsessed with bubble tea.","lang":"en"}' \
-  http://localhost:4000/api/rooms/SEED09/words
-curl -s -b $J http://localhost:4000/api/me/words
+  https://localhost:4000/api/rooms/SEED09/words
+curl -s -b $J https://localhost:4000/api/me/words
 ```
 
 pos 是 enum id：1 名詞、2 動詞、3 形容詞、4 副詞、5 片語、6 成語、7 其他。
@@ -113,3 +113,17 @@ docker exec monstertalk-postgres-1 psql -U monstertalk -d monstertalk -c "delete
 ```bash
 docker exec monstertalk-postgres-1 psql -U monstertalk -d monstertalk -c 'delete from "Words";'
 ```
+
+## https（2026-09-22 起 dev 一律 https）
+
+- 前端 `corepack pnpm dev` = `next dev --experimental-https`，憑證在 `apps/web/certificates/`（gitignore），
+  第一次跑會用 mkcert 產、可能要輸入密碼裝本機 CA。api 共用同一份（.env.local 的 `TLS_CERT` / `TLS_KEY`）。
+- 網址：前端 `https://localhost:6531`、api `https://localhost:4000`，WS 自動變 wss。
+- curl 要帶根憑證：`curl --cacert "$(mkcert -CAROOT)/rootCA.pem" https://localhost:4000/health`（或 `-k`）。
+  Node 腳本：`NODE_EXTRA_CA_CERTS="$(mkcert -CAROOT)/rootCA.pem" node …`。
+- **手機 / 第二台機器**（視訊測試要用）：
+  1. 前端改跑 `corepack pnpm --filter web exec next dev --port 6531 -H 192.168.x.x --experimental-https`（Next 會重產含那個 IP 的憑證）。
+  2. `.env.local` 的 `WEB_ORIGIN` 多列一個 `https://192.168.x.x:6531`（逗號分隔），重啟 api。
+  3. 手機裝 mkcert 根憑證：AirDrop `"$(mkcert -CAROOT)/rootCA.pem"` 到 iPhone → 設定安裝描述檔 → 一般 → 關於 → 憑證信任設定打開完整信任。
+     Android：設定 → 安全性 → 安裝憑證 → CA 憑證。
+  4. 手機開 `https://192.168.x.x:6531`，API 跟著頁面 host 走，不用另外設。

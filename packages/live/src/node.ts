@@ -1,4 +1,4 @@
-import type { IncomingMessage, Server } from "node:http";
+import type { IncomingMessage } from "node:http";
 import type { Duplex } from "node:stream";
 import { WebSocketServer } from "ws";
 import type { LiveHub } from "./hub.ts";
@@ -12,8 +12,8 @@ export type UpgradeDecision =
 
 export type AttachOptions = {
 	hub: LiveHub;
-	/** 只接受這個 Origin 的握手（瀏覽器一定會帶） */
-	origin: string;
+	/** 只接受這些 Origin 的握手（瀏覽器一定會帶）；dev 用 https 時 localhost 與區網 IP 可以同時列 */
+	origin: string | string[];
 	/**
 	 * 誰能連，以及他是誰。這裡是安全層：頁面那層的檢查擋不住直接開 WS 的人，這一關一定要查 DB。
 	 */
@@ -21,6 +21,11 @@ export type AttachOptions = {
 	/** 從 URL path 取房號；預設 /api/rooms/:code/live */
 	matchPath?: (pathname: string) => string | null;
 	log?: (message: string) => void;
+};
+
+/** http.Server 與 https.Server 都行：只用得到 upgrade 事件 */
+export type UpgradeServer = {
+	on(event: "upgrade", listener: (req: IncomingMessage, socket: Duplex, head: Buffer) => void): unknown;
 };
 
 const DEFAULT_PATH = /^\/api\/rooms\/([^/]+)\/live$/;
@@ -31,8 +36,9 @@ const STATUS_TEXT: Record<number, string> = { 401: "Unauthorized", 403: "Forbidd
  * 可以掛在同一個 server 上並存；路徑對不上的 upgrade 不碰。
  * Workers 上換 Durable Object 的 fetch handler，hub 不變。
  */
-export function attachLiveServer(server: Server, options: AttachOptions): void {
-	const { hub, origin, authorize } = options;
+export function attachLiveServer(server: UpgradeServer, options: AttachOptions): void {
+	const { hub, authorize } = options;
+	const origins = new Set(Array.isArray(options.origin) ? options.origin : [options.origin]);
 	const matchPath = options.matchPath ?? ((pathname: string) => DEFAULT_PATH.exec(pathname)?.[1] ?? null);
 	const log = options.log ?? (() => undefined);
 	const wss = new WebSocketServer({ noServer: true });
@@ -47,7 +53,7 @@ export function attachLiveServer(server: Server, options: AttachOptions): void {
 		const url = new URL(req.url ?? "/", "http://localhost");
 		const code = matchPath(url.pathname);
 		if (!code) return;
-		if (req.headers.origin !== origin) return reject(socket, 403, "origin");
+		if (!req.headers.origin || !origins.has(req.headers.origin)) return reject(socket, 403, "origin");
 
 		authorize(req, code).then(
 			(decision) => {

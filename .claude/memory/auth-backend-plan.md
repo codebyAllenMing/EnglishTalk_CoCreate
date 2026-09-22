@@ -96,3 +96,9 @@ wrangler 4.86 OAuth 已登入（`water6240@gmail.com`）；cloudflared 有憑證
 **How to apply:** 改 schema 一律 `db:generate` 產 migration 再 `db:migrate`，不手改 DB；secret 只放 `.env.local` / Workers secret。
 
 - 2026-09-22：`apps/web` 開始相依 workspace 套件（`@monstertalk/live/timer`，計時器純邏輯跟 server 共用），next.config 有 `transpilePackages: ["@monstertalk/live"]`；共用檔不能帶 `.ts` 副檔名的 import。
+
+- 2026-09-22 **dev 改成一律 https**（[[feedback-dev-https]]）：web `next dev --experimental-https`（mkcert，憑證在 apps/web/certificates/），
+  api 用 `.env.local` 的 `TLS_CERT` / `TLS_KEY` 走 `https.createServer`（沒給退回 http）；`WEB_ORIGIN` 變逗號清單（CORS、trustedOrigins、兩個 WS 握手共用，
+  `Env.WEB_ORIGINS`）；兩個 WS 套件的 attach 改收 `UpgradeServer`（只要 `on("upgrade")`），origin 可多個。
+  前端 API origin 改成**跟著頁面 host 走**（`NEXT_PUBLIC_API_PORT`，`apiOrigin()` 在呼叫時算），手機用區網 IP 開就自動打對 api；
+  `NEXT_PUBLIC_API_ORIGIN` 仍可強制指定。手機要裝 mkcert 根憑證、前端用 `-H <IP>` 重產憑證，步驟在 `_dev/dev-accounts.md`。

@@ -183,3 +183,17 @@ Forgot password、Apple 登入），實際只有 520px，垂直空間少了四�
 
 **How to apply:** 素材與定位都已完成。下一個決策點是上面那張落差清單 ——
 要不要把卡片改成照設計稿（tab 切換、欄位 icon、Apple 登入），等使用者決定。
+
+## 入口守門（2026-09-22 定案並建好）
+
+使用者發現已登入的人開 `/zh-TW`（landing）還是看到未登入的 Nav：landing 從來沒接 session。定案：
+- 「一進 app 的瞬間打一次 check 決定轉導」= 把 `SignedInRedirect` 搬到 `app/[lang]/layout.tsx`，用 `usePathname` 只在 `/`、`/login`、`/signup` 動作
+  （有 session → `/home`）；(app) 底下沒 session → `/login` 仍由 `SessionProvider` 做。check API 就是 better-auth 的 `get-session`。
+- **已登入的人不給看 landing**（使用者：「看這頁沒意義」）。
+- 導走用 `router.replace`，使用者本來就習慣這樣防止用瀏覽器上一頁繞回特殊頁。
+- session 沒有 refresh token 也不需要：better-auth 是 DB session + 滑動續期（7 天、updateAge 1 天、cookie 快取 5 分），
+  對照 ASP.NET cookie auth 的 SlidingExpiration；房間裡 presence 每 60 秒心跳就會續，talk 中不會過期。
+  剩下的 401 情境只有「別處登出 / session 被撤」，各 client 收到 401 統一導 login 是待辦。
+- 做法：`SignedInRedirect` 掛根 layout、`usePathname` 只在公開路徑動作；`auth/next.ts` 管 `?next=`（只收 `/<locale>/…` 相對路徑，login / signup 不回繞），
+  `SessionProvider` 沒 session 時帶 `currentPath()` 去 login，`AuthForm` 成功後 `safeNext(readNext(), locale, redirectTo)`。用 `window.location` 不用 `useSearchParams`（靜態匯出要 Suspense）。
+- 待辦：landing 閃一下用 localStorage 記上次登入狀態畫骨架（體驗取捨）；各 client 收到 401 統一導 login。

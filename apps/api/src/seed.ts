@@ -55,7 +55,7 @@ const auth = createAuth({
 	db,
 	secret: env.BETTER_AUTH_SECRET,
 	baseURL: env.API_ORIGIN,
-	trustedOrigins: [env.WEB_ORIGIN],
+	trustedOrigins: env.WEB_ORIGINS,
 });
 
 const ctx = await auth.$context;

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Nunito, Noto_Sans_TC } from "next/font/google";
+import SignedInRedirect from "@/auth/SignedInRedirect";
 import { getDictionary, locales } from "@/dictionaries";
 import "../globals.css";
 
@@ -34,7 +35,11 @@ export default async function RootLayout({ children, params }: LayoutProps<"/[la
 
 	return (
 		<html lang={lang} className={`${nunito.variable} ${notoSansTC.variable}`}>
-			<body className="font-sans">{children}</body>
+			<body className="font-sans">
+				{/* 入口守門：一進站問一次 session，已登入的人在公開頁（landing / login / signup）會被送去 /home */}
+				<SignedInRedirect locale={lang} />
+				{children}
+			</body>
 		</html>
 	);
 }
