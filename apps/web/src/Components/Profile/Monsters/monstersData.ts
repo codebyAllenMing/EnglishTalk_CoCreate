@@ -1,48 +1,47 @@
+import type { PresenceMap, PresenceState } from "@/presence/client";
+import type { PublicUser } from "@/profile/client";
 import type { LangCode, LevelCode } from "../profileData";
-import raw from "./fakeMonsters.json";
 
+/**
+ * 格狀與面板用的一隻怪獸 = 一個別的使用者 + 他此刻的線上狀態。
+ * 由 fromPublicUser() 把 /api/users 與 /api/presence 合起來；設定頁的預覽也是自己組一個。
+ */
 export type Monster = {
 	id: string;
 	name: string;
+	/** Avatars 的 code，對 public/images/avatar-<code>.webp */
+	avatar: string;
 	native: LangCode;
 	learning: LangCode;
+	/** 學習語言的程度 —— 卡片與面板顯示的是這個 */
 	level: LevelCode;
-	online: boolean;
-	/** 這個人的房間最多幾人 */
-	roomSize: number;
-	/** 自我介紹。⚠️ 不進字典 —— 這是使用者自己寫的內容，真實產品不會翻譯它，
-	 *  所以假資料也刻意中英文混著放，才看得出真實情況的排版 */
+	/** null = 離線 */
+	presence: PresenceState | null;
+	/** 離線時「最後上線」用；從沒上線過是 null */
+	lastSeenAt: string | null;
+	/** 自我介紹。使用者自己寫的內容，不進字典、不翻譯 */
 	bio: string;
-	/**
-	 * 下一個有空的時間 "HH:MM"。**每個人都有** —— 詳情面板的「Next available」
-	 * 是固定欄位，少了它面板高度會隨著選誰而跳動。
-	 */
-	freeAt: string;
-	/**
-	 * 現在還開放幾個名額。**選填** —— 有開房間的人才有。
-	 * 卡片的狀態列有它就顯示名額、沒有就退回顯示 freeAt（設計稿上兩種各半）。
-	 */
-	slotsOpen?: number;
 };
 
-/**
- * ⚠️⚠️ 假資料 ⚠️⚠️
- *
- * 後端尚未建立。grep "FAKE_" 可找出專案所有假內容。
- * 頭像檔名由 id 推導（avatar-${id}.webp），所以 id 必須跟 assets/source/avatars/ 對得上。
- */
-export const FAKE_MONSTERS: readonly Monster[] = raw.monsters.map((m) => ({
-	...m,
-	native: m.native as LangCode,
-	learning: m.learning as LangCode,
-	level: m.level as LevelCode,
-	slotsOpen: "slotsOpen" in m ? m.slotsOpen : undefined,
-}));
+export function fromPublicUser(user: PublicUser, presence: PresenceMap): Monster {
+	return {
+		id: user.id,
+		name: user.name,
+		avatar: user.avatar,
+		native: user.nativeLang,
+		learning: user.learningLang,
+		level: user.learningLevel,
+		presence: presence[user.id] ?? null,
+		lastSeenAt: user.lastSeenAt,
+		bio: user.bio,
+	};
+}
 
 export type MonsterFilter = {
 	/** "all" 或語言代碼 —— 比對的是對方的母語，那才是你能練到的語言 */
 	language: LangCode | "all";
 	level: LevelCode | "all";
+	/** active 與 idle 都算線上 */
 	onlineOnly: boolean;
 	query: string;
 };
@@ -54,38 +53,38 @@ export const DEFAULT_FILTER: MonsterFilter = {
 	query: "",
 };
 
-/** 篩選在 client 對已載入的資料做，不打 API —— 跟週曆切週同一個原則 */
+/** 篩選在 client 對已載入的名單做，不打 API —— 名單一次最多 50 人，超過再搬到 server */
 export function filterMonsters(monsters: readonly Monster[], f: MonsterFilter): Monster[] {
 	const q = f.query.trim().toLowerCase();
 	return monsters.filter(
 		(m) =>
 			(f.language === "all" || m.native === f.language) &&
 			(f.level === "all" || m.level === f.level) &&
-			(!f.onlineOnly || m.online) &&
+			(!f.onlineOnly || m.presence !== null) &&
 			(!q || m.name.toLowerCase().includes(q) || m.bio.toLowerCase().includes(q)),
 	);
 }
 
 /**
- * "16:00" → "4 PM" / "下午4時"；"16:30" → "4:30 PM"。
- *
- * 整點時**不輸出分鐘**，設計稿的卡片寫的是「Free at 4 PM」不是「4:00 PM」。
- * 詳情面板則刻意用 Schedule 的 formatTime（帶分鐘），跟設計稿一致。
+ * "2026-09-22T10:00:00Z" → "2 小時前" / "2 hours ago"。交給 Intl，字典不用維護單位。
+ * 一分鐘內顯示「剛剛」那一類的話（numeric: "auto" 的 "now"）。
  */
-export function formatHour(time: string, locale: string): string {
-	const [h, m] = time.split(":").map(Number);
-	const d = new Date(2000, 0, 1, h, m);
-	const options: Intl.DateTimeFormatOptions = m
-		? { hour: "numeric", minute: "2-digit" }
-		: { hour: "numeric" };
-	return new Intl.DateTimeFormat(locale, options).format(d);
+export function formatLastSeen(iso: string, locale: string, now = Date.now()): string {
+	const seconds = Math.round((Date.parse(iso) - now) / 1000);
+	const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
+	const abs = Math.abs(seconds);
+	if (abs < 60) return rtf.format(0, "second");
+	if (abs < 3600) return rtf.format(Math.round(seconds / 60), "minute");
+	if (abs < 86400) return rtf.format(Math.round(seconds / 3600), "hour");
+	if (abs < 86400 * 30) return rtf.format(Math.round(seconds / 86400), "day");
+	return rtf.format(Math.round(seconds / (86400 * 30)), "month");
 }
 
 /**
- * 把字典裡的 "{count} slots open" 填成實際文字。
+ * 把字典裡的 "{name} …" 填成實際文字。
  *
- * 沒有為了這件事裝 i18n 套件 —— 目前只有數量與時間兩種代入，
- * 真的需要複數規則（英文 1 slot / 2 slots）時字典就直接給兩個 key。
+ * 沒有為了這件事裝 i18n 套件 —— 目前只有幾種代入，
+ * 真的需要複數規則時字典就直接給兩個 key。
  */
 export function fill(text: string, vars: Record<string, string | number>): string {
 	return text.replace(/\{(\w+)\}/g, (_, key: string) => String(vars[key] ?? ""));

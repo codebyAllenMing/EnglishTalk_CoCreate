@@ -2,20 +2,23 @@
 
 import { ChevronDown, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { signOut } from "@/auth/client";
 import { useSession } from "@/auth/SessionProvider";
+import Avatar from "@/Components/UI/Avatar";
+import { usePresence } from "@/presence/PresenceProvider";
+import { useProfile } from "@/profile/ProfileProvider";
 
 type Props = {
 	locale: string;
-	/** 頭像由 Server Component 傳進來，next/image 留在 server 端 render */
-	avatar: ReactNode;
 	label: string;
 	logoutLabel: string;
 };
 
 /**
  * 頂部列的帳號選單：目前只有「登出」，上面帶目前登入者的名字與 email（來自 session）。
+ *
+ * 頭像來自 ProfileProvider，載到之前畫一個淡紫圓（靜態 HTML 沒有個人資料）。
  *
  * 用 React state 而不是 Popover API：popover 在 top layer，定位不跟著頭像走，
  * 要靠 CSS anchor positioning 才對得準，而那個 Safari / Firefox 還沒齊。
@@ -24,9 +27,11 @@ type Props = {
  * 登出後導去 landing（`/${locale}`）而不是 login —— 登出的人是要離開，不是要換帳號。
  * API 連不到時也照樣導走：留在原地也做不了別的事，cookie 會在 API 回來後的下一次登出清掉。
  */
-export default function AccountMenu({ locale, avatar, label, logoutLabel }: Props) {
+export default function AccountMenu({ locale, label, logoutLabel }: Props) {
 	const router = useRouter();
 	const { user } = useSession();
+	const { profile } = useProfile();
+	const { leave } = usePresence();
 	const [open, setOpen] = useState(false);
 	const [leaving, setLeaving] = useState(false);
 	const rootRef = useRef<HTMLDivElement>(null);
@@ -59,7 +64,11 @@ export default function AccountMenu({ locale, avatar, label, logoutLabel }: Prop
 				onClick={() => setOpen((shown) => !shown)}
 				className="flex items-center gap-1 text-ink-400 transition-colors hover:text-primary-600"
 			>
-				{avatar}
+				{profile ? (
+					<Avatar src={`avatar-${profile.avatar}`} className="w-9" sizes="36px" />
+				) : (
+					<span aria-hidden="true" className="block size-9 animate-pulse rounded-full bg-primary-100" />
+				)}
 				<ChevronDown aria-hidden="true" className={`size-4 transition-transform ${open ? "rotate-180" : ""}`} />
 			</button>
 
@@ -81,6 +90,8 @@ export default function AccountMenu({ locale, avatar, label, logoutLabel }: Prop
 						disabled={leaving}
 						onClick={async () => {
 							setLeaving(true);
+							// 先從線上名單消失再登出 —— 反過來 cookie 已經沒了，leave 會 401
+							await leave();
 							await signOut().catch(() => undefined);
 							router.replace(`/${locale}`);
 						}}

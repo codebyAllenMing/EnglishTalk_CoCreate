@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { getSession, type SessionUser } from "./client";
 
 export type SessionState =
@@ -11,9 +11,18 @@ export type SessionState =
 	/** 連不到 API。刻意不當成「沒登入」，見下方說明 */
 	| { status: "unreachable"; user: null };
 
-const SessionContext = createContext<SessionState>({ status: "checking", user: null });
+type SessionContextValue = SessionState & {
+	/** 跳過 cookie 快取重讀一次（改完 name 之後用） */
+	refresh: () => Promise<void>;
+};
 
-export function useSession(): SessionState {
+const SessionContext = createContext<SessionContextValue>({
+	status: "checking",
+	user: null,
+	refresh: async () => undefined,
+});
+
+export function useSession(): SessionContextValue {
 	return useContext(SessionContext);
 }
 
@@ -53,5 +62,10 @@ export default function SessionProvider({ locale, children }: Props) {
 		};
 	}, [locale, router]);
 
-	return <SessionContext value={state}>{children}</SessionContext>;
+	const refresh = useCallback(async () => {
+		const user = await getSession({ fresh: true }).catch(() => null);
+		if (user) setState({ status: "signedIn", user });
+	}, []);
+
+	return <SessionContext value={{ ...state, refresh }}>{children}</SessionContext>;
 }

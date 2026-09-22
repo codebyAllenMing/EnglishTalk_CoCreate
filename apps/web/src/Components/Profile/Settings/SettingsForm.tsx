@@ -2,16 +2,21 @@
 
 import { Check, ChevronDown, Eye, Plus, X } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useId, useState, type ReactNode } from "react";
+import { useSession } from "@/auth/SessionProvider";
 import Avatar from "@/Components/UI/Avatar";
 import Card from "@/Components/UI/Card";
 import CountryFlag from "@/Components/UI/CountryFlag";
 import Dialog from "@/Components/UI/Dialog";
+import { useToast } from "@/Components/UI/ToastProvider";
 import type { Dictionary } from "@/dictionaries";
+import { updateProfile, type Profile } from "@/profile/client";
+import { useProfile } from "@/profile/ProfileProvider";
 import type { AvatarChoice } from "../avatarChoices";
 import MonsterDetails from "../Monsters/MonsterDetails";
 import { fill, type Monster } from "../Monsters/monstersData";
-import type { CountryCode, GenderCode, LangCode, LevelCode } from "../profileData";
+import { LANG_FLAG, type CountryCode, type GenderCode, type LangCode, type LevelCode } from "../profileData";
 
 const NAME_MAX = 20;
 const BIO_MAX = 150;
@@ -19,12 +24,6 @@ const INTEREST_MAX = 20;
 const INTERESTS_MAX = 10;
 /** 只有兩個（使用者 2026-09-21 決定） */
 const COUNTRIES: readonly CountryCode[] = ["TW", "US"];
-/**
- * 語言欄位左側也放國旗（使用者 2026-09-21 指定，設計稿如此）。
- * 全站其他地方的語言仍是「中 / EN」徽章 —— 只有這張表單跟國家欄位並排，
- * 一邊國旗一邊徽章看起來像兩套系統。
- */
-const LANG_FLAG: Record<LangCode, CountryCode> = { zh: "TW", en: "US" };
 
 export type ProfileDraft = {
 	/** 挑選清單的 id（allen），不是檔名 */
@@ -43,7 +42,6 @@ export type ProfileDraft = {
 
 type Props = {
 	locale: string;
-	initial: ProfileDraft;
 	choices: readonly AvatarChoice[];
 	dict: Dictionary["profile"]["settings"];
 	langDict: Dictionary["profile"]["lang"];
@@ -74,9 +72,59 @@ type Props = {
  * 別人點你時看到的那個 MonsterDetails。房間人數與下次有空不在這張表單上，
  * 先用假值。
  *
- * ⚠️ 儲存變更目前 disabled —— 沒有 API，跟其他還沒接後端的動作同樣處理。
+ * ## 資料流
+ *
+ * 初始值從 ProfileProvider 來（client 載入，靜態 HTML 沒有資料），載到之前畫骨架。
+ * 外層等 profile 到了才掛 Form，並用 email 當 key —— Form 的 state 用 useState(initial)
+ * 只讀一次，換人（登出再登入別的帳號）時整個重掛才會拿到新值。
+ * 儲存打 PUT /api/me/profile，成功後把回傳值塞回 provider、刷新 session（name 在 cookie 快取裡）、
+ * 丟一則「已儲存」的 toast、回 /home（toast 掛在 layout，跨頁還在）。
  */
-export default function SettingsForm({
+export default function SettingsForm({ dict, ...rest }: Props) {
+	const { profile } = useProfile();
+	if (!profile) return <FormSkeleton />;
+	return <Form key={profile.email} initial={toDraft(profile)} dict={dict} {...rest} />;
+}
+
+function toDraft(p: Profile): ProfileDraft {
+	return {
+		avatar: p.avatar,
+		name: p.name,
+		country: p.country,
+		gender: p.gender,
+		native: p.nativeLang,
+		nativeLevel: p.nativeLevel,
+		learning: p.learningLang,
+		learningLevel: p.learningLevel,
+		interests: p.interests,
+		bio: p.bio,
+	};
+}
+
+function FormSkeleton() {
+	return (
+		<>
+			<Card className="p-4 sm:p-5">
+				<div aria-hidden="true" className="h-6 w-40 animate-pulse rounded-md bg-ink-100" />
+				<div className="mt-4 grid grid-cols-4 gap-3 sm:grid-cols-6 lg:grid-cols-8 2xl:grid-cols-11">
+					{Array.from({ length: 11 }, (_, i) => (
+						<div key={i} aria-hidden="true" className="aspect-square animate-pulse rounded-2xl bg-ink-100" />
+					))}
+				</div>
+			</Card>
+			<Card className="p-4 sm:p-5">
+				<div aria-hidden="true" className="h-6 w-32 animate-pulse rounded-md bg-ink-100" />
+				<div className="mt-4 grid grid-cols-1 gap-x-5 gap-y-4 md:grid-cols-6">
+					{Array.from({ length: 6 }, (_, i) => (
+						<div key={i} aria-hidden="true" className="h-12 animate-pulse rounded-xl bg-ink-100 md:col-span-3" />
+					))}
+				</div>
+			</Card>
+		</>
+	);
+}
+
+function Form({
 	locale,
 	initial,
 	choices,
@@ -86,9 +134,43 @@ export default function SettingsForm({
 	monstersDict,
 	closeLabel,
 	cancelLabel,
-}: Props) {
+}: Props & { initial: ProfileDraft }) {
+	const router = useRouter();
+	const session = useSession();
+	const { setProfile } = useProfile();
+	const { toast } = useToast();
 	const [draft, setDraft] = useState(initial);
+	const [pending, setPending] = useState(false);
+	const [saveError, setSaveError] = useState(false);
 	const id = useId();
+
+	const canSave = draft.name.trim().length > 0 && !pending;
+	const save = async () => {
+		setPending(true);
+		setSaveError(false);
+		const result = await updateProfile({
+			name: draft.name.trim(),
+			avatar: draft.avatar,
+			nativeLang: draft.native,
+			nativeLevel: draft.nativeLevel,
+			learningLang: draft.learning,
+			learningLevel: draft.learningLevel,
+			country: draft.country,
+			gender: draft.gender,
+			interests: draft.interests,
+			bio: draft.bio.trim(),
+		});
+		if (!result.ok) {
+			setSaveError(true);
+			setPending(false);
+			return;
+		}
+		setProfile(result.profile);
+		// name 也在 better-auth 的 cookie 快取裡，不刷新的話帳號選單會顯示舊名字
+		await session.refresh();
+		toast(dict.saved);
+		router.push(`/${locale}/home`);
+	};
 	const set = (patch: Partial<ProfileDraft>) => setDraft((d) => ({ ...d, ...patch }));
 
 	const langs = Object.keys(langDict) as LangCode[];
@@ -115,17 +197,17 @@ export default function SettingsForm({
 	};
 	const interestSuggestions = Object.values(dict.interestOptions).filter((label) => !hasInterest(label));
 
-	// ⚠️ 假值：這兩項不在設定表單上，預覽只是要把外框填滿
-	const FAKE_PREVIEW = { roomSize: 4, freeAt: "20:00" };
+	// 預覽當成自己正在線上（你正在看這頁）
 	const preview: Monster = {
-		id: draft.avatar,
+		id: "me",
+		avatar: draft.avatar,
 		name: draft.name || initial.name,
 		native: draft.native,
 		learning: draft.learning,
 		level: draft.learningLevel,
-		online: true,
+		presence: "active",
+		lastSeenAt: null,
 		bio: draft.bio,
-		...FAKE_PREVIEW,
 	};
 
 	return (
@@ -371,6 +453,13 @@ export default function SettingsForm({
 				</div>
 			</Card>
 
+			{/* 放在按鈕列上方：錯誤要在按下儲存的視線範圍內，擺在頁尾會以為沒反應 */}
+			{saveError && (
+				<p role="alert" className="rounded-xl bg-danger/10 px-4 py-2.5 text-sm font-bold text-danger">
+					{dict.saveFailed}
+				</p>
+			)}
+
 			<div className="flex flex-col gap-3 sm:flex-row sm:items-center">
 				<Link
 					href={`/${locale}/home`}
@@ -401,13 +490,15 @@ export default function SettingsForm({
 					</Dialog>
 					<button
 						type="button"
-						disabled
+						disabled={!canSave}
+						onClick={save}
 						className="rounded-xl bg-primary-500 px-6 py-3 font-extrabold text-white transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50"
 					>
 						{dict.save}
 					</button>
 				</div>
 			</div>
+
 		</>
 	);
 }

@@ -13,8 +13,8 @@ metadata:
 | 位置 | 內容 |
 |---|---|
 | `packages/db` | Drizzle schema（`src/schema/auth.ts`：Users / Sessions / Accounts / Verifications）、`createDb(url)`（postgres-js）、`drizzle.config.ts`、`drizzle/0000_*.sql` 第一版 migration |
-| `packages/auth` | `createAuth({ db, secret, baseURL, trustedOrigins })`、`verifySession(auth, headers)`（給 WS / tldraw 用）、`requireUser(auth)` Hono middleware（401 或 `c.var.user`） |
-| `apps/api` | Hono + `@hono/node-server`，port 4000。`/health`、`/api/auth/*` 交給 better-auth、`/api/me` 是受保護路由樣板。`createApp(env)` 不綁執行環境，上 Workers 只換 `index.ts` |
+| `packages/auth` | `createAuth({ db, secret, baseURL, trustedOrigins })`、`verifySession(auth, headers)`（給 WS / tldraw 用）、`requireUser(auth)` Hono middleware（401 或 `c.var.user` / `c.var.session`；用 `returnHeaders: true` 把 better-auth 的滑動續期 Set-Cookie 轉回 response，2026-09-22 補的） |
+| `apps/api` | Hono + `@hono/node-server`，port 4000。`/health`、`/api/auth/*` 交給 better-auth、`routes/profile.ts` 有 `GET/PUT /api/me/profile` 與 `GET /api/avatars`、`routes/users.ts` 有 `GET /api/users`、`routes/presence.ts` 有心跳 / 離開 / 快照（2026-09-22）；`hono/logger` 每個請求印一行。`createApp(env)` 不綁執行環境，上 Workers 只換 `index.ts` |
 | root | `docker-compose.yml`（postgres:17-alpine + Mailpit）、`.env.example`、`tsconfig.base.json`、scripts `dev:api` / `typecheck` / `db:generate` / `db:migrate` / `db:studio` |
 
 命名：表 PascalCase 複數（用 better-auth 的 `modelName` 對過去，adapter 的 `schema` map key 就是 modelName）、欄位 camelCase（better-auth 預設）。
@@ -26,12 +26,12 @@ metadata:
 cp .env.example .env.local        # 填 BETTER_AUTH_SECRET（openssl rand -base64 32）
 docker compose up -d              # Postgres 5432、Mailpit 8025
 corepack pnpm db:migrate          # 套 migration（改 schema 後先 db:generate）
-corepack pnpm db:seed             # 11 個測試帳號（可重跑，已存在就跳過）
+corepack pnpm db:seed             # 11 個測試帳號（可重跑；帳號已存在就跳過建立，密碼與個人資料每次覆寫回 seed 的值）
 corepack pnpm dev:api             # tsx watch，--env-file 讀 repo 根的 .env.local
 ```
 
 **測試帳號**（`apps/api/src/seed.ts`）：`allen / bobby / luna / alex / mia / sunny / tao / yuki / ryan / nina / leo`
-各 `<id>@example.com`，密碼一律 `password123`。名字對應前端 mock 的 11 隻怪獸，之後個人資料進 DB 就填這些人。
+各 `<id>@example.com`，密碼一律 `1qaz@WSX`（2026-09-22 從 password123 改的）。清單另有一份人看的 `_dev/dev-accounts.md`。名字對應前端 mock 的 11 隻怪獸，之後個人資料進 DB 就填這些人。
 seed 走 `auth.api.signUpEmail`（server-side）所以 hash 跟真註冊一樣；DATABASE_URL 不是 localhost 直接拒跑。
 前端 6531、api 4000；cookie 在 localhost 不分 port，不需要 tunnel。Mac mini 那條不用。
 
@@ -41,6 +41,8 @@ seed 走 `auth.api.signUpEmail`（server-side）所以 hash 跟真註冊一樣�
   ⚠️ lockfile 一旦含了太新的版本，之後 `pnpm install` 會在重解**之前**就中止；解法是 `git checkout pnpm-lock.yaml` 讓新套件重解，web 的鎖定不動。
 - `allowBuilds` 新增 `esbuild: false`（tsx 與 drizzle-kit 的傳遞依賴，binary 由 optionalDependencies 提供）。已用 scratchpad 複本跑 `--frozen-lockfile` 全新安裝驗過。
 - **tsx 會把 `--env-file` 轉給 Node**，所以 api 的 script 不需要 dotenv。drizzle-kit 只讀 cwd 的 `.env`，`drizzle.config.ts` 用 `process.loadEnvFile("../../.env.local")`（Node 內建，路徑相對於 `packages/db`，透過 `pnpm --filter` 跑就對）。
+- **CORS 的 allowMethods 要列全**：一開始漏了 PUT，瀏覽器 preflight 被擋、fetch 直接 throw，畫面看起來像沒反應（2026-09-22）。
+- session 滑動續期靠 Set-Cookie：`auth.api.getSession()` 在 server-side 呼叫時要 `returnHeaders: true` 並轉發 `getSetCookie()`，否則只更新 DB。
 - 「已存在」在 better-auth 有**兩個碼**：HTTP 端點回 `USER_ALREADY_EXISTS`，server-side `auth.api.signUpEmail` 丟的
   APIError 是 `USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL`。判斷用 `isAPIError`（從 `@monstertalk/auth` 再匯出，
   api 不直接相依 better-auth —— pnpm 嚴格隔離本來也 import 不到）。
@@ -85,7 +87,7 @@ wrangler 4.86 OAuth 已登入（`water6240@gmail.com`）；cloudflared 有憑證
 ## 未定 / 下一步
 
 - ~~前端接 API~~ ~~/home 查 session、登出~~ **都做完了（2026-09-21）**，見 [[auth-pages-state]]。
-  登入流程剩的：已登入的人打 /login 沒有導回 /home；個人資料卡與頂部列的名字仍是 FAKE_PROFILE（等 schema）
+  個人資料已進 DB 並接上畫面（2026-09-22，見 [[data-model-decisions]]）。登入流程剩的：已登入的人打 /login 沒有導回 /home
 - DB schema（除了 users）另開一場：個人資料欄位、房間預約、Word Bank、點數 ledger
 - vault 的 `tech-inventory` 要改 —— **使用者說一聲才動**
 

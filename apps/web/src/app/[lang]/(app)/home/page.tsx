@@ -5,7 +5,7 @@ import MonstersSection from "@/Components/Profile/Monsters/MonstersSection";
 import ProfileCard from "@/Components/Profile/ProfileCard";
 import RoomEndedNotice from "@/Components/Profile/RoomEndedNotice";
 import ScheduleSection from "@/Components/Profile/Schedule/ScheduleSection";
-import { getDictionary } from "@/dictionaries";
+import { getDictionary, getLocale } from "@/dictionaries";
 
 export async function generateMetadata(): Promise<Metadata> {
 	const dict = await getDictionary();
@@ -16,7 +16,8 @@ export async function generateMetadata(): Promise<Metadata> {
  * 個人首頁 —— 登入後的主畫面。
  *
  * ⚠️ 存取保護只有 (app)/layout.tsx 的 SessionProvider 在 client 查 session、沒登入導去 login ——
- *    靜態匯出沒有 middleware，HTML 本身仍是公開的。資料全部來自 FAKE_PROFILE。
+ *    靜態匯出沒有 middleware，HTML 本身仍是公開的。個人資料來自 ProfileProvider（client 載入），
+ *    週曆 / 怪獸 / 代幣 / 評價仍是 FAKE_*。
  *
  * 路由取名 /home 而非 /dashboard：landing 是給「還沒登入的人」看的，
  * 這裡才是登入後的家。命名照使用者的心智模型，不照技術慣例。
@@ -26,12 +27,14 @@ export async function generateMetadata(): Promise<Metadata> {
  */
 export default async function HomePage() {
 	const dict = await getDictionary();
+	const locale = await getLocale();
+	const card = <ProfileCard locale={locale} card={dict.profile.card} lang={dict.profile.lang} level={dict.profile.level} />;
 	return (
 		<AppShell
 			current="home"
-			beforeNav={<ProfileCard />}
+			beforeNav={card}
 			afterNav={<InviteCard />}
-			mobileTop={<ProfileCard />}
+			mobileTop={card}
 			mobileBottom={<InviteCard />}
 		>
 			<ScheduleSection />

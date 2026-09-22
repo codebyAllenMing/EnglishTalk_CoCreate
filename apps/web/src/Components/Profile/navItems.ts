@@ -1,13 +1,13 @@
 import {
 	BookOpen,
 	CalendarDays,
-	Ghost,
 	History,
 	Home,
 	Settings,
 	Users,
 	type LucideIcon,
 } from "lucide-react";
+import { Monster } from "@/Components/UI/MonsterIcon";
 import type { Dictionary } from "@/dictionaries";
 
 export type NavKey = keyof Dictionary["profile"]["nav"];
@@ -36,13 +36,13 @@ type NavItem = {
  * ⚠️ 沒有 href 的項目不給連結 —— 對應的頁面都還不存在，
  *    照專案既有決策「不存在的頁面不給連結、不做任何轉導」。
  *
- * Find Monsters 用 Ghost 而不是形狀更接近設計稿的 Cat：那個 icon 代表的是
- * 「找怪獸」這件事，語意優先於外形相似。
+ * Find Monsters 用自家的 Monster 圖示（UI/MonsterIcon.ts，lucide 風格線條），
+ * 跟區塊標題、面板提示同一顆；原本的 Ghost 像幽靈不像怪獸（使用者 2026-09-22 換的）。
  */
 export const NAV_ITEMS: readonly NavItem[] = [
 	{ key: "home", icon: Home, href: "/home", inTabBar: true },
 	{ key: "schedule", icon: CalendarDays, href: "/home#schedule", inTabBar: true },
-	{ key: "monsters", icon: Ghost, href: "/home#monsters", inTabBar: true },
+	{ key: "monsters", icon: Monster, href: "/home#monsters", inTabBar: true },
 	{ key: "rooms", icon: Users, inTabBar: true },
 	{ key: "history", icon: History, inTabBar: false },
 	{ key: "wordBank", icon: BookOpen, inTabBar: false },

@@ -1,8 +1,8 @@
-import { AlarmClock, Users } from "lucide-react";
+import { Clock, Moon, Radio } from "lucide-react";
 import Avatar from "@/Components/UI/Avatar";
 import LangBadge from "@/Components/UI/LangBadge";
 import type { Dictionary } from "@/dictionaries";
-import { fill, formatHour, type Monster } from "./monstersData";
+import { fill, formatLastSeen, type Monster } from "./monstersData";
 
 type Props = {
 	monster: Monster;
@@ -21,16 +21,12 @@ type Props = {
  * ⚠️ 語言徽章是**母語在前、學習中在後**。設計稿裡 Alex 是「中 EN」、Bobby 是
  *    「EN 中」—— 順序帶著資訊：第一顆才是你能跟他練到的語言。
  *
- * 狀態列兩種擇一：有開放名額就顯示名額（比較急迫、可以馬上進去），
- * 否則退回顯示下一個有空的時間。
+ * 狀態列目前放線上狀態：線上中 / 閒置中 / 最後上線 N 前 / 尚未上線。
+ * 設計稿這裡是「還有 2 個名額」「下午4時 有空」，那要等房間與空檔的表（使用者 2026-09-22 定的順序：
+ * 名額 > 有空 > 最後上線），有了再把它們排到前面。
  */
 export default function MonsterCard({ monster, selected, onSelect, locale, dict }: Props) {
-	const hasSlots = monster.slotsOpen !== undefined && monster.slotsOpen > 0;
-	// 英文的 1 slot / 2 slots 需要兩個 key；中文兩者相同，字典各自決定
-	const slotsText =
-		monster.slotsOpen === 1
-			? fill(dict.slotOpen, { count: 1 })
-			: fill(dict.slotsOpen, { count: monster.slotsOpen ?? 0 });
+	const status = describePresence(monster, locale, dict);
 
 	return (
 		<button
@@ -43,15 +39,17 @@ export default function MonsterCard({ monster, selected, onSelect, locale, dict 
 					: "border-ink-100 hover:border-primary-200 hover:bg-primary-50/50"
 			}`}
 		>
-			{monster.online && (
+			{monster.presence && (
 				<span
-					title={dict.onlineNow}
-					className="absolute top-3 right-3 size-2.5 rounded-full bg-secondary-400"
+					title={monster.presence === "active" ? dict.onlineNow : dict.idle}
+					className={`absolute top-3 right-3 size-2.5 rounded-full ${
+						monster.presence === "active" ? "bg-secondary-400" : "bg-token"
+					}`}
 				/>
 			)}
 
 			<Avatar
-				src={`avatar-${monster.id}`}
+				src={`avatar-${monster.avatar}`}
 				className="w-20"
 				sizes="80px"
 				circle={false}
@@ -65,15 +63,19 @@ export default function MonsterCard({ monster, selected, onSelect, locale, dict 
 			</span>
 
 			<span className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary-50 px-2 py-1.5 text-[11px] font-semibold text-ink-500">
-				{hasSlots ? (
-					<Users aria-hidden="true" className="size-3.5 shrink-0 text-primary-400" />
-				) : (
-					<AlarmClock aria-hidden="true" className="size-3.5 shrink-0 text-primary-400" />
-				)}
-				<span className="truncate">
-					{hasSlots ? slotsText : fill(dict.freeAt, { time: formatHour(monster.freeAt, locale) })}
-				</span>
+				<status.icon aria-hidden="true" className="size-3.5 shrink-0 text-primary-400" />
+				<span className="truncate">{status.text}</span>
 			</span>
 		</button>
 	);
+}
+
+/** 卡片與面板共用的狀態文字：線上中 / 閒置中 / 最後上線 N 前 / 尚未上線 */
+export function describePresence(monster: Monster, locale: string, dict: Dictionary["profile"]["monsters"]) {
+	if (monster.presence === "active") return { icon: Radio, text: dict.onlineNow };
+	if (monster.presence === "idle") return { icon: Moon, text: dict.idle };
+	return {
+		icon: Clock,
+		text: monster.lastSeenAt ? fill(dict.lastSeen, { time: formatLastSeen(monster.lastSeenAt, locale) }) : dict.neverSeen,
+	};
 }

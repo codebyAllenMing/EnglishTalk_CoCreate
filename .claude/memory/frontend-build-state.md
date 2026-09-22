@@ -77,7 +77,8 @@ metadata:
 2.5 **【延後到最後】`.arc-top` 的程式碼與本檔記載對不上**：globals.css 實際是
    `clamp(14px, 1.9vw, 44px)`，但下方「關鍵決策」記著已改成 5vw、1.9vw 是量錯的。
    **碰 landing 前要先釐清哪個才對**，別照著錯的那份改
-3. **上線前換掉假數據**（`grep "FAKE_"`）
+3. **上線前換掉假數據**（`grep "FAKE_"`）。個人資料、Find Monsters、線上狀態已走 API（2026-09-22）；還假的：週曆、
+   代幣 / 評價 / 通知（`FAKE_PROFILE`）、頭像擁有權（`FAKE_OWNED`）、landing 的統計與評價
 4. Cloudflare Pages 為原訂方案（proxy.ts 能跑、Image 最佳化在），目前先走 GitHub Pages
 
 ## 位置

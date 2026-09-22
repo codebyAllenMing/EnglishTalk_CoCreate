@@ -174,7 +174,8 @@
             "native": "母語",
             "learning": "學習中",
             "reputation": "評價",
-            "tokens": "ME 代幣"
+            "tokens": "ME 代幣",
+            "levelOf": "{lang} 程度：{level}"
         },
         "lang": {
             "zh": "中文",
@@ -235,9 +236,6 @@
             "offline": "離線",
             "search": "搜尋怪獸…",
             "searchLabel": "搜尋怪獸",
-            "freeAt": "{time} 有空",
-            "slotOpen": "還有 {count} 個名額",
-            "slotsOpen": "還有 {count} 個名額",
             "empty": {
                 "title": "沒有符合的怪獸",
                 "note": "換個語言或程度，或把搜尋清空試試。"
@@ -248,12 +246,12 @@
             },
             "panel": {
                 "close": "關閉詳情",
-                "roomUpTo": "房間最多 {count} 人",
-                "nextAvailable": "下次有空",
-                "today": "今天",
                 "viewSchedule": "查看行程",
                 "sayHello": "打聲招呼"
-            }
+            },
+            "idle": "閒置中",
+            "lastSeen": "最後上線 {time}",
+            "neverSeen": "尚未上線"
         },
         "settings": {
             "title": "個人設定",
@@ -302,7 +300,9 @@
                 "pets": "寵物",
                 "photography": "攝影"
             },
-            "addInterestButton": "新增"
+            "addInterestButton": "新增",
+            "saveFailed": "儲存失敗，請再試一次",
+            "saved": "已儲存變更"
         }
     },
     "common": {

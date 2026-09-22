@@ -174,7 +174,8 @@
             "native": "Native",
             "learning": "Learning",
             "reputation": "Reputation",
-            "tokens": "ME Tokens"
+            "tokens": "ME Tokens",
+            "levelOf": "{lang} level: {level}"
         },
         "lang": {
             "zh": "Mandarin",
@@ -235,9 +236,6 @@
             "offline": "Offline",
             "search": "Search monsters…",
             "searchLabel": "Search monsters",
-            "freeAt": "Free at {time}",
-            "slotOpen": "{count} slot open",
-            "slotsOpen": "{count} slots open",
             "empty": {
                 "title": "No monsters here",
                 "note": "Try another language, level, or clear the search."
@@ -248,12 +246,12 @@
             },
             "panel": {
                 "close": "Close details",
-                "roomUpTo": "Room up to {count} people",
-                "nextAvailable": "Next available",
-                "today": "Today",
                 "viewSchedule": "View schedule",
                 "sayHello": "Say hello"
-            }
+            },
+            "idle": "Away",
+            "lastSeen": "Last seen {time}",
+            "neverSeen": "Not online yet"
         },
         "settings": {
             "title": "Profile Settings",
@@ -302,7 +300,9 @@
                 "pets": "Pets",
                 "photography": "Photography"
             },
-            "addInterestButton": "Add"
+            "addInterestButton": "Add",
+            "saveFailed": "Couldn't save your changes. Please try again.",
+            "saved": "Changes saved"
         }
     },
     "common": {

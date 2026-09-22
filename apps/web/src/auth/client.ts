@@ -60,9 +60,13 @@ export type SessionUser = {
 /**
  * 目前登入的使用者；沒登入回 null（better-auth 回 200 + `null`）。
  * ⚠️ 連不到 API 會 throw，不會假裝成「沒登入」—— 呼叫端（SessionProvider）決定怎麼辦。
+ *
+ * `fresh`：跳過 better-auth 的 cookie 快取（5 分鐘）直接讀 DB，並重寫快取。
+ * 改完個人資料的 name 之後要用這個，不然帳號選單會繼續顯示舊名字直到快取過期。
  */
-export async function getSession(): Promise<SessionUser | null> {
-	const response = await fetch(apiUrl("/api/auth/get-session"), { credentials: "include" });
+export async function getSession(options?: { fresh?: boolean }): Promise<SessionUser | null> {
+	const query = options?.fresh ? "?disableCookieCache=true" : "";
+	const response = await fetch(apiUrl(`/api/auth/get-session${query}`), { credentials: "include" });
 	if (!response.ok) throw new Error(`get-session responded ${response.status}`);
 	const data: { user: SessionUser } | null = await response.json();
 	return data?.user ?? null;

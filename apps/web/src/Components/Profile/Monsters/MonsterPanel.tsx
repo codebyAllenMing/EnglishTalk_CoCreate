@@ -1,5 +1,6 @@
-import { Ghost, X } from "lucide-react";
+import { X } from "lucide-react";
 import Card from "@/Components/UI/Card";
+import { Monster as MonsterIcon } from "@/Components/UI/MonsterIcon";
 import type { Dictionary } from "@/dictionaries";
 import MonsterDetails from "./MonsterDetails";
 import type { Monster } from "./monstersData";
@@ -73,7 +74,7 @@ export default function MonsterPanel({ monster, onClose, locale, dict, levelDict
 						</>
 					) : (
 						<div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
-							<Ghost aria-hidden="true" className="size-10 text-primary-200" />
+							<MonsterIcon aria-hidden="true" className="size-10 text-primary-200" />
 							<p className="font-extrabold text-ink-400">{dict.hint.title}</p>
 							<p className="text-sm text-ink-300">{dict.hint.note}</p>
 						</div>

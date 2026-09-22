@@ -1,8 +1,14 @@
+import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { createAuth, requireUser } from "@monstertalk/auth";
-import { createDb } from "@monstertalk/db";
+import { logger } from "hono/logger";
+import { createAuth } from "@monstertalk/auth";
+import { createDb, schema } from "@monstertalk/db";
 import type { Env } from "./env.ts";
+import { createMemoryPresence } from "./presence/store.ts";
+import { presenceRoutes } from "./routes/presence.ts";
+import { profileRoutes } from "./routes/profile.ts";
+import { usersRoutes } from "./routes/users.ts";
 
 /**
  * 組出 Hono app，不綁定任何執行環境。
@@ -17,7 +23,20 @@ export function createApp(env: Env) {
 		trustedOrigins: [env.WEB_ORIGIN],
 	});
 
+	// 線上狀態的 cache（dev：行程內；prod：換 Durable Object）。某人真的離線時才寫一次 lastSeenAt
+	const presence = createMemoryPresence({
+		onOffline: (userId, lastSeenAt) => {
+			db.update(schema.users)
+				.set({ lastSeenAt })
+				.where(eq(schema.users.id, userId))
+				.catch((error: unknown) => console.error("lastSeenAt update failed", error));
+		},
+	});
+
 	const app = new Hono();
+
+	// 每個請求一行：方法、路徑、狀態、耗時
+	app.use(logger());
 
 	// cookie 要跨 origin 送（前端 6531 → api 4000），CORS 必須指定 origin 並開 credentials；萬用字元 * 不行
 	app.use(
@@ -26,7 +45,7 @@ export function createApp(env: Env) {
 			origin: env.WEB_ORIGIN,
 			credentials: true,
 			allowHeaders: ["Content-Type"],
-			allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+			allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 		}),
 	);
 
@@ -36,8 +55,11 @@ export function createApp(env: Env) {
 	// POST /api/auth/sign-up/email、POST /api/auth/sign-in/email、POST /api/auth/sign-out、GET /api/auth/get-session
 	app.on(["GET", "POST"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 
-	// 受保護路由的樣板：requireUser 沒過就 401，過了 c.var.user 有型別
-	app.get("/api/me", requireUser(auth), (c) => c.json(c.var.user));
+	// 個人資料：GET/PUT /api/me/profile、GET /api/avatars（requireUser 在裡面掛）
+	app.route("/api", profileRoutes(auth, db));
+	// 別人的名單與線上狀態，兩支分開：名單變動少、狀態每 30 秒被拉一次
+	app.route("/api", usersRoutes(auth, db));
+	app.route("/api", presenceRoutes(auth, presence));
 
 	return app;
 }
