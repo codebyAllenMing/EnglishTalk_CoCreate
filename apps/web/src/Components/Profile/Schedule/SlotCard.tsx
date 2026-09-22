@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight, Users } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSession } from "@/auth/SessionProvider";
 import Avatar from "@/Components/UI/Avatar";
@@ -18,6 +19,8 @@ import {
 	type RoomMember,
 	type ScheduleItem,
 } from "@/schedule/client";
+import { fill } from "../Monsters/monstersData";
+import { ENTRY_LEAD_MS as ENTRY_LEAD, entryState, formatCountdown } from "./entry";
 import { gridStyle, type MineSlot } from "./scheduleData";
 import { formatTime, parseLocalDate } from "./week";
 
@@ -32,6 +35,8 @@ type Props = {
 	onRemoved: (code: string) => void;
 	/** 同意了申請之後人數變了，通知週曆換掉這張卡的資料 */
 	onUpdated: (item: ScheduleItem) => void;
+	/** 牆鐘（30 秒一次），卡片上畫「進行中」；null = 還沒 mount */
+	now: number | null;
 };
 
 type Detail =
@@ -61,6 +66,11 @@ type CancelStep = "idle" | "confirm" | "pending";
  * 取消 / 審核 / 取消申請都只在開始前允許。render 裡不能讀時鐘（React Compiler 的 purity 規則），所以放 state。
  * 後端一律再擋一次。
  *
+ * ## 進入房間（使用者 2026-09-23）
+ *
+ * 只有我已加入（房主或 approved）的房有；框開著時每秒對一次牆鐘：開始前 5 分鐘到結束前按鈕亮、
+ * 還沒到顯示倒數（到點自動亮）、結束了標「已結束」不給按鈕。卡片本身進行中時多一顆綠點。
+ *
  * ## 定位
  *
  * 靠 grid-column / grid-row，見 gridStyle()。一格 10 分鐘，卡片高度由房的長度決定，內容跟著長度縮：
@@ -73,7 +83,7 @@ const TONE: Record<"hosted" | "session" | "requested", string> = {
 	requested: "border border-dashed border-secondary-400 bg-secondary-50 py-0 text-ink hover:bg-secondary-100",
 };
 
-export default function SlotCard({ slot, day, locale, dict, closeLabel, onRemoved, onUpdated }: Props) {
+export default function SlotCard({ slot, day, locale, dict, closeLabel, onRemoved, onUpdated, now }: Props) {
 	const { user } = useSession();
 	const { toast } = useToast();
 	const [open, setOpen] = useState(false);
@@ -83,6 +93,19 @@ export default function SlotCard({ slot, day, locale, dict, closeLabel, onRemove
 	/** 進行中的動作：取消申請、或正在審核的那個人的 userId */
 	const [busy, setBusy] = useState<string | null>(null);
 	const [error, setError] = useState<string | null>(null);
+	/** 框開著時每秒對一次，給「進入房間」的倒數與到點亮起 */
+	const [clock, setClock] = useState<number | null>(null);
+
+	useEffect(() => {
+		if (!open) return;
+		const tick = () => setClock(Date.now());
+		const id = setInterval(tick, 1000);
+		document.addEventListener("visibilitychange", tick);
+		return () => {
+			clearInterval(id);
+			document.removeEventListener("visibilitychange", tick);
+		};
+	}, [open]);
 
 	const requested = slot.status === "requested";
 	const tone = requested ? "requested" : slot.kind;
@@ -106,7 +129,9 @@ export default function SlotCard({ slot, day, locale, dict, closeLabel, onRemove
 	const openDialog = () => {
 		const start = parseLocalDate(slot.date);
 		start.setMinutes(slot.startMinutes);
-		setCanAct(start.getTime() > Date.now());
+		const at = Date.now();
+		setClock(at);
+		setCanAct(start.getTime() > at);
 		setDetail({ status: "loading" });
 		setCancelStep("idle");
 		setBusy(null);
@@ -181,6 +206,9 @@ export default function SlotCard({ slot, day, locale, dict, closeLabel, onRemove
 	const seats = detail.status === "ok" ? detail.detail.seats : slot.seats;
 	const requests = detail.status === "ok" && slot.kind === "hosted" ? detail.detail.requests : [];
 	const cancelled = detail.status === "cancelled";
+	const joined = slot.status === "approved";
+	const entry = joined && clock !== null ? entryState(slot.start, slot.end, clock) : null;
+	const liveOnCard = joined && now !== null && now >= slot.start - ENTRY_LEAD && now < slot.end;
 
 	return (
 		<>
@@ -191,6 +219,9 @@ export default function SlotCard({ slot, day, locale, dict, closeLabel, onRemove
 				className={`m-0.5 flex flex-col overflow-hidden rounded-xl px-2 text-left transition-colors ${TONE[tone]}`}
 			>
 				<span className="flex w-full items-center gap-1">
+					{liveOnCard && (
+						<span aria-label={dict.enter.live} title={dict.enter.live} className="size-2 shrink-0 rounded-full bg-secondary-500" />
+					)}
 					<span className="min-w-0 flex-1 truncate text-xs leading-tight font-extrabold">{title}</span>
 					{requested && (
 						<span className="shrink-0 text-[10px] leading-tight font-extrabold text-secondary-600">
@@ -224,7 +255,17 @@ export default function SlotCard({ slot, day, locale, dict, closeLabel, onRemove
 			>
 				<dl className="divide-y divide-ink-100 text-sm">
 					<Row label={dict.detail.type}>{requested ? dict.pending.tag : dict.legend[slot.kind]}</Row>
-					<Row label={dict.detail.time}>{time}</Row>
+					<Row label={dict.detail.time}>
+						{time}
+						{entry?.phase === "ended" && (
+							<span className="ml-2 rounded-full bg-ink-100 px-2 py-0.5 text-xs font-extrabold text-ink-500">{dict.enter.ended}</span>
+						)}
+						{entry?.phase === "open" && (
+							<span className="ml-2 rounded-full bg-secondary-100 px-2 py-0.5 text-xs font-extrabold text-secondary-700">
+								{dict.enter.live}
+							</span>
+						)}
+					</Row>
 					<Row label={dict.detail.languages}>
 						<span className="flex items-center gap-1.5">
 							<LangBadge code={slot.from} className="size-5 text-[9px]" />
@@ -244,6 +285,29 @@ export default function SlotCard({ slot, day, locale, dict, closeLabel, onRemove
 					<p role="alert" className="mt-4 rounded-xl bg-danger/10 px-4 py-3 text-sm font-bold text-danger">
 						{dict.cancelledRoom}
 					</p>
+				)}
+
+				{entry && !cancelled && entry.phase !== "ended" && (
+					<div className="mt-4">
+						{entry.phase === "open" ? (
+							<Link
+								href={`/${locale}/room/${slot.code}`}
+								className="block w-full rounded-full bg-secondary-500 py-2.5 text-center text-sm font-extrabold text-white transition-colors hover:bg-secondary-600"
+							>
+								{dict.enter.button}
+							</Link>
+						) : (
+							<button
+								type="button"
+								disabled
+								className="w-full rounded-full bg-ink-100 py-2.5 text-sm font-extrabold text-ink-400 tabular-nums"
+							>
+								{entry.opensIn <= 60 * 60_000
+									? fill(dict.enter.opensIn, { time: formatCountdown(entry.opensIn) })
+									: dict.enter.before}
+							</button>
+						)}
+					</div>
 				)}
 
 				<section className={`mt-4 ${cancelled ? "hidden" : ""}`}>

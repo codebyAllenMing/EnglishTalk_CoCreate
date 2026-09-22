@@ -21,6 +21,8 @@ type Props = {
 	/** 房主同意了人 → 人數變了 */
 	onUpdated: (item: ScheduleItem) => void;
 	scrollTop: number;
+	/** 牆鐘（ms），畫「進行中」用；null = 還沒 mount 不畫 */
+	now: number | null;
 };
 
 const TIME_COL = "4rem";
@@ -68,6 +70,7 @@ export default function ScheduleGrid({
 	onAdded,
 	onUpdated,
 	scrollTop,
+	now,
 }: Props) {
 	const hourFmt = new Intl.DateTimeFormat(locale, { hour: "numeric" });
 	const labels = Array.from({ length: SLOTS_PER_DAY / LABEL_EVERY }, (_, i) =>
@@ -154,6 +157,7 @@ export default function ScheduleGrid({
 							/>
 						) : (
 							<SlotCard
+								now={now}
 								key={slot.code}
 								slot={slot}
 								day={day}

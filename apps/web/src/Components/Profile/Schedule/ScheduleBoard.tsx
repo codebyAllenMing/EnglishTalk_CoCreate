@@ -73,6 +73,18 @@ export default function ScheduleBoard({ locale, dict, lang, closeLabel, cancelLa
 	const [offset, setOffset] = useState(0);
 	const [loaded, setLoaded] = useState<Loaded | null>(null);
 	const [scrollTop, setScrollTop] = useState<number | null>(null);
+	/** 卡片上的「進行中」綠點用，30 秒對一次就夠；null = 還沒 mount */
+	const [now, setNow] = useState<number | null>(null);
+
+	useEffect(() => {
+		const tick = () => setNow(Date.now());
+		const id = setInterval(tick, 30_000);
+		document.addEventListener("visibilitychange", tick);
+		return () => {
+			clearInterval(id);
+			document.removeEventListener("visibilitychange", tick);
+		};
+	}, []);
 
 	const visibleWeek = weekStart && (offset === 0 ? weekStart : shiftWeek(weekStart, offset));
 
@@ -182,6 +194,7 @@ export default function ScheduleBoard({ locale, dict, lang, closeLabel, cancelLa
 					onAdded={handleAdded}
 					onUpdated={handleUpdated}
 					scrollTop={scrollTop ?? initialScrollTop([])}
+					now={now}
 				/>
 
 				<WeekButton label={dict.nextWeek} onClick={() => setOffset(offset + 1)}>

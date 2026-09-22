@@ -90,3 +90,5 @@ metadata:
 - UI kit artifact: https://claude.ai/code/artifact/0543ca02-3dfd-487c-90e5-44d5c5d5433a
 
 **How to apply:** 接續開發前先讀此檔確認進度；產品規則去 vault 查，不要在 repo 內另建規格文件。
+
+- 2026-09-23 手機（iOS Chrome）測試：dev 的 hydration 錯誤 `__gcrremoteframetoken` 是 iOS Chrome 自己塞進 `<html>` 的屬性，不是程式問題；根 layout 的 `<html>` 加了 `suppressHydrationWarning`（只壓這一層）。

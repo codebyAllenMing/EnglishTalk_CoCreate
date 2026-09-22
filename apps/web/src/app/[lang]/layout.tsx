@@ -34,7 +34,9 @@ export default async function RootLayout({ children, params }: LayoutProps<"/[la
 	const { lang } = await params;
 
 	return (
-		<html lang={lang} className={`${nunito.variable} ${notoSansTC.variable}`}>
+		// suppressHydrationWarning 只管 <html> 這一層：iOS 版 Chrome 會自己在 <html> 塞 __gcrremoteframetoken 屬性，
+		// dev 的 hydration 比對會報不一致（2026-09-23 手機測試撞到）；跟我們的程式無關，其他元素不受影響
+		<html lang={lang} className={`${nunito.variable} ${notoSansTC.variable}`} suppressHydrationWarning>
 			<body className="font-sans">
 				{/* 入口守門：一進站問一次 session，已登入的人在公開頁（landing / login / signup）會被送去 /home */}
 				<SignedInRedirect locale={lang} />

@@ -372,3 +372,14 @@ seriously.」，但 Nav 與登入頁都已經是 **MonsterTalk**。側邊欄 log
 
 **How to apply:** 個人首頁的四個區塊都做完了。剩下的是**未定**那節（Logo 識別）、
 設計稿的「Show more monsters」等分頁 API，以及登入/註冊頁與設計稿的落差清單。
+
+## 進房入口（2026-09-23 建）
+
+使用者手機測試時發現週曆卡片打開沒有「進入房間」，也沒有不用拉日曆的快捷入口。定案並建好：
+- `Schedule/entry.ts`：`entryState(start, end, now)` → before / open / ended，`ENTRY_LEAD_MS` 5 分鐘（跟 db 的 ROOM_ENTRY_LEAD_MINUTES 同值；後端 roomAccess 一定再擋）。
+- `SlotCard` 對話框：只有已加入（房主或 approved）的房有。open → 綠色「進入房間」`Link` 到 `/room/:code`；before → 灰按鈕，一小時內倒數
+  `{time} 後可進入`、到點自動亮（框開著每秒對一次牆鐘 `clock`）；ended → 時間列旁標「已結束」、不給按鈕。卡片本身進行中多一顆綠點
+  （`ScheduleBoard` 30 秒一次的 `now` 經 `ScheduleGrid` 傳下去）。
+- `NextRoomCard`（home 最上面）：手機放在個人資料卡之前、桌機主欄最上面，兩處互斥各掛一次、共用同一個 promise。
+  自己打 `getSchedule(now − 2h, now + 7d)`，挑已加入且沒結束的最近一場：進行中綠底 + 進入；一小時內倒數；更晚顯示時間 + 「查看」捲到 `#schedule`；
+  同一天還有別場多一行「另有 N 場」；沒預約整張不畫。字典 `profile.schedule.enter.*`、`profile.schedule.next.*`。

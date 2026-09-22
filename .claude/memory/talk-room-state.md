@@ -183,7 +183,12 @@ P2 的（白板、反應、話題卡、單字庫）各自獨立一個檔，延�
 - **格子放大模式（2026-09-22 建）**：每格**左上角一顆 ⤢ 按鈕**（使用者：「應該要給一個放大縮小的按鈕，而不是點視窗放大」，原本整格可點已拿掉）→ 全寬當主畫面、其他縮成一排 1/3 寬小格，主畫面那顆變 ⤡ 按了回 2×2。純手動、各看各的（`focusId` 只在 VideoGrid 的 state）。
   同一個 grid 改 `grid-cols-3` + 主畫面 `order-first col-span-3`，不搬 DOM 所以 <video> 不重掛。右上角留給「未連線」標與反應泡泡。
   小格在 sm 以下藏兩顆燈、名字縮小；手機預設仍 2×2（使用者同意跟桌機一致）。字典 `room.video.focus / unfocus`。
-- 待做：Tunnel 手機測試（vault 筆記第 2 節，兩條 Cloudflare 指令要確認）、Find Monsters「通話中」用 live 連線當依據。
+- **Tunnel 手機測試（2026-09-22 深夜準備好、還沒建）**：設定範本 `_dev/tunnel/config.yml`（一個 hostname `talk.allenmingstudio.com` 路徑分流：
+  `^/(api/.*|health)$` → https://localhost:4000、其餘 → https://localhost:6531，都 noTLSVerify）。`apiOrigin()` 遇到非 localhost / IP 的 host 走同 origin；
+  next.config `allowedDevOrigins: ["192.168.*.*", "talk.allenmingstudio.com"]`；`.env.local` 的 WEB_ORIGIN 已多列 tunnel 網域。
+  **還沒跑的兩條 Cloudflare 寫入指令（要使用者確認）**：`cloudflared tunnel create monstertalk`、`cloudflared tunnel route dns monstertalk talk.allenmingstudio.com`，
+  跑完把 id 填進 config.yml，再 `cloudflared tunnel --config _dev/tunnel/config.yml run`。
+- 待做：Find Monsters「通話中」用 live 連線當依據。
 - 還沒定：發表當天後端跑哪（本機 dev vs 部署）。
 
 **How to apply:** 接後端前先讀這份確認 provider 的邊界。後端與部署的定案（LiveKit Cloud、tldraw

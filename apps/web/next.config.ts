@@ -13,6 +13,8 @@ const basePath = isStaticExport ? "/EnglishTalk_CoCreate" : "";
 const nextConfig: NextConfig = {
 	// 計時器的純邏輯（settle）跟 server 共用同一份 TS 原始碼，要 Next 幫忙轉譯 workspace 套件
 	transpilePackages: ["@monstertalk/live"],
+	// dev server 被非 localhost 的 host 打到（區網 IP 給手機、Cloudflare Tunnel 的網域）時 HMR / _next 資源要放行
+	allowedDevOrigins: ["192.168.*.*", "talk.allenmingstudio.com"],
 	...(isStaticExport && {
 		output: "export",
 		// project pages 的網址是 user.github.io/<repo>，少了這個前綴所有資源都會 404

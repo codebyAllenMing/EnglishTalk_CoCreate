@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import AppShell from "@/Components/Profile/AppShell";
 import InviteCard from "@/Components/Profile/InviteCard";
 import MonstersSection from "@/Components/Profile/Monsters/MonstersSection";
+import NextRoomCard from "@/Components/Profile/NextRoomCard";
 import ProfileCard from "@/Components/Profile/ProfileCard";
 import RoomEndedNotice from "@/Components/Profile/RoomEndedNotice";
 import ScheduleSection from "@/Components/Profile/Schedule/ScheduleSection";
@@ -29,14 +30,22 @@ export default async function HomePage() {
 	const dict = await getDictionary();
 	const locale = await getLocale();
 	const card = <ProfileCard locale={locale} card={dict.profile.card} lang={dict.profile.lang} level={dict.profile.level} />;
+	// 「接下來的房間」：手機放在個人資料卡之前（一進來不用捲就看到），桌機放主欄最上面；兩處互斥
+	const next = (className: string) => <NextRoomCard locale={locale} dict={dict.profile.schedule} className={className} />;
 	return (
 		<AppShell
 			current="home"
 			beforeNav={card}
 			afterNav={<InviteCard />}
-			mobileTop={card}
+			mobileTop={
+				<>
+					{next("")}
+					{card}
+				</>
+			}
 			mobileBottom={<InviteCard />}
 		>
+			{next("hidden lg:block")}
 			<ScheduleSection />
 			<MonstersSection />
 			{/* 從結束的房間被送回來時才會彈（看 ?ended=） */}

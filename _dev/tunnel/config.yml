@@ -1,0 +1,24 @@
+# Cloudflare Tunnel：把本機 dev 暴露成 https://talk.allenmingstudio.com，給手機 / 第二台機器測視訊。
+# 一個 hostname、路徑分流：/api/* 與 /health 進 api（4000），其餘進 Next（6531）。前端與 API 同 origin，cookie / CORS 都不用煩惱。
+# 兩個 origin 都是 dev 的 https（mkcert），所以 noTLSVerify。
+#
+#   建立（只做一次，會動到 Cloudflare 帳號，Allen 確認後跑）：
+#     cloudflared tunnel create monstertalk
+#     cloudflared tunnel route dns monstertalk talk.allenmingstudio.com
+#   把上面印出的 tunnel id 填進下面兩行，然後：
+#     cloudflared tunnel --config _dev/tunnel/config.yml run
+#
+# WebRTC 媒體不經過 tunnel（直連 Cloudflare 邊緣），tunnel 只走頁面、API、WS。
+tunnel: 3fb86b89-348b-4604-9e69-1f3239f5c6af
+credentials-file: /Users/allen/.cloudflared/3fb86b89-348b-4604-9e69-1f3239f5c6af.json
+ingress:
+  - hostname: talk.allenmingstudio.com
+    path: ^/(api/.*|health)$
+    service: https://localhost:4000
+    originRequest:
+      noTLSVerify: true
+  - hostname: talk.allenmingstudio.com
+    service: https://localhost:6531
+    originRequest:
+      noTLSVerify: true
+  - service: http_status:404

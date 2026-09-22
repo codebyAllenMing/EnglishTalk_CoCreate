@@ -5,6 +5,7 @@
  * 1. NEXT_PUBLIC_API_ORIGIN 有值 → 照用（部署時指定）。
  * 2. NEXT_PUBLIC_API_PORT 有值（dev）→ 跟著頁面的 host 走：https://localhost:4000、https://192.168.x.x:4000…
  *    手機或第二台機器用區網 IP 開前端時 API 自動跟著，不用改設定；cookie 也因為同 host 不同 port 算 same-site。
+ *    頁面是真網域（Cloudflare Tunnel 一個 hostname 路徑分流）→ 同 origin，API 在 /api 底下，cloudflared 負責轉到 4000。
  * 3. 都沒有（GitHub Pages 靜態站）→ 空字串：表單會打到自己的網址、拿到 404，然後顯示「連不到伺服器」。
  *    這是預期行為，不是 bug；正式上線前端會跟 API 一起上 Cloudflare。
  *
@@ -13,11 +14,15 @@
 const API_ORIGIN = process.env.NEXT_PUBLIC_API_ORIGIN ?? "";
 const API_PORT = process.env.NEXT_PUBLIC_API_PORT ?? "";
 
+/** localhost 或 IP 字面值（區網手機測試）；其餘當真網域（Cloudflare Tunnel），API 在同一個 origin 的 /api 底下 */
+const isLocalHost = (hostname: string) => hostname === "localhost" || /^[\d.]+$/.test(hostname) || hostname.includes(":");
+
 function apiOrigin(): string {
 	if (API_ORIGIN) return API_ORIGIN;
 	// SSR 沒有 location；這些函式只在瀏覽器的事件與 effect 裡被呼叫，這裡只是保險
-	if (API_PORT && typeof window !== "undefined") return `${window.location.protocol}//${window.location.hostname}:${API_PORT}`;
-	return "";
+	if (!API_PORT || typeof window === "undefined") return "";
+	const { protocol, hostname, host } = window.location;
+	return isLocalHost(hostname) ? `${protocol}//${hostname}:${API_PORT}` : `${protocol}//${host}`;
 }
 
 export const apiUrl = (path: string) => `${apiOrigin()}${path}`;

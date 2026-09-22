@@ -127,7 +127,14 @@ docker exec monstertalk-postgres-1 psql -U monstertalk -d monstertalk -c 'delete
 - 網址：前端 `https://localhost:6531`、api `https://localhost:4000`，WS 自動變 wss。
 - curl 要帶根憑證：`curl --cacert "$(mkcert -CAROOT)/rootCA.pem" https://localhost:4000/health`（或 `-k`）。
   Node 腳本：`NODE_EXTRA_CA_CERTS="$(mkcert -CAROOT)/rootCA.pem" node …`。
-- **手機 / 第二台機器**（視訊測試要用）：
+- **手機經 Cloudflare Tunnel**（真憑證，手機不用裝任何東西；設定在 `_dev/tunnel/config.yml`）：
+  1. 一次性：`cloudflared tunnel create monstertalk`、`cloudflared tunnel route dns monstertalk talk.allenmingstudio.com`，
+     把 tunnel id 填進 config.yml 的兩行。
+  2. 每次：`cloudflared tunnel --config _dev/tunnel/config.yml run`（跟 dev:api、dev 並存，第四個 terminal）。
+  3. 手機開 `https://talk.allenmingstudio.com`；Mac 上測的時候也用這個網址（localhost 的頁面對 tunnel 的 API 是跨站，cookie 不會送）。
+  4. `.env.local` 的 `WEB_ORIGIN` 已經多列了這個網域；前端的 API origin 遇到真網域會自動走同 origin，不用設 `NEXT_PUBLIC_API_ORIGIN`。
+  5. 手機用 4G 才會考驗 NAT 穿透；同一個 Wi-Fi 直連。
+- **手機用區網 IP**（不經 tunnel，要裝 mkcert 根憑證）：
   1. 前端改跑 `corepack pnpm --filter web exec next dev --port 6531 -H 192.168.x.x --experimental-https`（Next 會重產含那個 IP 的憑證）。
   2. `.env.local` 的 `WEB_ORIGIN` 多列一個 `https://192.168.x.x:6531`（逗號分隔），重啟 api。
   3. 手機裝 mkcert 根憑證：AirDrop `"$(mkcert -CAROOT)/rootCA.pem"` 到 iPhone → 設定安裝描述檔 → 一般 → 關於 → 憑證信任設定打開完整信任。

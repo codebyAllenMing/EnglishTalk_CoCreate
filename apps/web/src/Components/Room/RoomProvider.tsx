@@ -58,6 +58,8 @@ type RoomActions = {
 	videoBlocked: () => void;
 	/** 使用者點了「開始播放」 */
 	resumeVideo: () => void;
+	/** 按了「離開」確認：之後的 beforeunload 不再攔（整頁跳轉的備援要能走） */
+	markLeaving: () => void;
 };
 
 const RoomContext = createContext<(RoomState & RoomActions) | null>(null);
@@ -130,11 +132,15 @@ export default function RoomProvider({ room, children }: { room: Room; children:
 		};
 	}, [state.ended]);
 
+	const leaving = useRef(false);
+
 	// 重新整理 / 關分頁 / 改網址前讓瀏覽器問一聲（使用者 2026-09-22 誤按上一頁後決定：只擋這種，不做 history 陷阱）。
 	// 文案與樣式是瀏覽器的、改不了；站內導頁（Leave 按鈕、時間到的導回 home）是 SPA 換頁，不會觸發。
+	// 使用者已經按了「離開」確認就不攔：SPA 換頁沒成功時的整頁跳轉備援要能走。
 	useEffect(() => {
 		if (state.ended) return;
 		const ask = (event: BeforeUnloadEvent) => {
+			if (leaving.current) return;
 			event.preventDefault();
 			// 舊版 Chrome / Safari 還看這個
 			event.returnValue = "";
@@ -232,6 +238,9 @@ export default function RoomProvider({ room, children }: { room: Room; children:
 				nextTopic,
 				videoBlocked: sfu.blocked,
 				resumeVideo: sfu.resume,
+				markLeaving: () => {
+					leaving.current = true;
+				},
 			}}
 		>
 			{children}

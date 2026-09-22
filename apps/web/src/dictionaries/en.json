@@ -208,6 +208,19 @@
             "hostRoom": "Host a room",
             "untitled": "Room",
             "cancelledRoom": "This room has been cancelled",
+            "enter": {
+                "button": "Enter room",
+                "before": "Opens 5 minutes before start",
+                "opensIn": "Opens in {time}",
+                "ended": "Ended",
+                "live": "Live"
+            },
+            "next": {
+                "title": "Up next",
+                "live": "Live now",
+                "view": "View",
+                "more": "{count} more today — see calendar"
+            },
             "prevWeek": "Previous week",
             "nextWeek": "Next week",
             "legend": {
