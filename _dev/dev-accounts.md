@@ -50,7 +50,7 @@ docker exec monstertalk-postgres-1 psql -U monstertalk -d monstertalk -c 'select
 
 ## 房間（測週曆用）
 
-`db:seed` 會建 8 間相對**本週**的房（房號 `SEED01`–`SEED08`），每次重跑先刪這五間再建，你自己開的房不動。
+`db:seed` 會建 9 間相對**本週**的房（房號 `SEED01`–`SEED09`），每次重跑先刪這五間再建，你自己開的房不動。
 以 allen 登入看週曆：
 
 | 房號 | 房主 | 時間（本週） | 長度 | allen 的角色 | 週曆上 |
@@ -63,6 +63,10 @@ docker exec monstertalk-postgres-1 psql -U monstertalk -d monstertalk -c 'select
 | SEED06 | nina | 週五 20:00 | 40 分 | 沒關係 | 黃「可加入」 |
 | SEED07 | tao | 週六 10:00 | 60 分 | 沒關係（sunny 已加入，2/4） | 黃，跟 SEED08 併成「2 間可加入」 |
 | SEED08 | yuki | 週六 10:30 | 40 分 | 沒關係 | 同上 |
+| SEED09 | allen | **跑 seed 那一刻**起 60 分 | 60 分 | 房主，luna / bobby 已加入，mia 申請中 | 紫；**進房測試用**，`/zh-TW/room/SEED09` |
+
+進房（白板等即時功能）只在時間窗內、且是子單裡 approved 的人才連得上。SEED09 每跑一次 seed 就重新從「現在」開始，
+測白板前先 `corepack pnpm db:seed`，再用 allen / luna / bobby 開 `/zh-TW/room/SEED09`；mia 是申請中，連白板會被拒。
 
 審核流程用 **bobby** 登入：SEED02 的詳情裡有 mia 的申請，可以同意 / 拒絕。
 申請流程用 **mia** 登入：週曆上 SEED02 是「申請中」（可取消申請），SEED01 / 03 / 06 / 07 / 08 是黃卡。

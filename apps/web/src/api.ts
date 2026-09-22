@@ -10,3 +10,9 @@
 const API_ORIGIN = process.env.NEXT_PUBLIC_API_ORIGIN ?? "";
 
 export const apiUrl = (path: string) => `${API_ORIGIN}${path}`;
+
+/**
+ * WebSocket 用的 URL：同一個 origin，http → ws、https → wss。
+ * 靜態站（origin 空字串）沒有後端，回相對路徑讓它自然失敗，跟 apiUrl 同一種預期行為。
+ */
+export const wsUrl = (path: string) => `${API_ORIGIN.replace(/^http/, "ws")}${path}`;

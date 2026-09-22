@@ -14,6 +14,7 @@ metadata:
 |---|---|
 | `packages/db` | Drizzle schema（`src/schema/auth.ts`：Users / Sessions / Accounts / Verifications）、`createDb(url)`（postgres-js）、`drizzle.config.ts`、`drizzle/0000_*.sql` 第一版 migration |
 | `packages/auth` | `createAuth({ db, secret, baseURL, trustedOrigins })`、`verifySession(auth, headers)`（給 WS / tldraw 用）、`requireUser(auth)` Hono middleware（401 或 `c.var.user` / `c.var.session`；用 `returnHeaders: true` 把 better-auth 的滑動續期 Set-Cookie 轉回 response，2026-09-22 補的） |
+| `packages/whiteboard` | tldraw sync 的 hub（`Map<code, TLSocketRoom>`）+ Node upgrade 接頭，auth / DB 用 authorize 回呼注入；見 [[talk-room-state]] |
 | `apps/api` | Hono + `@hono/node-server`，port 4000。`/health`、`/api/auth/*` 交給 better-auth、`routes/profile.ts` 有 `GET/PUT /api/me/profile` 與 `GET /api/avatars`、`routes/users.ts` 有 `GET /api/users`、`routes/presence.ts` 有心跳 / 離開 / 快照（2026-09-22）；`hono/logger` 每個請求印一行。`createApp(env)` 不綁執行環境，上 Workers 只換 `index.ts` |
 | root | `docker-compose.yml`（postgres:17-alpine + Mailpit）、`.env.example`、`tsconfig.base.json`、scripts `dev:api` / `typecheck` / `db:generate` / `db:migrate` / `db:studio` |
 

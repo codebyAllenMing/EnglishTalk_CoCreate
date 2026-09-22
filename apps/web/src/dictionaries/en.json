@@ -408,13 +408,7 @@
             "everyone": "Everyone can edit",
             "reopen": "Reopen whiteboard",
             "collapse": "Hide whiteboard",
-            "tools": {
-                "select": "Select",
-                "pen": "Pen",
-                "text": "Text",
-                "undo": "Undo",
-                "redo": "Redo"
-            }
+            "unavailable": "Whiteboard unavailable: you need to be a member, and the room opens 5 minutes before start."
         },
         "topic": {
             "title": "Topic Card",
@@ -452,6 +446,17 @@
             "remove": "Remove {word}"
         },
         "endedTitle": "Room {code} has ended",
-        "endedHint": "Time is up — thanks for talking! See you in the next room."
+        "endedHint": "Time is up — thanks for talking! See you in the next room.",
+        "gate": {
+            "loading": "Entering the room…",
+            "notFound": "This room doesn't exist",
+            "cancelled": "This room has been cancelled",
+            "notMember": "You're not on this room's list",
+            "notStarted": "Starts {time}. You can enter 5 minutes before",
+            "ended": "This room has ended",
+            "unauthorized": "Please sign in first",
+            "network": "Can't reach the server, please try again",
+            "home": "Back to home"
+        }
     }
 }

@@ -81,5 +81,43 @@ P2 的（白板、反應、話題卡、單字庫）各自獨立一個檔，延�
   評分等結束後流程仍未定（vault `rating-mechanism`）。
 - 未做：emoji 選擇器（純視覺）、白板工具列（純視覺）、ControlBar 的 › 子選單。
 
+## 接後端的定案（2026-09-23 討論，未建）
+
+- **進房的門一定在 server，兩層缺一不可**（使用者：「你有擋就好，這很容易被忽略」）：
+  1. 頁面載入打 `GET /api/rooms/:code`：404 / 410 cancelled / `status` none 或 requested → 導回 home；
+     approved（含房主）才看時間窗 `startDate − 5 分鐘 ~ endDate`，太早顯示倒數、過了走 `?ended=`。**這層是體驗。**
+  2. **WS 握手（白板、聊天）與 LiveKit 簽 token 各自再查一次 `RoomMembers` approved + 時間窗**，不是就 4403 斷線 / 不簽。
+     **這層是安全。** 靜態 HTML 本來公開，直接打網址擋不住也不用擋，門在 API 與 WS。
+- **白板用 tldraw + `@tldraw/sync`**，浮水印使用者接受。server 端 `Map<code, TLSocketRoom>` 跑在 api 的 Node 行程
+  （同一個 `ws` server 按路徑分流：`/api/rooms/:code/whiteboard`、之後聊天 `/api/rooms/:code/live`），
+  prod 換官方 DO 範本（`idFromName(code)`）。第一個人連進來才建（lazy），`endDate` 到或沒人一段時間就銷毀，
+  內容只活在記憶體。圖片上傳先關。
+- 房號唯一真相是 `Rooms.code`，網址與 Map 都只是拿它當鍵，沒有第二份登錄表。
+- 隔離模型 = pub/sub：房號是 topic，每個 topic 各自一份 store 與 socket 清單，不是一條大廣播加 if。
+- **白板已建（2026-09-22）**，是獨立模組（使用者：「白板要變成一個模組」）：
+  - 後端 `packages/whiteboard`（`@monstertalk/whiteboard`）：`createWhiteboardHub()` = `Map<code, TLSocketRoom>` 的生命週期
+    （lazy 建、最後一人離開 60 秒銷毀、endDate + 5 分鐘銷毀）；`./node` 的 `attachWhiteboardServer(server, { hub, origin, authorize })`
+    掛在 http server 的 upgrade 上，路徑 `/api/rooms/:code/whiteboard?sessionId=`。套件不認識 auth / DB，誰能連由 `authorize` 回呼決定。
+  - api：`createApp()` 改回 `{ app, auth, db }`；`index.ts` 用 `instanceof http.Server` 收窄後掛白板，authorize =
+    `verifySession(cookie)` → `rooms/access.ts` 的 `roomAccess(db, userId, code)`（**進房規則只寫這一處**：存在、未取消、approved、
+    `startDate − 5 分鐘 ~ endDate`；`ROOM_ENTRY_LEAD_MINUTES` 在 packages/db）→ 401 / 403 / 404 / 410。ws 測過六種情況都對。
+  - 前端 `Components/Room/Whiteboard/`：`index.tsx`（外框 + 收合，`next/dynamic` 關 SSR）、`Board.tsx`（`useSync` + `<Tldraw>`，
+    store.status error 就顯示 `board.unavailable`）、`assets.ts`（上傳關掉）。房間頁只傳 `code`。換引擎只動 Board.tsx。
+  - `src/api.ts` 多 `wsUrl()`（http → ws）。seed 多 `SEED09`：跑 seed 那一刻起 60 分鐘、allen 房主 / luna bobby 已加入 / mia 申請中，測進房用。
+  - **入口已接（2026-09-22 晚）**：`GET /api/rooms/:code/entry`（roomAccess 的答案 + 房間 + 成員含母語與 me）。
+    前端 `Components/Room/RoomGate.tsx`（client）載入時打它：ok → 用真成員組 Room 掛 RoomProvider；notStarted → 倒數到
+    opensAt 再問一次；ended → `/home?ended=`；其餘顯示原因 + 回首頁（字典 `room.gate.*`）。頁面結構變成
+    `RoomGate → RoomProvider → RoomShell（server 殼）`，標題與三顆 chip 拆成 `RoomHeading`（client，讀 useRoom）。
+    `Participant` 多了 `avatar`（id 現在是 Users.id）。聊天 / 話題 / 單字仍 mock，mock 訊息的 from 輪流指到真成員。
+  - 白板的 tldraw user 用登入者，**兩個地方都要給**（踩過：只給一個，自己看是真名、別人看是「新用戶」）：
+    `useSync({ users: { currentUser: atom(UserRecordType.create({ id: createUserId(userId), name, color })) } })` 決定
+    **廣播給別人的 presence**（沒給就讀 localStorage 的預設偏好）；`useTldrawCurrentUser` + `<Tldraw user>` 只是編輯器
+    自己的偏好（語系、自己在清單裡的名字）。顏色由 userId 雜湊固定。
+- **https**（使用者 2026-09-22 提醒）：localhost 不用；手機連電腦時白板 / 聊天 http 也通，但**視訊的鏡頭麥克風要 secure context**。
+  https 頁面也不能開 ws://，所以到視訊那輪 web 與 api 要一起上 https：Next `next dev --experimental-https`（mkcert 自動產憑證，
+  手機要裝 mkcert 的根憑證）或 Cloudflare Tunnel 配自己網域（兩個子網域、cookie same-site、WS 通）。程式碼全靠 env
+  （`API_ORIGIN` / `WEB_ORIGIN` / `NEXT_PUBLIC_API_ORIGIN`），不用改。
+- 還沒定：發表當天後端跑哪（本機 dev vs 部署）、視訊 LiveKit Cloud vs 四人 mesh、單字入庫。
+
 **How to apply:** 接後端前先讀這份確認 provider 的邊界。後端與部署的定案（LiveKit Cloud、tldraw
 自架在 Durable Objects、自有 WS、Neon）在 [[auth-backend-plan]]；白板換 tldraw 時只動 `Whiteboard.tsx`。

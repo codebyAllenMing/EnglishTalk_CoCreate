@@ -117,9 +117,9 @@ type SeedRoom = {
 	code: string;
 	host: string;
 	title: string;
-	/** 相對本週週一的天數（可以是負的 = 上週、≥ 7 = 下週） */
-	day: number;
-	/** 當地時間 "HH:MM" */
+	/** 相對本週週一的天數（可以是負的 = 上週、≥ 7 = 下週）；"now" = 從跑 seed 的 5 分鐘前開始，測進房用 */
+	day: number | "now";
+	/** 當地時間 "HH:MM"（day 為 "now" 時忽略） */
 	time: string;
 	duration: RoomDuration;
 	capacity: number;
@@ -138,12 +138,19 @@ const SEED_ROOMS: readonly SeedRoom[] = [
 	{ code: "SEED06", host: "nina", title: "面試英文練習", day: 4, time: "20:00", duration: 40, capacity: 3, roomType: 2, members: [] },
 	{ code: "SEED07", host: "tao", title: "Coffee chat", day: 5, time: "10:00", duration: 60, capacity: 4, roomType: 2, members: [{ id: "sunny", status: "approved" }] },
 	{ code: "SEED08", host: "yuki", title: "Taiwanese food talk", day: 5, time: "10:30", duration: 40, capacity: 2, roomType: 1, members: [] },
+	// 進房測試用：跑 seed 那一刻就在時間窗內（開始 5 分鐘前到結束），60 分鐘。allen 房主、luna / bobby 已加入、mia 申請中
+	{ code: "SEED09", host: "allen", title: "Live test room", day: "now", time: "", duration: 60, capacity: 4, roomType: 2, members: [{ id: "luna", status: "approved" }, { id: "bobby", status: "approved" }, { id: "mia", status: "requested" }] },
 ];
 
 // 本週週一 00:00（本機時區）。getDay() 週日是 0，所以週日要往回推 6 天
 const today = new Date();
 const monday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - ((today.getDay() + 6) % 7));
-function at(day: number, time: string): Date {
+function at(day: number | "now", time: string): Date {
+	if (day === "now") {
+		const d = new Date(Date.now() - 5 * 60_000);
+		d.setSeconds(0, 0);
+		return d;
+	}
 	const [h = 0, m = 0] = time.split(":").map(Number);
 	return new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + day, h, m);
 }

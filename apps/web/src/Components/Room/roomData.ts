@@ -6,8 +6,10 @@ export type RoomKind = keyof Dictionary["room"]["kind"];
 export type PosCode = keyof Dictionary["room"]["saveWord"]["posOptions"];
 
 export type Participant = {
-	/** 對應 avatar-${id}.webp */
+	/** Users.id；反應與訊息的 from 都指它 */
 	id: string;
+	/** 頭像 code，對應 avatar-${avatar}.webp */
+	avatar: string;
 	name: string;
 	/** 這個人在房裡代表的語言（母語那一側），決定徽章與泡泡顏色 */
 	lang: LangCode;
@@ -58,7 +60,7 @@ export type Room = {
 export const FAKE_ROOM: Room = {
 	...raw,
 	kind: raw.kind as RoomKind,
-	participants: raw.participants.map((p) => ({ ...p, lang: p.lang as LangCode })),
+	participants: raw.participants.map((p) => ({ ...p, avatar: p.id, lang: p.lang as LangCode })),
 	words: raw.words.map((w) => ({ ...w, pos: w.pos as PosCode, lang: w.lang as LangCode })),
 };
 
@@ -68,6 +70,12 @@ export function parseLocalDateTime(value: string): Date {
 	const [y, m, d] = date.split("-").map(Number);
 	const [hh, mm] = time.split(":").map(Number);
 	return new Date(y, m - 1, d, hh, mm);
+}
+
+/** Date → "YYYY-MM-DDTHH:MM"（本地時間），parseLocalDateTime 的反向 */
+export function toLocalDateTime(d: Date): string {
+	const pad = (n: number) => String(n).padStart(2, "0");
+	return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 /** 秒 → "10:00" */

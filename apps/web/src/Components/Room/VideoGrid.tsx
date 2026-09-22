@@ -49,7 +49,7 @@ function VideoTile({ participant: p, youLabel, micLabel, camLabel }: { participa
 		>
 			{/* 視訊流的替身。鏡頭關著時就是這個畫面 */}
 			<Avatar
-				src={`avatar-${p.id}`}
+				src={`avatar-${p.avatar}`}
 				className="absolute inset-x-0 bottom-0 mx-auto w-[46%]"
 				sizes="(min-width: 1280px) 220px, 40vw"
 				circle={false}

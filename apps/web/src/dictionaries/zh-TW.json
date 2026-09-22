@@ -408,13 +408,7 @@
             "everyone": "大家都能畫",
             "reopen": "展開白板",
             "collapse": "收起白板",
-            "tools": {
-                "select": "選取",
-                "pen": "畫筆",
-                "text": "文字",
-                "undo": "復原",
-                "redo": "重做"
-            }
+            "unavailable": "白板連不上：要在房間開始前 5 分鐘到結束之間、而且是這間房的成員。"
         },
         "topic": {
             "title": "話題卡",
@@ -452,6 +446,17 @@
             "remove": "移除 {word}"
         },
         "endedTitle": "{code} 房間的對話已結束",
-        "endedHint": "時間到了，辛苦了！下個房間見。"
+        "endedHint": "時間到了，辛苦了！下個房間見。",
+        "gate": {
+            "loading": "進房中…",
+            "notFound": "找不到這間聊天室",
+            "cancelled": "此房間已被取消",
+            "notMember": "你不在這間聊天室的名單裡",
+            "notStarted": "{time} 開始，開始前 5 分鐘可以進入",
+            "ended": "這間聊天室已經結束",
+            "unauthorized": "請先登入",
+            "network": "連不到伺服器，請稍後再試",
+            "home": "回首頁"
+        }
     }
 }

@@ -4,6 +4,7 @@ import { Hono } from "hono";
 import { requireUser, type Auth } from "@monstertalk/auth";
 import { schema, type Db } from "@monstertalk/db";
 import {
+	ROOM_ENTRY_LEAD_MINUTES,
 	ROOM_CAPACITY_MAX,
 	ROOM_CAPACITY_MIN,
 	ROOM_DURATIONS,
@@ -14,6 +15,7 @@ import {
 	type RoomDuration,
 	type RoomTypeId,
 } from "@monstertalk/db/schema";
+import { roomAccess } from "../rooms/access.ts";
 
 export type ScheduleKind = "hosted" | "session";
 /** 我跟這間房的關係：approved = 已加入（房主也是）、requested = 申請中等房主 */
@@ -54,6 +56,23 @@ export type RoomDetail = Omit<ScheduleItem, "status"> & {
 /** 別人開的、還能申請的房（GET /api/rooms?from&to） */
 export type OpenRoom = Omit<ScheduleItem, "kind" | "status"> & { host: RoomMember };
 
+/** 房間裡的一個人（GET /api/rooms/:code/entry）。lang = 母語，決定徽章與泡泡顏色 */
+export type RoomParticipant = RoomMember & { lang: Lang; me: boolean };
+
+/**
+ * 進房的答案。ok = 可以進、附房間資料與成員；不行的話 reason 說為什麼，
+ * notStarted 附 opensAt（開始前 ROOM_ENTRY_LEAD_MINUTES 分鐘）讓前端倒數。
+ * 這是頁面的體驗層；WS 握手與簽 token 各自再用 roomAccess 擋一次。
+ */
+export type RoomEntry =
+	| {
+			ok: true;
+			role: "host" | "member";
+			room: Omit<ScheduleItem, "kind" | "status" | "seats">;
+			participants: RoomParticipant[];
+	  }
+	| { ok: false; reason: "notFound" | "cancelled" | "notMember" | "notStarted" | "ended"; opensAt?: string };
+
 /** POST /api/rooms 的 body。endDate 不收，server 由 startDate + durationMinutes 算 */
 export type RoomInput = {
 	title: string;
@@ -74,6 +93,7 @@ const CODE_ATTEMPTS = 5;
  *   GET  /api/me/schedule?from&to          我有份的房（開的、加入的、申請中的）
  *   GET  /api/rooms?from&to                別人開的、還有位、我還沒申請過、不撞我已加入的房
  *   GET  /api/rooms/:code                  詳情 + 成員（任何登入的人）；房主另外拿到申請中的名單
+ *   GET  /api/rooms/:code/entry            進房：roomAccess 的答案 + 房間資料 + 成員（含母語、誰是我）
  *   POST /api/rooms                        開房：交易內查重疊 → 插主單 → 插房主子單
  *   POST /api/rooms/:code/join             申請加入（requested）；left 過的走狀態轉換
  *   POST /api/rooms/:code/leave            取消申請 / 退出（→ left）；房主不能走這條，要取消房
@@ -182,6 +202,52 @@ export function roomsRoutes(auth: Auth, db: Db) {
 				return { ...base, host: { ...r.host, role: "host" } };
 			});
 		return c.json(open);
+	});
+
+	app.get("/rooms/:code/entry", guard, async (c) => {
+		const me = c.var.user.id;
+		const access = await roomAccess(db, me, c.req.param("code"));
+		if (!access.ok) {
+			const body: RoomEntry = {
+				ok: false,
+				reason: access.reason,
+				opensAt:
+					access.reason === "notStarted" && access.room
+						? new Date(access.room.startDate.getTime() - ROOM_ENTRY_LEAD_MINUTES * 60_000).toISOString()
+						: undefined,
+			};
+			const status = access.reason === "notFound" ? 404 : access.reason === "cancelled" ? 410 : 403;
+			return c.json(body, status);
+		}
+
+		const people = await db
+			.select({
+				id: schema.users.id,
+				name: schema.users.name,
+				avatar: schema.avatars.code,
+				lang: schema.users.nativeLang,
+				role: schema.roomMembers.role,
+			})
+			.from(schema.roomMembers)
+			.innerJoin(schema.users, eq(schema.roomMembers.userId, schema.users.id))
+			.innerJoin(schema.avatars, eq(schema.users.avatarId, schema.avatars.id))
+			.where(and(eq(schema.roomMembers.roomId, access.room.id), eq(schema.roomMembers.status, "approved")))
+			.orderBy(schema.roomMembers.role, schema.roomMembers.createDate);
+		const { kind: _k, status: _s, seats: _seats, ...room } = toItem(access.room, "session", "approved", people.length);
+		const body: RoomEntry = {
+			ok: true,
+			role: access.role,
+			room,
+			participants: people.map((p) => ({
+				id: p.id,
+				name: p.name,
+				avatar: p.avatar,
+				lang: p.lang as Lang,
+				role: p.role === "host" ? "host" : "member",
+				me: p.id === me,
+			})),
+		};
+		return c.json(body);
 	});
 
 	app.get("/rooms/:code", guard, async (c) => {

@@ -14,6 +14,7 @@ import { usersRoutes } from "./routes/users.ts";
 /**
  * 組出 Hono app，不綁定任何執行環境。
  * dev 由 index.ts 用 @hono/node-server 跑；上 Cloudflare Workers 時改成 export default { fetch: app.fetch }，這裡不用動。
+ * 一併回 auth 與 db：WebSocket 的握手（白板、之後的聊天）不走 Hono，index.ts 要拿它們驗 session 與查子單。
  */
 export function createApp(env: Env) {
 	const db = createDb(env.DATABASE_URL);
@@ -64,5 +65,5 @@ export function createApp(env: Env) {
 	// 房間：GET /api/me/schedule（週曆）、POST /api/rooms（開房）
 	app.route("/api", roomsRoutes(auth, db));
 
-	return app;
+	return { app, auth, db };
 }
