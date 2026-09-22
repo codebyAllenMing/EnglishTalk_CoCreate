@@ -207,11 +207,13 @@
             "title": "我的行程",
             "hostRoom": "開設聊天室",
             "untitled": "聊天室",
+            "cancelledRoom": "此房間已被取消",
             "prevWeek": "上一週",
             "nextWeek": "下一週",
             "legend": {
                 "session": "你的對話",
-                "hosted": "你開設的聊天室"
+                "hosted": "你開設的聊天室",
+                "open": "可加入的聊天室"
             },
             "timezone": "所有時間以你的當地時間顯示",
             "detail": {
@@ -219,14 +221,18 @@
                 "time": "時間",
                 "languages": "語言",
                 "participants": "人數",
-                "code": "房號"
+                "code": "房號",
+                "members": "成員",
+                "host": "房主",
+                "you": "（你）",
+                "membersFailed": "成員載入失敗"
             },
             "host": {
                 "title": "開設聊天室",
                 "hint": "選好時間，其他怪獸就能申請加入。",
                 "roomTitle": "標題",
-                "optional": "（選填）",
                 "roomTitlePlaceholder": "例如：English practice",
+                "titleRequired": "請填標題",
                 "date": "日期",
                 "time": "開始時間",
                 "duration": "時長",
@@ -236,10 +242,49 @@
                 "type": "語言方向",
                 "create": "建立聊天室",
                 "created": "聊天室建好了",
-                "past": "開始時間已經過了",
+                "tooSoon": "開始時間至少要在 30 分鐘後，請選下一個時段",
                 "overlap": "這個時間你已經有其他聊天室了",
                 "invalid": "資料有誤，請檢查後再試",
                 "network": "連不到伺服器，請稍後再試"
+            },
+            "cancel": {
+                "button": "取消聊天室",
+                "confirm": "確定要取消嗎？已加入的成員會看不到這間聊天室，而且無法復原。",
+                "keep": "保留",
+                "yes": "確定取消",
+                "done": "聊天室已取消",
+                "started": "已經開始的聊天室不能取消",
+                "failed": "取消失敗，請再試一次"
+            },
+            "open": {
+                "count": "{n} 間可加入",
+                "pick": "這個時段有幾間聊天室，選一間看看：",
+                "question": "要加入這間聊天室嗎？",
+                "hint": "送出後等房主同意，同意了就會出現在你的行程裡。",
+                "join": "申請加入",
+                "requested": "已送出申請",
+                "back": "返回清單",
+                "full": "這間已經滿了",
+                "overlap": "這個時間你已經有其他聊天室了",
+                "started": "這間已經開始了",
+                "failed": "申請失敗，請再試一次",
+                "fullTag": "已滿",
+                "cancelledTag": "已取消"
+            },
+            "pending": {
+                "tag": "申請中",
+                "waiting": "等房主同意中，同意後就能進房。",
+                "withdraw": "取消申請",
+                "withdrawn": "已取消申請",
+                "failed": "操作失敗，請再試一次"
+            },
+            "requests": {
+                "title": "申請加入",
+                "approve": "同意",
+                "reject": "拒絕",
+                "full": "這間已經滿了，先拒絕或取消其他人",
+                "overlap": "對方那個時間已經有其他聊天室了",
+                "failed": "操作失敗，請再試一次"
             }
         },
         "monsters": {

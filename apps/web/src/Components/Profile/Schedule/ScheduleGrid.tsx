@@ -1,6 +1,8 @@
 import type { Dictionary } from "@/dictionaries";
 import InitialScroll from "./InitialScroll";
+import OpenSlotCard from "./OpenSlotCard";
 import SlotCard from "./SlotCard";
+import type { ScheduleItem } from "@/schedule/client";
 import { SLOTS_PER_DAY, SLOT_HEIGHT, SLOT_MINUTES, type Slot } from "./scheduleData";
 import type { WeekDay } from "./week";
 
@@ -11,7 +13,13 @@ type Props = {
 	locale: string;
 	dict: Dictionary["profile"]["schedule"];
 	closeLabel: string;
-	soonNote: string;
+	cancelLabel: string;
+	/** 取消房 / 取消申請 → 卡片拿掉 */
+	onRemoved: (code: string) => void;
+	/** 申請加入 → 多一張「申請中」的卡 */
+	onAdded: (item: ScheduleItem) => void;
+	/** 房主同意了人 → 人數變了 */
+	onUpdated: (item: ScheduleItem) => void;
 	scrollTop: number;
 };
 
@@ -55,7 +63,10 @@ export default function ScheduleGrid({
 	locale,
 	dict,
 	closeLabel,
-	soonNote,
+	cancelLabel,
+	onRemoved,
+	onAdded,
+	onUpdated,
 	scrollTop,
 }: Props) {
 	const hourFmt = new Intl.DateTimeFormat(locale, { hour: "numeric" });
@@ -128,17 +139,32 @@ export default function ScheduleGrid({
 						/>
 					))}
 
-					{slots.map(({ slot, day }) => (
-						<SlotCard
-							key={slot.code}
-							slot={slot}
-							day={day}
-							locale={locale}
-							dict={dict}
-							closeLabel={closeLabel}
-							soonNote={soonNote}
-						/>
-					))}
+					{slots.map(({ slot, day }) =>
+						slot.kind === "open" ? (
+							<OpenSlotCard
+								key={slot.key}
+								slot={slot}
+								day={day}
+								locale={locale}
+								dict={dict}
+								closeLabel={closeLabel}
+								cancelLabel={cancelLabel}
+								onJoined={onAdded}
+								onGone={onRemoved}
+							/>
+						) : (
+							<SlotCard
+								key={slot.code}
+								slot={slot}
+								day={day}
+								locale={locale}
+								dict={dict}
+								closeLabel={closeLabel}
+								onRemoved={onRemoved}
+								onUpdated={onUpdated}
+							/>
+						),
+					)}
 				</div>
 			</div>
 

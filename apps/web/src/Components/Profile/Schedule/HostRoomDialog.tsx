@@ -32,7 +32,7 @@ type Draft = {
 	roomType: RoomTypeId;
 };
 
-type ErrorKey = "past" | "overlap" | "invalid" | "network";
+type ErrorKey = "titleRequired" | "tooSoon" | "overlap" | "invalid" | "network";
 
 const DURATIONS: readonly RoomDuration[] = [20, 40, 60];
 const CAPACITIES: readonly number[] = [2, 3, 4];
@@ -41,6 +41,8 @@ const ROOM_TYPES: readonly { id: RoomTypeId; from: LangCode; to: LangCode }[] = 
 	{ id: 1, from: "en", to: "zh" },
 	{ id: 2, from: "zh", to: "en" },
 ];
+/** 開始時間至少要在幾分鐘之後（跟 packages/db 的 ROOM_LEAD_MINUTES 同值；後端一定再擋一次） */
+const LEAD_MINUTES = 30;
 /** 開始時間只能選 :00 / :30，一天 48 個 */
 const TIME_OPTIONS = Array.from({ length: 48 }, (_, i) => i * 30);
 const TITLE_MAX = 40;
@@ -51,13 +53,21 @@ const INPUT =
 	"w-full rounded-xl border border-ink-100 bg-surface px-4 py-3 font-semibold transition-colors placeholder:font-normal placeholder:text-ink-300 hover:border-primary-200 focus:border-primary-400";
 const LABEL = "mb-1.5 block text-sm font-semibold text-ink-600";
 
+/** 必填標記。六個欄位都是必填，全部掛上（使用者 2026-09-22）。aria-hidden：欄位本身有 required，讀屏不用再唸一次星號 */
+const Star = () => (
+	<span aria-hidden="true" className="ml-0.5 text-danger">
+		*
+	</span>
+);
+
 /**
- * 開設聊天室的對話框：標題、日期、開始時間、時長、人數、語言方向，六個欄位對應 Rooms 主單。
+ * 開設聊天室的對話框：標題（必填）、日期、開始時間、時長、人數、語言方向，六個欄位對應 Rooms 主單。
  *
  * 用 Dialog 的受控模式而不是 trigger：每次打開都要重算預設值（下一個 :00 / :30、
  * 預設方向跟著個人資料的母語 → 學習語言），trigger 模式沒有「打開了」的回呼。
  *
- * 只在前端擋「時間已過」—— 其餘規則（重疊、列舉值）後端一定會再驗，前端照它回的錯誤碼顯示文案。
+ * 前端只擋「不到 30 分鐘後」（選單先灰掉，送出再驗一次）—— 其餘規則（重疊、列舉值）後端一定會再驗，
+ * 前端照它回的錯誤碼顯示文案。
  * 送出中鎖按鈕；成功後 toast、把新房交給週曆、關閉。關閉不清草稿：下次打開會整個重算。
  */
 export default function HostRoomDialog({ locale, dict, lang, closeLabel, cancelLabel, onCreated }: Props) {
@@ -81,10 +91,14 @@ export default function HostRoomDialog({ locale, dict, lang, closeLabel, cancelL
 	};
 
 	const submit = async (close: () => void) => {
+		if (!draft.title.trim()) {
+			setError("titleRequired");
+			return;
+		}
 		const start = parseLocalDate(draft.date);
 		start.setMinutes(draft.minutes);
-		if (start.getTime() <= Date.now()) {
-			setError("past");
+		if (start.getTime() < Date.now() + LEAD_MINUTES * 60_000) {
+			setError("tooSoon");
 			return;
 		}
 		setPending(true);
@@ -125,17 +139,18 @@ export default function HostRoomDialog({ locale, dict, lang, closeLabel, cancelL
 				closeLabel={closeLabel}
 				closeOnBackdrop={false}
 				cancel={{ label: cancelLabel, disabled: pending }}
-				confirm={{ label: h.create, disabled: pending, onClick: submit }}
+				confirm={{ label: h.create, disabled: pending || !draft.title.trim(), onClick: submit }}
 			>
 				<div className="flex flex-col gap-4">
 					<div>
 						<label htmlFor="room-title" className={LABEL}>
 							{h.roomTitle}
-							<span className="ml-1 font-normal text-ink-400">{h.optional}</span>
+							<Star />
 						</label>
 						<input
 							id="room-title"
 							type="text"
+							required
 							value={draft.title}
 							maxLength={TITLE_MAX}
 							placeholder={h.roomTitlePlaceholder}
@@ -148,10 +163,12 @@ export default function HostRoomDialog({ locale, dict, lang, closeLabel, cancelL
 						<div>
 							<label htmlFor="room-date" className={LABEL}>
 								{h.date}
+								<Star />
 							</label>
 							<input
 								id="room-date"
 								type="date"
+								required
 								value={draft.date}
 								min={today}
 								onChange={(event) => event.target.value && patch({ date: event.target.value })}
@@ -161,6 +178,7 @@ export default function HostRoomDialog({ locale, dict, lang, closeLabel, cancelL
 						<div>
 							<label htmlFor="room-time" className={LABEL}>
 								{h.time}
+								<Star />
 							</label>
 							<div className="relative">
 								<select
@@ -170,8 +188,8 @@ export default function HostRoomDialog({ locale, dict, lang, closeLabel, cancelL
 									className={`${INPUT} appearance-none pr-10`}
 								>
 									{TIME_OPTIONS.map((m) => (
-										// 今天的話，已經過去的時間點灰掉；其他天全開
-										<option key={m} value={m} disabled={draft.date === today && m <= nowMinutes}>
+										// 今天的話，不到 30 分鐘後的時間點灰掉；其他天全開
+										<option key={m} value={m} disabled={draft.date === today && m < nowMinutes + LEAD_MINUTES}>
 											{formatTime(m, locale)}
 										</option>
 									))}
@@ -215,12 +233,12 @@ export default function HostRoomDialog({ locale, dict, lang, closeLabel, cancelL
 }
 
 /**
- * 預設值：今天、下一個至少 15 分鐘後的 :00 / :30（跨過午夜就變明天 00:00）、40 分鐘、2 人、
+ * 預設值：今天、下一個至少 30 分鐘後的 :00 / :30（16:49 → 17:30；跨過午夜就變明天 00:00）、40 分鐘、2 人、
  * 方向 = 母語 → 學習語言（個人資料還沒載到就 zh → en）。
  */
 function defaultDraft(me: { native: LangCode; learning: LangCode } | null): Draft {
 	const now = new Date();
-	let minutes = Math.ceil((now.getHours() * 60 + now.getMinutes() + 15) / 30) * 30;
+	let minutes = Math.ceil((now.getHours() * 60 + now.getMinutes() + LEAD_MINUTES) / 30) * 30;
 	const date = new Date(now);
 	if (minutes >= MINUTES_PER_DAY) {
 		minutes -= MINUTES_PER_DAY;
@@ -244,7 +262,10 @@ function Segmented<T extends string | number>({
 }) {
 	return (
 		<fieldset>
-			<legend className={LABEL}>{label}</legend>
+			<legend className={LABEL}>
+				{label}
+				<Star />
+			</legend>
 			<div role="radiogroup" className="flex gap-2">
 				{options.map((option) => {
 					const selected = option.value === value;

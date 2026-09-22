@@ -3,14 +3,15 @@ import type { SlotKind } from "./scheduleData";
 
 type Props = { dict: Dictionary["profile"]["schedule"] };
 
-/** 圖例的色塊要跟 SlotCard 的 TONE 對得上，改配色時兩邊一起改 */
+/** 圖例的色塊要跟 SlotCard / OpenSlotCard 的配色對得上，改配色時一起改 */
 const SWATCH: Record<SlotKind, string> = {
 	hosted: "bg-primary-100",
 	session: "bg-secondary-100",
+	open: "bg-token/25",
 };
 
 export default function ScheduleLegend({ dict }: Props) {
-	const items: SlotKind[] = ["hosted", "session"];
+	const items: SlotKind[] = ["hosted", "session", "open"];
 
 	return (
 		<div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 px-1 text-xs text-ink-500">

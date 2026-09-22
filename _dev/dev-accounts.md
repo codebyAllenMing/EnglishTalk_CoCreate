@@ -50,7 +50,7 @@ docker exec monstertalk-postgres-1 psql -U monstertalk -d monstertalk -c 'select
 
 ## 房間（測週曆用）
 
-`db:seed` 會建 5 間相對**本週**的房（房號 `SEED01`–`SEED05`），每次重跑先刪這五間再建，你自己開的房不動。
+`db:seed` 會建 8 間相對**本週**的房（房號 `SEED01`–`SEED08`），每次重跑先刪這五間再建，你自己開的房不動。
 以 allen 登入看週曆：
 
 | 房號 | 房主 | 時間（本週） | 長度 | allen 的角色 | 週曆上 |
@@ -58,8 +58,14 @@ docker exec monstertalk-postgres-1 psql -U monstertalk -d monstertalk -c 'select
 | SEED01 | allen | 週二 20:00 | 40 分 | 房主，luna 已加入 | 紫（你開設的） |
 | SEED02 | bobby | 週四 21:00 | 60 分 | 已同意加入（3/4，mia 申請中） | 綠（你的對話） |
 | SEED03 | luna | 週六 19:00 | 60 分 | 已同意加入 | 綠 |
-| SEED04 | alex | 下週三 20:00 | 20 分 | 申請中（未同意） | **不顯示** |
-| SEED05 | allen | 上週四 12:00 | 20 分 | 房主，沒標題、沒人加入 | 紫（上一週） |
+| SEED04 | alex | 下週三 20:00 | 20 分 | 申請中（未同意） | 綠虛線「申請中」（下一週） |
+| SEED05 | allen | 上週四 12:00 | 20 分 | 房主，沒人加入 | 紫（上一週） |
+| SEED06 | nina | 週五 20:00 | 40 分 | 沒關係 | 黃「可加入」 |
+| SEED07 | tao | 週六 10:00 | 60 分 | 沒關係（sunny 已加入，2/4） | 黃，跟 SEED08 併成「2 間可加入」 |
+| SEED08 | yuki | 週六 10:30 | 40 分 | 沒關係 | 同上 |
+
+審核流程用 **bobby** 登入：SEED02 的詳情裡有 mia 的申請，可以同意 / 拒絕。
+申請流程用 **mia** 登入：週曆上 SEED02 是「申請中」（可取消申請），SEED01 / 03 / 06 / 07 / 08 是黃卡。
 
 用 curl 開一間房（先登入拿 cookie）：
 

@@ -134,6 +134,19 @@ metadata:
 > 今天已過的時間灰掉）/ 時長 / 人數 / 語言方向三組藥丸（Segmented）。用 Dialog 的**受控模式**：每次打開重算預設值
 > （下一個至少 15 分鐘後的半點、方向 = 母語 → 學習語言）。前端只擋「時間已過」，重疊 / 驗證看後端錯誤碼顯示 `schedule.host.*` 文案。
 > 建好：toast、新房塞進已載入的 slots、可見週切到那間房的週（範圍外則切週自然重拉）。欄位樣式抄設定頁的 INPUT 字串（那邊沒匯出）。
+> **卡片詳情 `SlotCard`（client，受控 Dialog）**：打開才打 `GET /api/rooms/:code` 拉成員（含房主、含自己標「（你）」），
+> 載入中依人數畫骨架。我開的、還沒開始的房有「取消聊天室」，同框再問一次才送 `POST /api/rooms/:code/cancel`，
+> 成功 toast + 卡片從 slots 移除。「還沒開始」在打開那一刻算進 state（render 裡不能 `Date.now()`，React Compiler 的 purity 規則）。
+> **黃卡回來了、語意換掉**（2026-09-22 使用者：「開房後其他人要能看到，在日曆上加入」）：黃 = 別人開的、還有位、
+> 我還沒申請過、不撞我任何一張卡的房（`GET /api/rooms?from&to`）。**重疊的併成一張卡**「N 間可加入」（`openSlots()`，
+> 同一天、時間有交集就串），`OpenSlotCard` 點開：一間直接「要加入嗎？」，多間先列清單再選。申請 → `POST /rooms/:code/join`
+> → 我週曆多一張**綠虛線「申請中」**卡（status requested），黃卡因重算自動消失。
+> 申請中的卡點開：等房主同意 + 取消申請（`POST /rooms/:code/leave`）。房主的卡點開多一段「申請加入」名單，
+> 同意 / 拒絕（`POST /rooms/:code/requests/:userId { decision }`），回新的詳情直接換掉。
+> 板子的 Loaded 分 `mine`（MineSlot[]）與 `open`（OpenRoom[]），黃卡每次 render 從兩者重算。
+> 三種卡的 grid 位置共用 `gridStyle()`。我加入的房還沒有「退出」（API 有，UI 沒露）。
+> 黃卡選到一間就打 `GET /api/rooms/:code`（已放寬給所有登入的人讀）拿最新人數與成員列在申請框裡，滿了鎖按鈕（使用者 2026-09-22）。
+> 「返回清單」是有底色的藥丸（跟 ✕ 同灰）。
 > 以下是原本靜態 mock 時期的紀錄，數字（48 格 / 34px / 1632px）已過時，其餘決策仍有效。
 
 

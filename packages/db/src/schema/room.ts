@@ -76,6 +76,8 @@ export const roomMembers = pgTable(
 	],
 );
 
+/** 開始時間至少要在幾分鐘之後（使用者 2026-09-22：16:49 不能開 17:00，只能開 17:30） */
+export const ROOM_LEAD_MINUTES = 30;
 /** 開房時可選的時長（分鐘）；房內計時器對半切成兩桶 */
 export const ROOM_DURATIONS = [20, 40, 60] as const;
 export const ROOM_CAPACITY_MIN = 2;

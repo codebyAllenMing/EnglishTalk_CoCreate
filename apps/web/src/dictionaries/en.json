@@ -207,11 +207,13 @@
             "title": "My Schedule",
             "hostRoom": "Host a room",
             "untitled": "Room",
+            "cancelledRoom": "This room has been cancelled",
             "prevWeek": "Previous week",
             "nextWeek": "Next week",
             "legend": {
                 "session": "Your sessions",
-                "hosted": "Room you host"
+                "hosted": "Room you host",
+                "open": "Open rooms"
             },
             "timezone": "All times shown in your local time",
             "detail": {
@@ -219,14 +221,18 @@
                 "time": "Time",
                 "languages": "Languages",
                 "participants": "Participants",
-                "code": "Room code"
+                "code": "Room code",
+                "members": "Members",
+                "host": "Host",
+                "you": "(you)",
+                "membersFailed": "Couldn't load members"
             },
             "host": {
                 "title": "Host a room",
                 "hint": "Pick a time and other monsters can ask to join.",
                 "roomTitle": "Title",
-                "optional": "(optional)",
                 "roomTitlePlaceholder": "e.g. English practice",
+                "titleRequired": "Please give the room a title",
                 "date": "Date",
                 "time": "Start time",
                 "duration": "Length",
@@ -236,10 +242,49 @@
                 "type": "Language direction",
                 "create": "Create room",
                 "created": "Room created",
-                "past": "That start time has already passed",
+                "tooSoon": "Rooms must start at least 30 minutes from now. Please pick the next slot",
                 "overlap": "You already have a room at that time",
                 "invalid": "Something's off, please check the form",
                 "network": "Can't reach the server, please try again"
+            },
+            "cancel": {
+                "button": "Cancel room",
+                "confirm": "Cancel this room? Members will no longer see it, and this can't be undone.",
+                "keep": "Keep it",
+                "yes": "Yes, cancel",
+                "done": "Room cancelled",
+                "started": "A room that has already started can't be cancelled",
+                "failed": "Couldn't cancel, please try again"
+            },
+            "open": {
+                "count": "{n} open rooms",
+                "pick": "A few rooms overlap here, pick one:",
+                "question": "Join this room?",
+                "hint": "The host will review your request. Once approved it shows up in your schedule.",
+                "join": "Ask to join",
+                "requested": "Request sent",
+                "back": "Back to the list",
+                "full": "This room is full",
+                "overlap": "You already have a room at that time",
+                "started": "This room has already started",
+                "failed": "Couldn't send the request, please try again",
+                "fullTag": "Full",
+                "cancelledTag": "Cancelled"
+            },
+            "pending": {
+                "tag": "Pending",
+                "waiting": "Waiting for the host to approve.",
+                "withdraw": "Withdraw request",
+                "withdrawn": "Request withdrawn",
+                "failed": "Something went wrong, please try again"
+            },
+            "requests": {
+                "title": "Requests",
+                "approve": "Approve",
+                "reject": "Decline",
+                "full": "The room is full. Decline or cancel someone first",
+                "overlap": "They already have a room at that time",
+                "failed": "Something went wrong, please try again"
             }
         },
         "monsters": {

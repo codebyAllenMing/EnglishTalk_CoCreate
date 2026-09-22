@@ -22,7 +22,6 @@ export default async function ScheduleSection() {
 				lang={dict.profile.lang}
 				closeLabel={dict.common.close}
 				cancelLabel={dict.common.cancel}
-				soonNote={dict.profile.soon.note}
 			/>
 
 			<ScheduleLegend dict={s} />

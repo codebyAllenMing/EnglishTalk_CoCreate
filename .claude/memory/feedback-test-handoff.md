@@ -17,3 +17,9 @@ corepack pnpm dev         # web 6531
 ```
 不放 `docker compose up`。要用 `corepack pnpm`（他 shell 的 `pnpm` 被別名攔截）。
 測試帳號見 [[auth-backend-plan]]。
+
+
+## 清測試資料只刪自己建的（2026-09-22 踩到）
+
+curl 煙霧測試後我用 `delete from "Rooms" where code not like 'SEED%'` 清場，把使用者剛用畫面開的房（GLAF2D）一起刪了。
+**以後只刪自己那次建的 code**（`where code in ('...')`），dev DB 也一樣 —— 使用者同時在用同一個 DB 測。

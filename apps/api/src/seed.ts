@@ -127,13 +127,17 @@ type SeedRoom = {
 	members: { id: string; status: RoomMemberStatus }[];
 };
 
-/** roomType：1 = en → zh、2 = zh → en。allen 視角：SEED01 / 05 是他開的，02 / 03 是他加入的，04 申請中（週曆不顯示） */
+/** roomType：1 = en → zh、2 = zh → en。allen 視角：SEED01 / 05 是他開的，02 / 03 是他加入的，04 申請中（虛線卡），06–08 可加入（黃卡） */
 const SEED_ROOMS: readonly SeedRoom[] = [
 	{ code: "SEED01", host: "allen", title: "English practice", day: 1, time: "20:00", duration: 40, capacity: 2, roomType: 2, members: [{ id: "luna", status: "approved" }] },
 	{ code: "SEED02", host: "bobby", title: "Small group room", day: 3, time: "21:00", duration: 60, capacity: 4, roomType: 1, members: [{ id: "allen", status: "approved" }, { id: "luna", status: "approved" }, { id: "mia", status: "requested" }] },
 	{ code: "SEED03", host: "luna", title: "Movie night chat", day: 5, time: "19:00", duration: 60, capacity: 3, roomType: 1, members: [{ id: "allen", status: "approved" }] },
 	{ code: "SEED04", host: "alex", title: "Weekly check-in", day: 9, time: "20:00", duration: 20, capacity: 2, roomType: 2, members: [{ id: "allen", status: "requested" }] },
-	{ code: "SEED05", host: "allen", title: "", day: -4, time: "12:00", duration: 20, capacity: 2, roomType: 2, members: [] },
+	{ code: "SEED05", host: "allen", title: "Quick chat", day: -4, time: "12:00", duration: 20, capacity: 2, roomType: 2, members: [] },
+	// 下面兩間沒有 allen：從 allen 的視角是黃色「可加入」；週六 10:00 那兩間重疊，會併成一張卡
+	{ code: "SEED06", host: "nina", title: "面試英文練習", day: 4, time: "20:00", duration: 40, capacity: 3, roomType: 2, members: [] },
+	{ code: "SEED07", host: "tao", title: "Coffee chat", day: 5, time: "10:00", duration: 60, capacity: 4, roomType: 2, members: [{ id: "sunny", status: "approved" }] },
+	{ code: "SEED08", host: "yuki", title: "Taiwanese food talk", day: 5, time: "10:30", duration: 40, capacity: 2, roomType: 1, members: [] },
 ];
 
 // 本週週一 00:00（本機時區）。getDay() 週日是 0，所以週日要往回推 6 天

@@ -36,7 +36,16 @@ metadata:
 
 - **房間**：使用者 2026-09-22 用「主單 / 子單」定了結構，**schema 已建**（`packages/db/src/schema/room.ts`、migration `0004_rooms`），
   **API 已有 `GET /api/me/schedule?from&to` 與 `POST /api/rooms`**（`apps/api/src/routes/rooms.ts`，2026-09-22），
-  週曆與開房 Dialog 已接；取消、別人的房、申請 / 審核還沒有：
+  週曆、開房 Dialog、詳情（`GET /api/rooms/:code`，只有 approved 成員看得到，回成員清單）、
+  取消（`POST /api/rooms/:code/cancel`，房主 + 未取消 + 未開始，寫 cancelDate；404 / 409 cancelled / 409 started）已接；
+  **公開房、申請、審核也接了**（2026-09-22 晚）：`GET /api/rooms?from&to`（未取消、未開始、還有位、不是我開的、
+  我沒有 approved / requested / rejected 的關係、不撞我 approved 的房）、`POST /rooms/:code/join`（requested；left 過的轉回；
+  409 already / rejected / full / overlap / started / host）、`POST /rooms/:code/leave`（requested 或 approved → left，房主 409）、
+  `POST /rooms/:code/requests/:userId { decision }`（房主；approve 前再驗名額與申請人重疊；回 RoomDetail）。
+  `GET /me/schedule` 現在也回 requested 的房；`GET /rooms/:code` 申請中的人也能看，requests 只給房主。
+  **已取消的房**：GET / join / leave / requests 回 **410 `{ error: "cancelled" }`**（不是 404），前端 `ApiError` + `isCancelled()`
+  分辨；兩種卡的框顯示「此房間已被取消」、關框才從週曆拿掉（框開著拿掉元件會 unmount）。
+  POST /rooms 的 title 必填（去空白後不能空）。週曆 = 我有份的房 + 別人可申請的房（黃卡）。退出的 UI 還沒露：
   - 主單 `Rooms`：`id`（流水號）、`code`（房號，網址用，server 產 6–8 碼大寫去易混字元，unique）、`hostId`、`title`、
     `startDate`、`endDate`、`durationMinutes smallint`（20 / 40 / 60，DB check）、`capacity`（2–4，含房主）、
     `roomType`（enum id：`ROOM_TYPES` 1 = en→zh、2 = zh→en，常數在 room.ts，不建 lookup 表）、`cancelDate`（null = 未取消）、
@@ -51,12 +60,12 @@ metadata:
     `left` = approved 後自己退出、席次還回去（使用者決定留）；房主退出 = 取消房間走 `cancelDate`，不走子單狀態。
   - 規則放 app 層交易：同一人的房（host 或 approved）時間不能重疊（週曆不畫重疊）；申請與同意各檢查一次名額。
   - **「開放時段」拿掉了**（2026-09-22 拍板）：v1.0 邀請制留下的概念，房主制下沒有它的角色；沒有空檔實體，只有 Rooms。
-  - POST /rooms：手寫驗證（title ≤ 40、startDate 整分且在未來、duration / capacity / roomType 列舉）→ 先抽一個沒用過的 6 碼房號
+  - POST /rooms：手寫驗證（title ≤ 40、startDate 整分且**至少 30 分鐘後**（`ROOM_LEAD_MINUTES`，400 `tooSoon`，使用者 2026-09-22：16:49 只能開 17:30）、duration / capacity / roomType 列舉）→ 先抽一個沒用過的 6 碼房號
     （字母表去 0 O 1 I）→ 交易內查重疊（我 approved 的房、未取消、`start < to && end > from`）→ 插主單 + 房主子單。
     重疊回 409 `{ error: "overlap" }`，驗證回 400 `{ error: "invalid", field }`。
   - 週曆的 API 回傳 `ScheduleItem`：id / code / kind（hosted = role host、session = role member）/ title / startDate / endDate（ISO UTC）
     / durationMinutes / capacity / seats { taken, total } / from / to（roomType 展開，前端不碰 enum id）。
-  - seed 每次重建 5 間 `SEED*` 房（相對本週），不動使用者自己開的。
+  - seed 每次重建 8 間 `SEED*` 房（相對本週），不動使用者自己開的；06–08 沒有 allen，給黃卡與併卡用。
   - 週曆 = 這兩張表的投影，前端一次拉三週、切週只篩選；格子已改 10 分鐘一格（見 [[profile-page-state]]）。
 - **代幣**：獨立表，使用者視為「加裝武器」，等房間建好再上（ledger append-only + 物化餘額，vault E1）。
 - 評分 / 通知 / 推薦碼：P1–P2。

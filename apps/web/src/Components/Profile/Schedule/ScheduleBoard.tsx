@@ -3,10 +3,10 @@
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import type { Dictionary } from "@/dictionaries";
-import { getSchedule, type ScheduleItem } from "@/schedule/client";
+import { getOpenRooms, getSchedule, type OpenRoom, type ScheduleItem } from "@/schedule/client";
 import HostRoomDialog from "./HostRoomDialog";
 import ScheduleGrid from "./ScheduleGrid";
-import { initialScrollTop, slotsInWeek, toSlot, type Slot } from "./scheduleData";
+import { initialScrollTop, openSlots, slotsInWeek, toSlot, type MineSlot, type Slot } from "./scheduleData";
 import {
 	buildWeek,
 	currentWeekStart,
@@ -24,15 +24,14 @@ type Props = {
 	lang: Dictionary["profile"]["lang"];
 	closeLabel: string;
 	cancelLabel: string;
-	soonNote: string;
 };
 
 /** 一次載入的範圍：這週的前一週到後一週，共三週。切週在範圍內只是換篩選條件，超出才重打 */
 const WEEKS_BEFORE = 1;
 const WEEKS_AFTER = 1;
 
-/** from 含、to 不含，都是週一的 "YYYY-MM-DD" */
-type Loaded = { from: string; to: string; slots: Slot[] };
+/** from 含、to 不含，都是週一的 "YYYY-MM-DD"。mine = 我有份的房；open = 別人的可申請的房（併卡在 render 時算） */
+type Loaded = { from: string; to: string; mine: MineSlot[]; open: OpenRoom[] };
 
 /** 「本週」不會在頁面開著的時候變（跨午夜那一下不值得處理），所以永遠不通知 */
 const subscribeNever = () => () => {};
@@ -51,9 +50,13 @@ const serverHasNoToday = () => null;
  *
  * ## 資料一次載入三週，切週只是篩選
  *
- * slots 每筆都帶絕對日期，切週用 slotsInWeek() 挑出落在該週的；週跑出載入範圍才重打 API，
+ * 兩支 API 一起拉：我有份的房（GET /api/me/schedule）與別人的可申請的房（GET /api/rooms）。
+ * 每筆都帶絕對日期，切週用 slotsInWeek() 挑出落在該週的；週跑出載入範圍才重打，
  * 而且拉的又是以新的那週為中心的三週。連不到 API 或沒登入就畫空網格 ——
- * 導去 login 是 SessionProvider 的事，這裡不重複做。
+ * 導去 login 是 SessionProvider 的事，這裡不重複做。別人的房拉失敗不影響我的房。
+ *
+ * 黃卡（openSlots）每次 render 從 open 與 mine 重算：撞到我任何一張卡的濾掉、重疊的併成一張。
+ * 所以申請了一間之後只要把它加進 mine，黃卡那邊自己會消失。
  *
  * ## 初始捲動只算一次
  *
@@ -65,7 +68,7 @@ const serverHasNoToday = () => null;
  * 不重打；然後把可見週切到那間房所在的週 —— 開了一間下下週的房卻什麼都沒看到，會以為沒建成。
  * 落在範圍外的話切週本身就會觸發重拉，新房會在那批資料裡。
  */
-export default function ScheduleBoard({ locale, dict, lang, closeLabel, cancelLabel, soonNote }: Props) {
+export default function ScheduleBoard({ locale, dict, lang, closeLabel, cancelLabel }: Props) {
 	const weekStart = useSyncExternalStore(subscribeNever, currentWeekStart, serverHasNoToday);
 	const [offset, setOffset] = useState(0);
 	const [loaded, setLoaded] = useState<Loaded | null>(null);
@@ -81,15 +84,18 @@ export default function ScheduleBoard({ locale, dict, lang, closeLabel, cancelLa
 		const from = shiftWeek(visibleWeek, -WEEKS_BEFORE);
 		const to = shiftWeek(visibleWeek, WEEKS_AFTER + 1);
 		let cancelled = false;
-		getSchedule(parseLocalDate(from), parseLocalDate(to)).then(
-			(items) => {
+		const f = parseLocalDate(from);
+		const t = parseLocalDate(to);
+		Promise.all([getSchedule(f, t), getOpenRooms(f, t).catch((): OpenRoom[] => [])]).then(
+			([items, open]) => {
 				if (cancelled) return;
-				const slots = items.map(toSlot);
-				setLoaded({ from, to, slots });
-				setScrollTop((prev) => prev ?? initialScrollTop(slotsInWeek(slots, visibleWeek).map((x) => x.slot)));
+				const mine = items.map(toSlot);
+				setLoaded({ from, to, mine, open });
+				const week = slotsInWeek([...mine, ...openSlots(open, mine)], visibleWeek).map((x) => x.slot);
+				setScrollTop((prev) => prev ?? initialScrollTop(week));
 			},
 			() => {
-				if (!cancelled) setLoaded({ from, to, slots: [] });
+				if (!cancelled) setLoaded({ from, to, mine: [], open: [] });
 			},
 		);
 		return () => {
@@ -97,13 +103,32 @@ export default function ScheduleBoard({ locale, dict, lang, closeLabel, cancelLa
 		};
 	}, [visibleWeek, loaded]);
 
-	const handleCreated = (item: ScheduleItem) => {
+	/** 開了房或申請了別人的房：加進 mine（黃卡自己會消失）；開房的話把可見週切過去 */
+	const handleAdded = (item: ScheduleItem) => {
 		const slot = toSlot(item);
-		setLoaded((prev) =>
-			prev && slot.date >= prev.from && slot.date < prev.to ? { ...prev, slots: [...prev.slots, slot] } : prev,
-		);
-		if (weekStart) setOffset(weeksBetween(weekStart, weekStartOf(slot.date)));
+		setLoaded((prev) => {
+			if (!prev) return prev;
+			const open = prev.open.filter((r) => r.code !== slot.code);
+			const inRange = slot.date >= prev.from && slot.date < prev.to;
+			return { ...prev, open, mine: inRange ? [...prev.mine, slot] : prev.mine };
+		});
+		if (item.kind === "hosted" && weekStart) setOffset(weeksBetween(weekStart, weekStartOf(slot.date)));
 	};
+	/** 取消房、取消申請、或點開才發現已取消：從我的卡與別人的卡都拿掉 */
+	const handleRemoved = (code: string) =>
+		setLoaded((prev) =>
+			prev
+				? {
+						...prev,
+						mine: prev.mine.filter((s) => s.code !== code),
+						open: prev.open.filter((r) => r.code !== code),
+					}
+				: prev,
+		);
+	const handleUpdated = (item: ScheduleItem) =>
+		setLoaded((prev) =>
+			prev ? { ...prev, mine: prev.mine.map((s) => (s.code === item.code ? toSlot(item) : s)) } : prev,
+		);
 	const actions = (
 		<HostRoomDialog
 			locale={locale}
@@ -111,7 +136,7 @@ export default function ScheduleBoard({ locale, dict, lang, closeLabel, cancelLa
 			lang={lang}
 			closeLabel={closeLabel}
 			cancelLabel={cancelLabel}
-			onCreated={handleCreated}
+			onCreated={handleAdded}
 		/>
 	);
 
@@ -126,7 +151,8 @@ export default function ScheduleBoard({ locale, dict, lang, closeLabel, cancelLa
 
 	const days = buildWeek(visibleWeek, locale);
 	const { range, year } = formatWeekRange(visibleWeek, locale);
-	const visibleSlots = loaded ? slotsInWeek(loaded.slots, visibleWeek) : [];
+	const all: Slot[] = loaded ? [...loaded.mine, ...openSlots(loaded.open, loaded.mine)] : [];
+	const visibleSlots = slotsInWeek(all, visibleWeek);
 
 	return (
 		<>
@@ -151,7 +177,10 @@ export default function ScheduleBoard({ locale, dict, lang, closeLabel, cancelLa
 					locale={locale}
 					dict={dict}
 					closeLabel={closeLabel}
-					soonNote={soonNote}
+					cancelLabel={cancelLabel}
+					onRemoved={handleRemoved}
+					onAdded={handleAdded}
+					onUpdated={handleUpdated}
 					scrollTop={scrollTop ?? initialScrollTop([])}
 				/>
 
