@@ -198,9 +198,16 @@ export default function RoomProvider({ room, children }: { room: Room; children:
 
 /** 給畫面的整數秒；now 還沒有（SSR / 第一次 render）就照 remaining 原樣顯示。now 是 server 時間 */
 function view(t: TimerState, now: number | null): Timer {
-	const active = now === null ? t.remaining[t.active] : Math.max(0, Math.ceil(leftOf(t, now)));
+	// 兩桶都取整：沒在跑的那桶存的是 swap 那一刻算出來的浮點秒數，直接畫會出現 3:43.4529999
+	const whole = (seconds: number) => Math.max(0, Math.ceil(seconds));
+	const active = now === null ? t.remaining[t.active] : leftOf(t, now);
 	const swapIn = t.swapAt === null || now === null ? null : Math.max(0, Math.ceil((t.swapAt - now) / 1000));
-	return { active: t.active, remaining: { ...t.remaining, [t.active]: active }, ended: t.ended, swapIn };
+	return {
+		active: t.active,
+		remaining: { zh: whole(t.active === "zh" ? active : t.remaining.zh), en: whole(t.active === "en" ? active : t.remaining.en) },
+		ended: t.ended,
+		swapIn,
+	};
 }
 
 export function useRoom() {
