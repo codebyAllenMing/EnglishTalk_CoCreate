@@ -2,7 +2,8 @@
 
 import "tldraw/tldraw.css";
 import { useSync } from "@tldraw/sync";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { reportError } from "@/log";
 import {
 	atom,
 	createUserId,
@@ -66,6 +67,11 @@ export default function Board({ code, locale, unavailable }: Props) {
 		locale: locale.toLowerCase(),
 	}));
 	const user = useTldrawCurrentUser({ userPreferences: prefs, setUserPreferences: setPrefs });
+
+	// 同步斷了（握手被拒、Cloudflare / api 掛了）留痕；畫面照樣顯示 unavailable
+	useEffect(() => {
+		if (store.status === "error") reportError("whiteboard.sync", store.error, { code });
+	}, [store, code]);
 
 	if (store.status === "error") {
 		return (

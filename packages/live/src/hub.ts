@@ -1,4 +1,4 @@
-import type { ChatMessage, ClientMessage, LiveUser, ServerMessage } from "./protocol.ts";
+import type { ChatMessage, ClientMessage, LiveUser, MediaState, ServerMessage } from "./protocol.ts";
 import { initialTimer, nextEventAt, requestSwap, settle, type TimerInit, type TimerState } from "./timer.ts";
 
 /** 最小的 socket 介面：ws 套件與 Cloudflare 的 WebSocket 都有這三個 */
@@ -18,6 +18,8 @@ export type LiveHubOptions = {
 	/** 單則幾個字。預設 500 */
 	textLimit?: number;
 	log?: (message: string) => void;
+	/** 處理訊息時的例外（不會讓 hub 掛掉，但要留痕）。預設 console.error */
+	onError?: (error: unknown, context: { code: string; userId: string; type?: string }) => void;
 };
 
 export type LiveConnection = {
@@ -37,7 +39,7 @@ export type LiveHub = {
 	closeAll(): void;
 };
 
-type Client = { socket: SocketLike; user: LiveUser };
+type Client = { socket: SocketLike; user: LiveUser; /** 最後一次送來的視訊狀態 */ media?: MediaState };
 type Room = {
 	clients: Set<Client>;
 	history: ChatMessage[];
@@ -58,6 +60,8 @@ const SETTLE_MARGIN_MS = 20;
  * 所有人離開再回來歷史還在（使用者 2026-09-22 定案：房間開著的期間歷史要完整）。
  * 訊息只活在記憶體，行程重啟就沒了；要留下來是另一張 RoomMessages 表的事，協定不用動。
  *
+ * 視訊狀態（media）：只轉發與記住，媒體本身在 Cloudflare SFU。hello 帶每個在線的人最後一次的狀態，晚進來的照單去拉。
+ *
  * 計時器：server 是權威時鐘，但**不每秒廣播**。狀態只在 swap 進來、swapAt 到點、桶歸零時改一次並廣播，
  * client 拿狀態用同一支 settle() 從牆鐘推。行程重啟後狀態重建成「從 startDate 跑到現在、沒切過」。
  *
@@ -68,9 +72,17 @@ export function createLiveHub(options: LiveHubOptions = {}): LiveHub {
 	const historyLimit = options.historyLimit ?? 200;
 	const textLimit = options.textLimit ?? 500;
 	const log = options.log ?? (() => undefined);
+	const onError = options.onError ?? ((error, context) => console.error("live hub error", context, error));
 	const rooms = new Map<string, Room>();
 
 	const online = (room: Room) => [...new Set([...room.clients].map((c) => c.user.id))];
+
+	/** 同一人多分頁：最後送過 media 的那個分頁算數 */
+	const mediaOf = (room: Room): Record<string, MediaState> => {
+		const map: Record<string, MediaState> = {};
+		for (const client of room.clients) if (client.media) map[client.user.id] = client.media;
+		return map;
+	};
 
 	const broadcast = (room: Room, message: ServerMessage) => {
 		const data = JSON.stringify(message);
@@ -140,6 +152,14 @@ export function createLiveHub(options: LiveHubOptions = {}): LiveHub {
 			socket.addEventListener("message", (event) => {
 				const msg = parseMessage(event.data, textLimit);
 				if (!msg) return;
+				try {
+					handle(msg);
+				} catch (error) {
+					onError(error, { code, userId: user.id, type: msg.type });
+				}
+			});
+
+			const handle = (msg: ClientMessage) => {
 				if (msg.type === "chat") {
 					const message: ChatMessage = { id: crypto.randomUUID(), from: user.id, at: new Date().toISOString(), text: msg.text };
 					room.history.push(message);
@@ -151,8 +171,11 @@ export function createLiveHub(options: LiveHubOptions = {}): LiveHub {
 					room.timer = next;
 					broadcast(room, { type: "timer", timer: next });
 					scheduleTimer(code, room);
+				} else if (msg.type === "media") {
+					client.media = msg.media;
+					broadcast(room, { type: "media", user: user.id, media: msg.media });
 				}
-			});
+			};
 
 			const leave = () => {
 				if (!room.clients.delete(client)) return;
@@ -171,6 +194,7 @@ export function createLiveHub(options: LiveHubOptions = {}): LiveHub {
 				history: room.history,
 				timer: room.timer,
 				now,
+				media: mediaOf(room),
 			};
 			socket.send(JSON.stringify(hello));
 			broadcast(room, { type: "presence", online: online(room) });
@@ -184,8 +208,9 @@ export function createLiveHub(options: LiveHubOptions = {}): LiveHub {
 }
 
 /**
- * 只認協定裡的兩種 client 訊息，其他丟掉。
+ * 只認協定裡的三種 client 訊息，其他丟掉。
  * chat：去頭尾空白、空的與超長的丟掉（超長截斷會讓對方看到半句，不如不送）。
+ * media：sessionId 是字串或 null、mic / cam 是布林，形狀不對就丟。
  */
 function parseMessage(data: unknown, textLimit: number): ClientMessage | null {
 	const raw = typeof data === "string" ? data : data instanceof Uint8Array ? new TextDecoder().decode(data) : null;
@@ -198,8 +223,17 @@ function parseMessage(data: unknown, textLimit: number): ClientMessage | null {
 	}
 	if (typeof parsed !== "object" || parsed === null || !("type" in parsed)) return null;
 	if (parsed.type === "swap") return { type: "swap" };
+	if (parsed.type === "media") return parseMedia("media" in parsed ? parsed.media : undefined);
 	if (parsed.type !== "chat") return null;
 	const text = "text" in parsed && typeof parsed.text === "string" ? parsed.text.trim() : "";
 	if (!text || text.length > textLimit) return null;
 	return { type: "chat", text };
+}
+
+function parseMedia(value: unknown): ClientMessage | null {
+	if (typeof value !== "object" || value === null) return null;
+	const v = value as { sessionId?: unknown; mic?: unknown; cam?: unknown };
+	const sessionId = v.sessionId === null ? null : typeof v.sessionId === "string" && v.sessionId.length <= 128 ? v.sessionId : undefined;
+	if (sessionId === undefined || typeof v.mic !== "boolean" || typeof v.cam !== "boolean") return null;
+	return { type: "media", media: { sessionId, mic: v.mic, cam: v.cam } };
 }

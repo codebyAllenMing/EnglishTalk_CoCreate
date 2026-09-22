@@ -157,7 +157,25 @@ P2 的（白板、反應、話題卡、單字庫）各自獨立一個檔，延�
   放在 `RoomProvider`、結束後拿掉）；**不做上一頁的 history 陷阱**（手機 Safari 滑動返回會先走再跳回、壞掉前後頁語意），
   改以「回去很容易」補：狀態都在 server，回 home 再點進去是原樣；待辦是週曆卡的「進入房間」按鈕 + home 頂部「有房間進行中」橫幅。
 - https 前置 2026-09-22 做完（dev 一律 https，見 [[auth-backend-plan]]）。視訊三條路（mesh / LiveKit Cloud / Cloudflare Realtime）已攤開，我傾向 mesh（訊號走 live WS 加 `rtc` 轉發、Google STUN、跨網路再加 Cloudflare 免費 TURN），等使用者決定。
-- 還沒定：發表當天後端跑哪（本機 dev vs 部署）、視訊引擎。
+- **視訊 2026-09-22 定案並建好：Cloudflare Realtime Serverless SFU**（使用者看完評估表選的；vault `video-engine-options.md` 已 confirmed，MOC 更新）。
+  訂閱綁卡、免費 1,000GB/月（SFU 與 TURN 共用一池），App ID / Secret 在 `.env.local` 的 `CF_REALTIME_*`。做法：
+  - api `routes/video.ts`：代打層，client 不碰 Secret。`POST …/video/sessions`、`POST …/sessions/:sid/tracks`（推 local + offer / 拉 remote）、
+    `PUT …/renegotiate`、`PUT …/tracks/close`。每條過 `roomAccess`，有 sid 再驗「我在這房開的」（記憶體 Map，TTL 3 小時），拉別人的 session 必須同房。
+    沒設定回 503 `unavailable`。上游錯誤 502 原樣轉回（Cloudflare 的 `errorCode` / `errorDescription`）。
+  - `packages/live` 協定多 `media`：client `{ type: "media", media: { sessionId, mic, cam } }`，server 廣播 `{ type: "media", user, media }`，hello 帶 `media` map；
+    hub 只轉發與記住（每個 client 最後一次），媒體本身在 Cloudflare。
+  - web `Video/useSfu.ts`：一條 PeerConnection 雙向共用（STUN `stun.cloudflare.com:3478`、max-bundle）。進房 getUserMedia（640×360）→ 開 session → 兩條 sendonly
+    transceiver、trackName = kind → 等 ICE connected → 廣播 media。別人的 media 進來就拉 audio / video（Cloudflare 給 offer、我答 answer → renegotiate），
+    離線或換 session 就 `tracks/close force`。**所有 SDP 往返排隊（queue）**，Cloudflare 一次只能一個 renegotiation。
+    **ontrack 靠 mid → userId 的對照分流，要在 setRemoteDescription 之前登記**。mic / cam = `track.enabled` + 廣播，關鏡頭不關 track（免 renegotiate）。
+    live 重連後（hub 是新 client）再送一次 media。拒絕權限 / 未設定 / 連不上都不擋房間，VideoGrid 上方畫提示。
+  - `VideoGrid`：有串流且 cam 開 → `<video>`（自己靜音 + 鏡像），否則頭像；別人的 `<video>` 在 cam 關時仍掛著（display none）讓聲音繼續。
+    遠端聲音被自動播放政策擋（直接開網址沒手勢）→ 蓋一顆「點一下開始」，點了所有 `<video>` 重試 play。
+  - `RoomProvider` 的 micOn / camOn / toggleMic / toggleCam 改由 useSfu 管；多 `video` 狀態與 `videoBlocked` / `resumeVideo`。
+  - curl 驗過：開 session 201（真的打 Cloudflare）、申請中 403、別人的 sid 403、body 壞 400、拉不存在的 session 400、假 SDP 502 帶 Cloudflare 錯誤、不存在的房 404。
+    瀏覽器端的推拉流我沒法在 Node 測，靠使用者兩個帳號實測。
+- 待做：Tunnel 手機測試（vault 筆記第 2 節，兩條 Cloudflare 指令要確認）、格子切換（P2）、Find Monsters「通話中」用 live 連線當依據。
+- 還沒定：發表當天後端跑哪（本機 dev vs 部署）。
 
 **How to apply:** 接後端前先讀這份確認 provider 的邊界。後端與部署的定案（LiveKit Cloud、tldraw
 自架在 Durable Objects、自有 WS、Neon）在 [[auth-backend-plan]]；白板換 tldraw 時只動 `Whiteboard.tsx`。

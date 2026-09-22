@@ -2,14 +2,18 @@ import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+import { requestId } from "hono/request-id";
 import { createAuth } from "@monstertalk/auth";
 import { createDb, schema } from "@monstertalk/db";
 import type { Env } from "./env.ts";
+import { logError } from "./log.ts";
 import { createMemoryPresence } from "./presence/store.ts";
+import { clientLogRoutes } from "./routes/clientLog.ts";
 import { presenceRoutes } from "./routes/presence.ts";
 import { profileRoutes } from "./routes/profile.ts";
 import { roomsRoutes } from "./routes/rooms.ts";
 import { usersRoutes } from "./routes/users.ts";
+import { videoRoutes } from "./routes/video.ts";
 import { wordsRoutes } from "./routes/words.ts";
 
 /**
@@ -32,14 +36,26 @@ export function createApp(env: Env) {
 			db.update(schema.users)
 				.set({ lastSeenDate })
 				.where(eq(schema.users.id, userId))
-				.catch((error: unknown) => console.error("lastSeenDate update failed", error));
+				.catch((error: unknown) => logError("presence.lastSeenDate", error, { userId }));
 		},
 	});
 
 	const app = new Hono();
 
+	// 每個請求一個 id（回應 header X-Request-Id 也有），錯誤 log 與 500 回應都帶它，前後端對得起來
+	app.use(requestId());
 	// 每個請求一行：方法、路徑、狀態、耗時
 	app.use(logger());
+
+	// 沒被路由接住的例外：寫一行帶 requestId / 路徑 / 使用者的 log，回 500 JSON（不回 Hono 預設的純文字）
+	app.onError((error, c) => {
+		const id = c.get("requestId");
+		// requireUser 有掛的路由才有 user；app 這層的 Variables 型別不知道它，直接從 var 拿
+		const user = (c.var as { user?: { id: string } }).user;
+		logError("http", error, { requestId: id, method: c.req.method, path: c.req.path, userId: user?.id });
+		return c.json({ error: "internal", requestId: id }, 500);
+	});
+	app.notFound((c) => c.json({ error: "notFound", path: c.req.path }, 404));
 
 	// cookie 要跨 origin 送（前端 6531 → api 4000），CORS 必須指定 origin 並開 credentials；萬用字元 * 不行
 	app.use(
@@ -67,6 +83,10 @@ export function createApp(env: Env) {
 	app.route("/api", roomsRoutes(auth, db));
 	// 單字庫：GET /api/me/words（整本）、GET / POST /api/rooms/:code/words（這場）、DELETE /api/me/words/:id
 	app.route("/api", wordsRoutes(auth, db));
+	// 視訊：Cloudflare Realtime SFU 的代打（開 session、推 / 拉 track、renegotiate、關 track）
+	app.route("/api", videoRoutes(auth, db, env.REALTIME));
+	// 前端的例外丟過來一起留痕
+	app.route("/api", clientLogRoutes(auth));
 
 	return { app, auth, db };
 }

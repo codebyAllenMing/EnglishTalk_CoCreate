@@ -5,7 +5,8 @@ import { initialTimer, leftOf, settle, type TimerState } from "@monstertalk/live
 import { deleteWord, getRoomWords, saveRoomWord, type SaveWordResult, type WordInput, type WordItem } from "@/words/client";
 import type { LangCode } from "../Profile/profileData";
 import { parseLocalDateTime, type ChatMessage, type Room } from "./roomData";
-import { useLive, type LiveStatus } from "./useLive";
+import { useLive, type LiveStatus, type MediaState } from "./useLive";
+import { useSfu, type VideoStatus } from "./Video/useSfu";
 
 /** 給畫面看的：兩桶各剩幾秒、誰在跑、跑完沒、幾秒後要換 */
 type Timer = {
@@ -32,6 +33,15 @@ type RoomState = {
 	/** 這場存的字（自己的），進房拉一次、存 / 刪之後跟著改 */
 	words: WordItem[];
 	topicIndex: number;
+	/** 視訊（Cloudflare Realtime SFU）：我的串流、別人的串流、全房的開關狀態 */
+	video: {
+		status: VideoStatus;
+		localStream: MediaStream | null;
+		remote: Record<string, MediaStream>;
+		media: Record<string, MediaState>;
+		needsGesture: boolean;
+		gestureTick: number;
+	};
 };
 
 type RoomActions = {
@@ -44,6 +54,10 @@ type RoomActions = {
 	saveWord: (input: WordInput) => Promise<SaveWordResult>;
 	removeWord: (id: number) => Promise<void>;
 	nextTopic: () => void;
+	/** 遠端 <video>.play() 被自動播放政策擋掉時由 VideoGrid 回報 */
+	videoBlocked: () => void;
+	/** 使用者點了「開始播放」 */
+	resumeVideo: () => void;
 };
 
 const RoomContext = createContext<(RoomState & RoomActions) | null>(null);
@@ -77,11 +91,17 @@ export default function RoomProvider({ room, children }: { room: Room; children:
 
 	// 只是重繪的觸發器；數字都從牆鐘算，不從它累加
 	const [now, setNow] = useState<number | null>(null);
-	const [micOn, setMicOn] = useState(true);
-	const [camOn, setCamOn] = useState(true);
 	const [whiteboardOpen, setWhiteboardOpen] = useState(true);
 	const [reactions, setReactions] = useState<Record<string, string>>({});
 	const live = useLive(room.code);
+	const sfu = useSfu({
+		code: room.code,
+		meId: me.id,
+		liveStatus: live.status,
+		media: live.media,
+		online: live.online,
+		sendMedia: live.sendMedia,
+	});
 	const [words, setWords] = useState<WordItem[]>([]);
 	const [topicIndex, setTopicIndex] = useState(0);
 	const reactionTimeouts = useRef(new Map<string, ReturnType<typeof setTimeout>>());
@@ -184,8 +204,8 @@ export default function RoomProvider({ room, children }: { room: Room; children:
 			value={{
 				room,
 				timer,
-				micOn,
-				camOn,
+				micOn: sfu.micOn,
+				camOn: sfu.camOn,
 				whiteboardOpen,
 				reactions,
 				chatStatus: live.status,
@@ -193,15 +213,25 @@ export default function RoomProvider({ room, children }: { room: Room; children:
 				messages: live.messages,
 				words,
 				topicIndex,
+				video: {
+					status: sfu.status,
+					localStream: sfu.localStream,
+					remote: sfu.remote,
+					media: live.media,
+					needsGesture: sfu.needsGesture,
+					gestureTick: sfu.gestureTick,
+				},
 				swapLang,
-				toggleMic: () => setMicOn((v) => !v),
-				toggleCam: () => setCamOn((v) => !v),
+				toggleMic: sfu.toggleMic,
+				toggleCam: sfu.toggleCam,
 				toggleWhiteboard: () => setWhiteboardOpen((v) => !v),
 				react,
 				sendMessage,
 				saveWord,
 				removeWord,
 				nextTopic,
+				videoBlocked: sfu.blocked,
+				resumeVideo: sfu.resume,
 			}}
 		>
 			{children}

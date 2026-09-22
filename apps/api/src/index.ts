@@ -9,8 +9,16 @@ import { createWhiteboardHub } from "@monstertalk/whiteboard";
 import { attachWhiteboardServer, type UpgradeDecision } from "@monstertalk/whiteboard/node";
 import { createApp } from "./app.ts";
 import { loadEnv } from "./env.ts";
+import { logError, logInfo } from "./log.ts";
 import { ROOM_TYPES } from "@monstertalk/db/schema";
 import { roomAccess, roomUser } from "./rooms/access.ts";
+
+// 沒人接的 promise rejection 預設會讓 Node 整個掛掉（v15 起）；留痕、不掛。真正的 uncaughtException 狀態不可信，留痕後退出
+process.on("unhandledRejection", (reason) => logError("process.unhandledRejection", reason));
+process.on("uncaughtException", (error) => {
+	logError("process.uncaughtException", error);
+	process.exit(1);
+});
 
 const env = loadEnv(process.env);
 const { app, auth, db } = createApp(env);
@@ -41,11 +49,12 @@ const server = tls
  */
 // serve() 的型別是 http / http2 / https 的聯集；attach 只要 upgrade 事件，http.Server 與 https.Server 都有
 if (!("on" in server)) throw new Error("expected an http(s).Server for WebSocket upgrades");
-const whiteboard = createWhiteboardHub({ log: (m) => console.log(m) });
+const whiteboard = createWhiteboardHub({ log: (m) => logInfo("whiteboard", m) });
 attachWhiteboardServer(server, {
 	hub: whiteboard,
 	origin: env.WEB_ORIGINS,
-	log: (m) => console.log(m),
+	log: (m) => logInfo("whiteboard", m),
+	onError: (error, context) => logError("whiteboard", error, context),
 	authorize: async (req, code): Promise<UpgradeDecision> => {
 		const session = await verifySession(auth, new Headers({ cookie: req.headers.cookie ?? "" }));
 		if (!session) return { ok: false, status: 401, reason: "no session" };
@@ -60,11 +69,12 @@ attachWhiteboardServer(server, {
  * 聊天 + 計時器（之後也是反應）的 WebSocket，路徑 /api/rooms/:code/live，同一道門，另外把人查出來交給 hub。
  * 計時器從房間 startDate 自動起跑、先跑 roomType 的 to（要學習的那一語）。
  */
-const live = createLiveHub({ log: (m) => console.log(m) });
+const live = createLiveHub({ log: (m) => logInfo("live", m), onError: (error, context) => logError("live", error, context) });
 attachLiveServer(server, {
 	hub: live,
 	origin: env.WEB_ORIGINS,
-	log: (m) => console.log(m),
+	log: (m) => logInfo("live", m),
+	onError: (error, context) => logError("live", error, context),
 	authorize: async (req, code): Promise<LiveDecision> => {
 		const session = await verifySession(auth, new Headers({ cookie: req.headers.cookie ?? "" }));
 		if (!session) return { ok: false, status: 401, reason: "no session" };

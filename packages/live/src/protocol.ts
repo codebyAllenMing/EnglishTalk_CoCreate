@@ -6,13 +6,17 @@ import type { TimerState } from "./timer.ts";
  *
  *   client → server   { type: "chat", text }
  *                     { type: "swap" }                            按 ⇄（再按一次 = 取消排程中的切換）
- *   server → client   { type: "hello", you, online, history, timer, now }
+ *                     { type: "media", media }                    我的視訊狀態：SFU sessionId、mic / cam 開關（推完 track 或切開關時送）
+ *   server → client   { type: "hello", you, online, history, timer, now, media }
  *                                                                 連上第一包；晚進來的從 history 拿到之前的訊息，
- *                                                                 timer 是計時器狀態、now 是 server 此刻（ms，client 算時差）
+ *                                                                 timer 是計時器狀態、now 是 server 此刻（ms，client 算時差），
+ *                                                                 media 是目前在線每個人的視訊狀態（照單去拉 track）
  *                     { type: "chat", message }                 廣播含自己；前端等這包回來才顯示
  *                     { type: "presence", online }              有人進出
  *                     { type: "timer", timer }                  計時器狀態變了（swap / 取消 / 換桶 / 結束）；平常不送
+ *                     { type: "media", user, media }            某人的視訊狀態變了
  *
+ * 視訊媒體本身走 Cloudflare Realtime SFU，這條只交換「誰的 session 是哪個、開關如何」。
  * 之後反應（emoji）也走這條，多加 type 就好，不用再開連線。
  */
 export type LiveUser = { id: string; name: string; avatar: string; lang: string };
@@ -26,10 +30,23 @@ export type ChatMessage = {
 	text: string;
 };
 
-export type ClientMessage = { type: "chat"; text: string } | { type: "swap" };
+/** 某人在 SFU 的狀態。sessionId null = 還沒推（沒鏡頭權限、視訊未設定…），別人就畫頭像 */
+export type MediaState = { sessionId: string | null; mic: boolean; cam: boolean };
+
+export type ClientMessage = { type: "chat"; text: string } | { type: "swap" } | { type: "media"; media: MediaState };
 
 export type ServerMessage =
-	| { type: "hello"; you: string; online: string[]; history: ChatMessage[]; timer: TimerState; now: number }
+	| {
+			type: "hello";
+			you: string;
+			online: string[];
+			history: ChatMessage[];
+			timer: TimerState;
+			now: number;
+			/** userId → 狀態；只有送過 media 的人在裡面 */
+			media: Record<string, MediaState>;
+	  }
 	| { type: "chat"; message: ChatMessage }
 	| { type: "presence"; online: string[] }
-	| { type: "timer"; timer: TimerState };
+	| { type: "timer"; timer: TimerState }
+	| { type: "media"; user: string; media: MediaState };

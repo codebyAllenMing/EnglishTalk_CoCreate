@@ -20,6 +20,8 @@ export type AttachOptions = {
 	/** 從 URL path 取房號；預設 /api/rooms/:code/whiteboard */
 	matchPath?: (pathname: string) => string | null;
 	log?: (message: string) => void;
+	/** authorize 丟例外時留痕（握手照樣拒絕）。預設 console.error */
+	onError?: (error: unknown, context: { code: string }) => void;
 };
 
 /** http.Server 與 https.Server 都行：只用得到 upgrade 事件 */
@@ -49,6 +51,7 @@ export function attachWhiteboardServer(server: UpgradeServer, options: AttachOpt
 	const origins = new Set(Array.isArray(options.origin) ? options.origin : [options.origin]);
 	const matchPath = options.matchPath ?? ((pathname: string) => DEFAULT_PATH.exec(pathname)?.[1] ?? null);
 	const log = options.log ?? (() => undefined);
+	const onError = options.onError ?? ((error, context) => console.error("whiteboard authorize failed", context, error));
 	const wss = new WebSocketServer({ noServer: true });
 
 	const reject = (socket: Duplex, status: number, reason: string) => {
@@ -74,7 +77,7 @@ export function attachWhiteboardServer(server: UpgradeServer, options: AttachOpt
 				});
 			},
 			(error: unknown) => {
-				console.error("whiteboard authorize failed", error);
+				onError(error, { code });
 				reject(socket, 403, "error");
 			},
 		);

@@ -381,6 +381,13 @@
         "total": "{minutes} min total",
         "you": "You",
         "offline": "Not connected",
+        "video": {
+            "connecting": "Connecting video…",
+            "denied": "No camera or microphone access. Others will only see your avatar.",
+            "unavailable": "Video isn't set up yet. Use chat and the whiteboard for now.",
+            "failed": "Couldn't connect video. Refresh to try again.",
+            "tapToPlay": "Tap to start audio and video"
+        },
         "leave": "Leave room",
         "leaveTitle": "Leave the room?",
         "leaveHint": "The conversation keeps going without you. You can come back with the room code while it is still open.",

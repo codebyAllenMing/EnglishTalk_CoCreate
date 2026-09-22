@@ -11,6 +11,8 @@ export type Env = {
 	BETTER_AUTH_SECRET: string;
 	/** dev 走 https 用的憑證（PEM 路徑，相對 repo 根目錄）；兩個都給才開 https，不給就是 http（prod 的 Workers 不看這個） */
 	TLS?: { cert: string; key: string };
+	/** Cloudflare Realtime Serverless SFU 的 App；沒給視訊路由回 503，其他功能照常 */
+	REALTIME?: { appId: string; secret: string };
 };
 
 export function loadEnv(source: Record<string, string | undefined>): Env {
@@ -25,6 +27,9 @@ export function loadEnv(source: Record<string, string | undefined>): Env {
 	const tlsCert = source.TLS_CERT;
 	const tlsKey = source.TLS_KEY;
 	if ((tlsCert && !tlsKey) || (!tlsCert && tlsKey)) throw new Error("TLS_CERT 與 TLS_KEY 要一起給");
+	const appId = source.CF_REALTIME_APP_ID;
+	const appSecret = source.CF_REALTIME_APP_SECRET;
+	if ((appId && !appSecret) || (!appId && appSecret)) throw new Error("CF_REALTIME_APP_ID 與 CF_REALTIME_APP_SECRET 要一起給");
 
 	return {
 		DATABASE_URL: required("DATABASE_URL"),
@@ -36,5 +41,6 @@ export function loadEnv(source: Record<string, string | undefined>): Env {
 			.filter(Boolean),
 		BETTER_AUTH_SECRET: required("BETTER_AUTH_SECRET"),
 		TLS: tlsCert && tlsKey ? { cert: tlsCert, key: tlsKey } : undefined,
+		REALTIME: appId && appSecret ? { appId, secret: appSecret } : undefined,
 	};
 }

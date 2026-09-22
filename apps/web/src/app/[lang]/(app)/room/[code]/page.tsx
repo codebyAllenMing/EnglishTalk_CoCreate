@@ -31,7 +31,7 @@ export async function generateMetadata(): Promise<Metadata> {
  *
  * 這一頁沒有任何一塊能留在 server：視訊、聊天、計時、白板全是即時互動。
  * 結構是「RoomGate（client，問 API 能不能進、拿成員）→ RoomProvider → server 殼 + 畫面」。
- * 成員、白板、聊天、單字是真的；話題與視訊仍是 mock，接 LiveKit 時只換 provider 的資料來源。
+ * 成員、白板、聊天、單字、視訊（Cloudflare Realtime SFU）都是真的；只剩話題卡是 mock。
  *
  * P2 的區塊（反應、話題卡）各自獨立一個檔，之後要延後是整檔拿掉。
  */
@@ -49,7 +49,13 @@ export default async function RoomPage({ params }: PageProps<"/[lang]/room/[code
 
 				<div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_24rem] xl:gap-5">
 					<div className="flex min-w-0 flex-col gap-4">
-						<VideoGrid youLabel={r.you} micLabel={r.controls.mic} camLabel={r.controls.camera} offlineLabel={r.offline} />
+						<VideoGrid
+							youLabel={r.you}
+							micLabel={r.controls.mic}
+							camLabel={r.controls.camera}
+							offlineLabel={r.offline}
+							dict={r.video}
+						/>
 						<Whiteboard code={code} locale={locale} dict={r.board} />
 						<ControlBar dict={r.controls} />
 					</div>

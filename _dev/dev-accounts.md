@@ -71,6 +71,12 @@ docker exec monstertalk-postgres-1 psql -U monstertalk -d monstertalk -c 'select
 
 計時器：從房間 startDate 自動起跑（SEED09 = 跑 seed 那一刻 − 5 分），先跑 roomType 的 to（SEED09 是 zh → en，先跑英文），
 全房同步；任何人按 ⇄ 大家都看到 5 秒倒數，再按一次取消。
+視訊（Cloudflare Realtime SFU）：進房會問鏡頭與麥克風，按允許；自己那格是鏡像預覽，別人的格子在他也進房後幾秒出現。
+同一台電腦開兩個瀏覽器（或一般 + 無痕）各登一個帳號就能對看，Chrome 允許兩個分頁同時用同一顆鏡頭。
+拒絕權限或 `.env.local` 沒填 `CF_REALTIME_*` 不擋房間，格子上方會有一行提示、別人只看到你的頭像。
+直接開網址進房（沒有點擊過頁面）遠端聲音會被瀏覽器擋，格子上會蓋一顆「點一下開始」。
+用量看儀表板 Realtime → Serverless SFU → Analytics；免費 1,000GB/月。
+
 ⚠️ **重跑 seed 後要重啟 dev:api**：hub 裡的 SEED09 是第一個人連上時用當時的 startDate 建的，重跑 seed 只換 DB 那一列，
 hub 不知道，計時器會停在舊的時間。
 
@@ -127,3 +133,15 @@ docker exec monstertalk-postgres-1 psql -U monstertalk -d monstertalk -c 'delete
   3. 手機裝 mkcert 根憑證：AirDrop `"$(mkcert -CAROOT)/rootCA.pem"` 到 iPhone → 設定安裝描述檔 → 一般 → 關於 → 憑證信任設定打開完整信任。
      Android：設定 → 安全性 → 安裝憑證 → CA 憑證。
   4. 手機開 `https://192.168.x.x:6531`，API 跟著頁面 host 走，不用另外設。
+
+## 追 log
+
+api 的 terminal 每個例外一行：`[yyyy-mm-dd hh:mm:ss] ERROR <scope> — <錯誤> | {requestId, userId, code…}`，stack 縮排接在下面。前端抓到的例外也會丟到 `POST /api/client-log`，
+在同一個 terminal 出現、scope 是 `client.xxx`。500 回應帶 `requestId`，回應 header 也有 `X-Request-Id`，拿它 grep：
+
+```bash
+corepack pnpm dev:api 2>&1 | tee /tmp/api.log     # 想留檔就這樣起
+grep ' ERROR ' /tmp/api.log | grep <requestId>
+```
+
+視訊接不上時看 `scope` 是 `client.video.*` 的哪一步：getUserMedia（裝置）、session / push / pull（代打與 Cloudflare）、ice（媒體連不到 Cloudflare 邊緣）。

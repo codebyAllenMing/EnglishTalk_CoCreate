@@ -381,6 +381,13 @@
         "total": "共 {minutes} 分鐘",
         "you": "你",
         "offline": "未連線",
+        "video": {
+            "connecting": "視訊連線中…",
+            "denied": "沒有鏡頭或麥克風權限，其他人只會看到你的頭像。",
+            "unavailable": "視訊尚未設定，先用聊天和白板。",
+            "failed": "視訊連不上，重新整理再試一次。",
+            "tapToPlay": "點一下開始播放聲音與影像"
+        },
         "leave": "離開房間",
         "leaveTitle": "要離開房間嗎？",
         "leaveHint": "對話會繼續進行。房間還開著的時候，你可以用房號再回來。",

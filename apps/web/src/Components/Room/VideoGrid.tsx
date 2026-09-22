@@ -1,39 +1,114 @@
 "use client";
 
-import { Mic, MicOff, Video, VideoOff } from "lucide-react";
+import { Mic, MicOff, Play, Video, VideoOff } from "lucide-react";
+import { useEffect, useRef } from "react";
 import Avatar from "@/Components/UI/Avatar";
 import LangBadge from "@/Components/UI/LangBadge";
+import type { Dictionary } from "@/dictionaries";
 import type { Participant } from "./roomData";
 import { useRoom } from "./RoomProvider";
 
-type Props = { youLabel: string; micLabel: string; camLabel: string; /** 沒連著即時通道的人格子上的標 */ offlineLabel: string };
+type Props = {
+	youLabel: string;
+	micLabel: string;
+	camLabel: string;
+	/** 沒連著即時通道的人格子上的標 */
+	offlineLabel: string;
+	dict: Dictionary["room"]["video"];
+};
 
 /**
- * 2×2 視訊格。
+ * 2×2 視訊格（串流來自 Cloudflare Realtime SFU，見 Video/useSfu）。
  *
- * 每格的底是**視訊流的位置**：接 LiveKit 時那個 16:9 的框直接換成 <video>，
- * 名字、語言徽章、mic / cam 狀態、反應泡泡都是疊在上面的 overlay，不隨底下
- * 是圖還是影片而改變。鏡頭關閉時顯示頭像 —— 所以 mock 的畫面就是 camera off 的畫面，
- * 不是丟掉的東西。
+ * 每格的底是**視訊流的位置**：有串流且鏡頭開著就是 <video>，否則是頭像；
+ * 名字、語言徽章、mic / cam 狀態、反應泡泡都是疊在上面的 overlay，不隨底下是圖還是影片而改變。
  *
- * 自己那格的 mic / cam 跟著 ControlBar 的狀態走，別人的固定開著（假資料）。
+ * 自己那格：本機串流、靜音、鏡像；mic / cam 跟著 ControlBar。別人那格：mic / cam 讀 live 廣播的狀態，
+ * 鏡頭關著時 <video> 仍掛著（display none）讓聲音繼續播。
  * 自己那格多一圈紫框 —— 「你」的字樣不夠一眼認出哪格是自己（使用者 2026-09-21）。
+ *
+ * 遠端 <video> 帶聲音，直接開網址（沒有使用者手勢）會被自動播放政策擋 → 蓋一顆「點一下開始」。
  */
-export default function VideoGrid({ youLabel, micLabel, camLabel, offlineLabel }: Props) {
-	const { room } = useRoom();
+export default function VideoGrid({ youLabel, micLabel, camLabel, offlineLabel, dict }: Props) {
+	const { room, video, resumeVideo } = useRoom();
+	const notice =
+		video.status === "denied"
+			? dict.denied
+			: video.status === "unavailable"
+				? dict.unavailable
+				: video.status === "failed"
+					? dict.failed
+					: null;
+
 	return (
-		<div className="grid grid-cols-2 gap-3">
-			{room.participants.map((p) => (
-				<VideoTile
-					key={p.id}
-					participant={p}
-					youLabel={youLabel}
-					micLabel={micLabel}
-					camLabel={camLabel}
-					offlineLabel={offlineLabel}
-				/>
-			))}
+		<div className="flex flex-col gap-3">
+			{notice && (
+				<p role="status" className="rounded-xl bg-danger/10 px-4 py-2.5 text-sm font-bold text-danger">
+					{notice}
+				</p>
+			)}
+			<div className="relative grid grid-cols-2 gap-3">
+				{room.participants.map((p) => (
+					<VideoTile
+						key={p.id}
+						participant={p}
+						youLabel={youLabel}
+						micLabel={micLabel}
+						camLabel={camLabel}
+						offlineLabel={offlineLabel}
+					/>
+				))}
+				{video.needsGesture && (
+					<button
+						type="button"
+						onClick={resumeVideo}
+						className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-2xl bg-ink/50 text-white backdrop-blur-sm"
+					>
+						<span className="flex size-14 items-center justify-center rounded-full bg-primary-500">
+							<Play aria-hidden="true" className="size-7 translate-x-0.5" />
+						</span>
+						<span className="text-sm font-extrabold">{dict.tapToPlay}</span>
+					</button>
+				)}
+			</div>
 		</div>
+	);
+}
+
+/**
+ * <video> 綁 MediaStream。srcObject 不能走 React 屬性，只能在 effect 裡設；
+ * play() 被自動播放政策拒絕就回報，使用者點了按鈕（tick 變）再試一次。
+ */
+function VideoView({
+	stream,
+	muted,
+	mirror,
+	visible,
+	tick,
+	onBlocked,
+}: {
+	stream: MediaStream;
+	muted: boolean;
+	mirror: boolean;
+	visible: boolean;
+	tick: number;
+	onBlocked: () => void;
+}) {
+	const ref = useRef<HTMLVideoElement>(null);
+	useEffect(() => {
+		const el = ref.current;
+		if (!el) return;
+		if (el.srcObject !== stream) el.srcObject = stream;
+		el.play().catch(() => onBlocked());
+	}, [stream, tick, onBlocked]);
+	return (
+		<video
+			ref={ref}
+			muted={muted}
+			playsInline
+			autoPlay
+			className={visible ? `absolute inset-0 size-full object-cover ${mirror ? "-scale-x-100" : ""}` : "hidden"}
+		/>
 	);
 }
 
@@ -42,10 +117,20 @@ const BACKDROP: Record<string, string> = {
 	en: "from-lang-en/25 via-primary-50 to-secondary-100",
 };
 
-function VideoTile({ participant: p, youLabel, micLabel, camLabel, offlineLabel }: { participant: Participant } & Props) {
-	const { micOn, camOn, reactions, online } = useRoom();
-	const mic = p.me ? micOn : true;
-	const cam = p.me ? camOn : true;
+function VideoTile({
+	participant: p,
+	youLabel,
+	micLabel,
+	camLabel,
+	offlineLabel,
+}: { participant: Participant } & Omit<Props, "dict">) {
+	const { micOn, camOn, reactions, online, video, videoBlocked } = useRoom();
+	const state = video.media[p.id];
+	const stream = p.me ? video.localStream : video.remote[p.id];
+	// 別人的開關讀廣播來的狀態；還沒送過（沒推、沒權限）就當關著
+	const mic = p.me ? micOn : (state?.mic ?? false);
+	const cam = p.me ? camOn : (state?.cam ?? false);
+	const showVideo = !!stream && cam;
 	const reaction = reactions[p.id];
 	// 在線 = 連著即時通道；自己那格不看（自己還在 connecting 時不該標自己離線）
 	const isOffline = !p.me && !online.includes(p.id);
@@ -61,13 +146,25 @@ function VideoTile({ participant: p, youLabel, micLabel, camLabel, offlineLabel 
 					{offlineLabel}
 				</span>
 			)}
-			{/* 視訊流的替身。鏡頭關著時就是這個畫面 */}
-			<Avatar
-				src={`avatar-${p.avatar}`}
-				className="absolute inset-x-0 bottom-0 mx-auto w-[46%]"
-				sizes="(min-width: 1280px) 220px, 40vw"
-				circle={false}
-			/>
+			{/* 鏡頭關著時就是頭像；<video> 在有串流時一直掛著，關鏡頭只是藏起來讓聲音繼續 */}
+			{!showVideo && (
+				<Avatar
+					src={`avatar-${p.avatar}`}
+					className="absolute inset-x-0 bottom-0 mx-auto w-[46%]"
+					sizes="(min-width: 1280px) 220px, 40vw"
+					circle={false}
+				/>
+			)}
+			{stream && (
+				<VideoView
+					stream={stream}
+					muted={!!p.me}
+					mirror={!!p.me}
+					visible={showVideo}
+					tick={video.gestureTick}
+					onBlocked={videoBlocked}
+				/>
+			)}
 
 			{reaction && (
 				/*
