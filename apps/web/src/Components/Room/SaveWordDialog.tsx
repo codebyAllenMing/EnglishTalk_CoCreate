@@ -3,8 +3,9 @@
 import { useId, useState } from "react";
 import Dialog from "@/Components/UI/Dialog";
 import type { Dictionary } from "@/dictionaries";
+import { WORD_POS, type WordPosId } from "@/words/client";
 import type { LangCode } from "../Profile/profileData";
-import type { ChatMessage, PosCode } from "./roomData";
+import type { ChatMessage } from "./roomData";
 import { useRoom } from "./RoomProvider";
 
 type Props = {
@@ -20,6 +21,9 @@ type Props = {
 /**
  * 從一則訊息存單字（方案 B，使用者 2026-09-21 定案）：顯示原句，使用者自己填
  * 單字（必填）、詞性、意思（選填）。原句就是例句，直接存。
+ *
+ * 存進 DB（POST /api/rooms/:code/words）才關框；同一個字已經在字典裡 server 回 duplicate，
+ * 框不關、顯示訊息讓他改。
  *
  * 這個對話框是之後 LLM（盤點 B6）的前置 —— LLM 進來只是把欄位**預填**、
  * 使用者按確認，同一個對話框不用重做。
@@ -46,6 +50,8 @@ export default function SaveWordDialog({ message, lang, onClose, dict, closeLabe
 	);
 }
 
+type ErrorKey = "duplicate" | "failed";
+
 function Form({
 	message,
 	lang,
@@ -62,14 +68,20 @@ function Form({
 	const { saveWord } = useRoom();
 	const id = useId();
 	const [word, setWord] = useState("");
-	const [pos, setPos] = useState<PosCode>("n");
+	const [pos, setPos] = useState<WordPosId>(1);
 	const [meaning, setMeaning] = useState("");
-	const canSave = word.trim().length > 0;
+	const [saving, setSaving] = useState(false);
+	const [error, setError] = useState<ErrorKey | null>(null);
+	const canSave = word.trim().length > 0 && !saving;
 
-	const submit = () => {
+	const submit = async () => {
 		if (!canSave) return;
-		saveWord({ word: word.trim(), pos, meaning: meaning.trim(), example: message.text, lang });
-		onDone();
+		setSaving(true);
+		setError(null);
+		const result = await saveWord({ word: word.trim(), pos, meaning: meaning.trim(), example: message.text, lang });
+		setSaving(false);
+		if (result.ok) onDone();
+		else setError(result.reason === "duplicate" ? "duplicate" : "failed");
 	};
 
 	return (
@@ -77,7 +89,7 @@ function Form({
 			className="flex flex-col gap-4"
 			onSubmit={(event) => {
 				event.preventDefault();
-				submit();
+				void submit();
 			}}
 		>
 			<div>
@@ -93,7 +105,10 @@ function Form({
 					id={`${id}-word`}
 					value={word}
 					autoFocus
-					onChange={(event) => setWord(event.target.value)}
+					onChange={(event) => {
+						setWord(event.target.value);
+						setError(null);
+					}}
 					className={INPUT}
 				/>
 			</div>
@@ -106,12 +121,12 @@ function Form({
 					<select
 						id={`${id}-pos`}
 						value={pos}
-						onChange={(event) => setPos(event.target.value as PosCode)}
+						onChange={(event) => setPos(Number(event.target.value) as WordPosId)}
 						className={INPUT}
 					>
-						{(Object.entries(dict.posOptions) as [PosCode, string][]).map(([code, label]) => (
-							<option key={code} value={code}>
-								{label}
+						{WORD_POS.map((p) => (
+							<option key={p.id} value={p.id}>
+								{dict.posOptions[p.code]}
 							</option>
 						))}
 					</select>
@@ -129,6 +144,12 @@ function Form({
 					/>
 				</div>
 			</div>
+
+			{error && (
+				<p role="alert" className="rounded-xl bg-danger/10 px-4 py-2.5 text-sm font-bold text-danger">
+					{dict[error]}
+				</p>
+			)}
 
 			<div className="flex gap-3">
 				<button

@@ -24,8 +24,9 @@ type Props = {
 /**
  * 房內聊天。
  *
- * **整個訊息泡泡是按鈕** —— 點了開 SaveWordDialog 從那句話存單字（使用者 2026-09-21
- * 定案：不畫星號、也不標記存過）。泡泡顏色跟著發言者的語言側：中文粉、英文紫。
+ * **別人的訊息泡泡是按鈕** —— 點了開 SaveWordDialog 從那句話存單字（使用者 2026-09-21
+ * 定案：不畫星號、也不標記存過）。**自己的泡泡不能點**（使用者 2026-09-22：「自己儲存自己的感覺有點怪」），
+ * 畫成普通泡泡、沒有 hover。泡泡顏色跟著發言者的語言側：中文粉、英文紫。
  *
  * 一份清單只用一個受控的 Dialog（記「選中哪一則」），不是每則各掛一個。
  */
@@ -69,7 +70,7 @@ export default function Chat({ locale, youLabel, dict, saveDict, closeLabel, can
 							avatar={author.avatar}
 							lang={author.lang}
 							time={formatTime(toMinutes(m.at), locale)}
-							onPick={() => setPending(m)}
+							onPick={author.me ? undefined : () => setPending(m)}
 						/>
 					);
 				})}
@@ -123,9 +124,15 @@ export default function Chat({ locale, youLabel, dict, saveDict, closeLabel, can
 }
 
 const BUBBLE: Record<LangCode, string> = {
-	zh: "bg-lang-zh/12 hover:bg-lang-zh/20",
-	en: "bg-lang-en/12 hover:bg-lang-en/20",
+	zh: "bg-lang-zh/12",
+	en: "bg-lang-en/12",
 };
+/** 只有可以點的泡泡才有 hover */
+const BUBBLE_HOVER: Record<LangCode, string> = {
+	zh: "hover:bg-lang-zh/20",
+	en: "hover:bg-lang-en/20",
+};
+const BUBBLE_BASE = "mt-1 max-w-full rounded-xl rounded-tl-sm px-3.5 py-2 text-left text-sm leading-relaxed";
 
 function Message({
 	message,
@@ -140,7 +147,8 @@ function Message({
 	avatar: string;
 	lang: LangCode;
 	time: string;
-	onPick: () => void;
+	/** 沒給 = 不能點（自己的訊息） */
+	onPick?: () => void;
 }) {
 	return (
 		<div className="flex items-start gap-2.5">
@@ -151,13 +159,17 @@ function Message({
 					<LangBadge code={lang} className="size-4.5 text-[8px]" />
 					<span className="text-ink-400">{time}</span>
 				</p>
-				<button
-					type="button"
-					onClick={onPick}
-					className={`mt-1 max-w-full rounded-xl rounded-tl-sm px-3.5 py-2 text-left text-sm leading-relaxed transition-colors ${BUBBLE[lang]}`}
-				>
-					{message.text}
-				</button>
+				{onPick ? (
+					<button
+						type="button"
+						onClick={onPick}
+						className={`${BUBBLE_BASE} transition-colors ${BUBBLE[lang]} ${BUBBLE_HOVER[lang]}`}
+					>
+						{message.text}
+					</button>
+				) : (
+					<p className={`${BUBBLE_BASE} w-fit ${BUBBLE[lang]}`}>{message.text}</p>
+				)}
 			</div>
 		</div>
 	);

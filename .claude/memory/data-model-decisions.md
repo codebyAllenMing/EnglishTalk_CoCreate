@@ -116,3 +116,14 @@ metadata:
 - 產生端統一走 `notify(userId, type, ref, payload)`，房間 / 訊息路由都呼叫它，之後加 email / push 只改這一處。
 - 送達：先 30 秒輪詢 `GET /api/notifications?unread=1`（跟 presence 同節奏），自有 WS 蓋好改推；徽章 = `readAt is null` 的 count，`PATCH /api/notifications/read`。
 - 第一則通知會是房主審核制的「申請加入 / 同意 / 拒絕」，房間路由建好時一起掛。
+
+### Word Bank（2026-09-22 定案並建好：`packages/db/src/schema/word.ts`、migration `0005_words`、`apps/api/src/routes/words.ts`、`apps/web/src/words/client.ts`）
+
+使用者拍板：
+- 表 `Words`：id / userId（FK Users cascade）/ roomId（FK Rooms，nullable，set null，只拿來篩「這場」）/ word / pos（**smallint enum id**，跟 roomType 同做法，使用者 2026-09-22：「我習慣用 enum 的說法」；1 noun 2 verb 3 adjective 4 adverb 5 phrase 6 idiom（成語，使用者留 pos 的理由）7 other；`WORD_POS` 對照表放 schema、前端拿 id 對字典）
+  / meaning / example（存字那一刻抄聊天原句，因為聊天歷史不進 DB）/ lang（zh | en）/ **isDelete**（使用者：「用一個 isDelete 就好」，不用 deleteDate）/ createDate / updateDate。
+- **同一個字存過要擋**（整本字典、跨房間）：partial unique index `(userId, lang, lower(word)) where isDelete = false`；API 回 409 `duplicate`，對話框顯示「已存過」。
+  刪過的字再存 = 新的一列（舊列留著 isDelete = true）。
+- **房間面板只拿這場的字**（`roomId = 該房`，重新整理回來還在）；**home 的 Word Bank 頁才顯示整本**，那頁延後、等房間內接完再回頭。
+- 長度：word ≤ 60、meaning ≤ 200、example ≤ 500（＝聊天單則上限）。
+- API **不用 query 區分**（使用者 2026-09-22）：`GET /api/me/words` = 整本（home 頁）；`GET /api/rooms/:code/words` = 這場的字、`POST /api/rooms/:code/words` = 存字（roomId 從路徑來，先過 roomAccess）；`DELETE /api/me/words/:id` = 軟刪，兩邊共用。

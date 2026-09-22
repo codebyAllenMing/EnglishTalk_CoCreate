@@ -418,7 +418,7 @@
         },
         "chat": {
             "title": "Chat",
-            "hint": "Tap a message to save a word from it",
+            "hint": "Tap someone else's message to save a word from it",
             "placeholder": "Type a message…",
             "send": "Send",
             "emoji": "Emoji",
@@ -434,12 +434,15 @@
             "meaning": "Meaning",
             "meaningPlaceholder": "In your own words (optional)",
             "save": "Save word",
+            "duplicate": "That word is already in your Word Bank.",
+            "failed": "Couldn't save it. Please try again.",
             "posOptions": {
-                "n": "n.",
-                "v": "v.",
-                "adj": "adj.",
-                "adv": "adv.",
+                "noun": "n.",
+                "verb": "v.",
+                "adjective": "adj.",
+                "adverb": "adv.",
                 "phrase": "phrase",
+                "idiom": "idiom",
                 "other": "other"
             }
         },

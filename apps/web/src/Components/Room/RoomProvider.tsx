@@ -1,8 +1,9 @@
 "use client";
 
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { deleteWord, getRoomWords, saveRoomWord, type SaveWordResult, type WordInput, type WordItem } from "@/words/client";
 import type { LangCode } from "../Profile/profileData";
-import { type ChatMessage, type Room, type WordEntry } from "./roomData";
+import { type ChatMessage, type Room } from "./roomData";
 import { useLive, type LiveStatus } from "./useLive";
 
 /** 給畫面看的：兩桶各剩幾秒、誰在跑、跑完沒、幾秒後要換 */
@@ -53,7 +54,8 @@ type RoomState = {
 	/** 現在連著即時通道的 userId（同一人多分頁算一個） */
 	online: string[];
 	messages: ChatMessage[];
-	words: WordEntry[];
+	/** 這場存的字（自己的），進房拉一次、存 / 刪之後跟著改 */
+	words: WordItem[];
 	topicIndex: number;
 };
 
@@ -64,8 +66,8 @@ type RoomActions = {
 	toggleWhiteboard: () => void;
 	react: (emoji: string) => void;
 	sendMessage: (text: string) => void;
-	saveWord: (entry: Omit<WordEntry, "id">) => void;
-	removeWord: (id: string) => void;
+	saveWord: (input: WordInput) => Promise<SaveWordResult>;
+	removeWord: (id: number) => Promise<void>;
 	nextTopic: () => void;
 };
 
@@ -75,7 +77,7 @@ const REACTION_MS = 3000;
 
 /**
  * 對話室唯一的狀態層。畫面元件全部從這裡拿資料、透過這裡改資料 ——
- * 聊天與在線名單已經來自 useLive（自有 WS）；之後接 LiveKit 與計時器同步也是換這裡的資料來源，畫面不動。
+ * 聊天與在線名單來自 useLive（自有 WS）、單字來自 /api/rooms/:code/words；之後接 LiveKit 與計時器同步也是換這裡的資料來源，畫面不動。
  *
  * ## 計時器（照盤點 C1 的原則寫）
  *
@@ -111,7 +113,7 @@ export default function RoomProvider({ room, children }: { room: Room; children:
 	const [whiteboardOpen, setWhiteboardOpen] = useState(true);
 	const [reactions, setReactions] = useState<Record<string, string>>({});
 	const live = useLive(room.code);
-	const [words, setWords] = useState(room.words);
+	const [words, setWords] = useState<WordItem[]>([]);
 	const [topicIndex, setTopicIndex] = useState(0);
 	const reactionTimeouts = useRef(new Map<string, ReturnType<typeof setTimeout>>());
 
@@ -130,6 +132,17 @@ export default function RoomProvider({ room, children }: { room: Room; children:
 			document.removeEventListener("visibilitychange", tick);
 		};
 	}, [state.ended]);
+
+	// 這場已經存過的字（重新整理回來還在）。拉不到就空的，存字那一刻會再遇到同樣的錯
+	useEffect(() => {
+		let stale = false;
+		getRoomWords(room.code).then((items) => {
+			if (!stale && items) setWords(items);
+		});
+		return () => {
+			stale = true;
+		};
+	}, [room.code]);
 
 	const timer = view(state, now);
 
@@ -165,10 +178,16 @@ export default function RoomProvider({ room, children }: { room: Room; children:
 	// 只送出去，等 server 廣播回來才出現在畫面上（useLive）
 	const sendMessage = live.send;
 
-	const saveWord = (entry: Omit<WordEntry, "id">) =>
-		setWords((w) => [...w, { ...entry, id: `local-${Date.now()}` }]);
+	// 存進 DB 才出現在面板；同一個字存過 server 會擋（duplicate），對話框自己顯示
+	const saveWord = async (input: WordInput) => {
+		const result = await saveRoomWord(room.code, input);
+		if (result.ok) setWords((w) => [...w, result.item]);
+		return result;
+	};
 
-	const removeWord = (id: string) => setWords((w) => w.filter((x) => x.id !== id));
+	const removeWord = async (id: number) => {
+		if (await deleteWord(id)) setWords((w) => w.filter((x) => x.id !== id));
+	};
 
 	// 隨機但不重複抽到同一張
 	const nextTopic = () =>

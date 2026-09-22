@@ -10,6 +10,7 @@ import { presenceRoutes } from "./routes/presence.ts";
 import { profileRoutes } from "./routes/profile.ts";
 import { roomsRoutes } from "./routes/rooms.ts";
 import { usersRoutes } from "./routes/users.ts";
+import { wordsRoutes } from "./routes/words.ts";
 
 /**
  * 組出 Hono app，不綁定任何執行環境。
@@ -64,6 +65,8 @@ export function createApp(env: Env) {
 	app.route("/api", presenceRoutes(auth, presence));
 	// 房間：GET /api/me/schedule（週曆）、POST /api/rooms（開房）
 	app.route("/api", roomsRoutes(auth, db));
+	// 單字庫：GET /api/me/words（整本）、GET / POST /api/rooms/:code/words（這場）、DELETE /api/me/words/:id
+	app.route("/api", wordsRoutes(auth, db));
 
 	return { app, auth, db };
 }

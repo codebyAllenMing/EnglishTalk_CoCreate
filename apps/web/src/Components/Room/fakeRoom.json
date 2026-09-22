@@ -22,10 +22,5 @@
         { "en": "A place you want to visit", "zh": "想去的一個地方" },
         { "en": "Your morning routine", "zh": "你的早晨例行公事" },
         { "en": "A skill you want to learn", "zh": "想學的一項技能" }
-    ],
-    "words": [
-        { "id": "w1", "word": "obsessed", "pos": "adj", "meaning": "really like something", "example": "I'm obsessed with bubble tea.", "lang": "en" },
-        { "id": "w2", "word": "flavor", "pos": "n", "meaning": "taste", "example": "What flavor do you like?", "lang": "en" },
-        { "id": "w3", "word": "shop", "pos": "n", "meaning": "store / place to buy", "example": "We should try that new bubble tea shop!", "lang": "en" }
     ]
 }

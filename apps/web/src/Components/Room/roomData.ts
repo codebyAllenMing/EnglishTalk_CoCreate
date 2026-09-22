@@ -3,7 +3,6 @@ import type { LangCode } from "../Profile/profileData";
 import raw from "./fakeRoom.json";
 
 export type RoomKind = keyof Dictionary["room"]["kind"];
-export type PosCode = keyof Dictionary["room"]["saveWord"]["posOptions"];
 
 export type Participant = {
 	/** Users.id；反應與訊息的 from 都指它 */
@@ -26,16 +25,6 @@ export type ChatMessage = {
 
 export type Topic = Record<LangCode, string>;
 
-export type WordEntry = {
-	id: string;
-	word: string;
-	pos: PosCode;
-	meaning: string;
-	/** 來源訊息的原句 —— 就是例句，不用另外要 */
-	example: string;
-	lang: LangCode;
-};
-
 export type Room = {
 	code: string;
 	kind: RoomKind;
@@ -45,13 +34,12 @@ export type Room = {
 	participants: Participant[];
 	messages: ChatMessage[];
 	topics: Topic[];
-	words: WordEntry[];
 };
 
 /**
  * ⚠️⚠️ 假資料 ⚠️⚠️
  *
- * 後端與即時通訊都還沒有，整個房間的初始狀態來自 fakeRoom.json。
+ * 成員、聊天、單字已經是真的；話題還來自 fakeRoom.json（HAPPY123 只剩 generateStaticParams 在用）。
  * grep "FAKE_" 可找出專案所有假內容。
  *
  * 房號寫死 HAPPY123 —— 靜態匯出的 /room/[code] 只能預先建出列在
@@ -61,7 +49,6 @@ export const FAKE_ROOM: Room = {
 	...raw,
 	kind: raw.kind as RoomKind,
 	participants: raw.participants.map((p) => ({ ...p, avatar: p.id, lang: p.lang as LangCode })),
-	words: raw.words.map((w) => ({ ...w, pos: w.pos as PosCode, lang: w.lang as LangCode })),
 };
 
 /** "2026-09-22T20:00" → Date（本地時間）。不用 new Date(iso)：那會被當 UTC */

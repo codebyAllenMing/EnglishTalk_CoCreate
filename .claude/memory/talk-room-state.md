@@ -19,7 +19,7 @@ metadata:
   跑到 0 自動換另一桶，兩桶都 0 結束。手動換不重置，總時長永遠等於開房設的。
   **按 ⇄ 不是立刻換，先倒數 5 秒**（`SWAP_DELAY_MS`；「講到一半被切掉很突兀」），倒數中再按是取消；
   倒數期間桶先空了就走自動換、排程作廢。排程用時間戳存（`swapAt`），在 `settle()` 裡結算。
-- **Word Bank 方案 B**：點**整個訊息泡泡**開 SaveWordDialog，使用者自己填單字（必填）、
+- **Word Bank 方案 B**：點**別人的訊息泡泡**開 SaveWordDialog（**自己的泡泡不能點**，使用者 2026-09-22：「自己儲存自己的感覺有點怪」；畫成普通泡泡沒 hover），使用者自己填單字（必填）、
   詞性、意思（選填），原句直接當例句。**沒有星號**（訊息旁與面板列都沒有，使用者：
   「都儲存成字典了，星號 UX 怪怪的」）、存過也不標記、面板列只有刪除。
   這是盤點 B6（LLM 抽字）的前置：LLM 進來只是預填欄位，同一個對話框。
@@ -133,7 +133,12 @@ P2 的（白板、反應、話題卡、單字庫）各自獨立一個檔，延�
     `socketRef.current = null` 會蓋掉活著的那條 —— 畫面顯示已連線、送出卻沒反應。要 `if (socketRef.current === socket)` 才清。
     Node 腳本測不出來（沒有 StrictMode），只有瀏覽器 dev 會中。
   - Chat 泡泡的頭像要用 `participant.avatar`，不是 id（id 已經是 Users.id）。
-- 還沒定：發表當天後端跑哪（本機 dev vs 部署）、視訊 LiveKit Cloud vs 四人 mesh、單字入庫。
+- **單字接 DB 了（2026-09-22 建）**：`Words` 表（見 [[data-model-decisions]]），API 用路徑分範圍（[[feedback-api-routes-not-query]]）。
+  `RoomProvider` 進房打 `GET /api/rooms/:code/words` 拿這場的字，`saveWord` 是 async 回 `SaveWordResult`（存進 DB 才進面板），
+  `removeWord(id: number)` 軟刪成功才移除。`SaveWordDialog` 的 pos 是 enum id（`WORD_POS` 在 `src/words/client.ts`，跟 db 同一份手抄），
+  duplicate 時框不關、顯示 `saveWord.duplicate`。`fakeRoom.json` 的 words 拿掉、`Room` 型別沒有 words 了。
+  用 curl 驗過：401 / 409 duplicate（含大小寫與前後空白）/ 400 各欄位 / 403 非成員 / 404 不存在 / 刪別人的 404 / 刪過再存是新列。
+- 還沒定：發表當天後端跑哪（本機 dev vs 部署）、視訊 LiveKit Cloud vs 四人 mesh。
 
 **How to apply:** 接後端前先讀這份確認 provider 的邊界。後端與部署的定案（LiveKit Cloud、tldraw
 自架在 Durable Objects、自有 WS、Neon）在 [[auth-backend-plan]]；白板換 tldraw 時只動 `Whiteboard.tsx`。

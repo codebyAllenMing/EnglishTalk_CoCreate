@@ -69,6 +69,9 @@ docker exec monstertalk-postgres-1 psql -U monstertalk -d monstertalk -c 'select
 測白板與聊天前先 `corepack pnpm db:seed`，再用 allen / luna / bobby 開 `/zh-TW/room/SEED09`；mia 是申請中，進不了房。
 聊天只活在 api 行程的記憶體：api 重啟訊息就沒了，房間結束 5 分鐘後也清掉。
 
+單字庫：進 SEED09 點任一則聊天泡泡存字，面板立刻出現、重新整理還在；同一個字（不分大小寫）再存會顯示「已經在你的單字庫裡了」；
+刪掉後可以再存。mia 打 `/api/rooms/SEED09/words` 會是 403。
+
 審核流程用 **bobby** 登入：SEED02 的詳情裡有 mia 的申請，可以同意 / 拒絕。
 申請流程用 **mia** 登入：週曆上 SEED02 是「申請中」（可取消申請），SEED01 / 03 / 06 / 07 / 08 是黃卡。
 
@@ -83,8 +86,25 @@ curl -s -b $J -H "Origin: http://localhost:6531" -H "Content-Type: application/j
   http://localhost:4000/api/rooms
 ```
 
+用 curl 存字 / 看整本（接在上面登入之後）：
+
+```bash
+curl -s -b $J -H "Origin: http://localhost:6531" -H "Content-Type: application/json" \
+  -d '{"word":"obsessed","pos":3,"meaning":"really like","example":"I am obsessed with bubble tea.","lang":"en"}' \
+  http://localhost:4000/api/rooms/SEED09/words
+curl -s -b $J http://localhost:4000/api/me/words
+```
+
+pos 是 enum id：1 名詞、2 動詞、3 形容詞、4 副詞、5 片語、6 成語、7 其他。
+
 清掉自己測試開的房（SEED 的留著）：
 
 ```bash
 docker exec monstertalk-postgres-1 psql -U monstertalk -d monstertalk -c "delete from \"Rooms\" where code not like 'SEED%';"
+```
+
+清掉自己測試存的字（Words 表整張是測試資料，沒有別人的）：
+
+```bash
+docker exec monstertalk-postgres-1 psql -U monstertalk -d monstertalk -c 'delete from "Words";'
 ```

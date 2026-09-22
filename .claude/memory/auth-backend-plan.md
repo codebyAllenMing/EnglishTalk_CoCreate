@@ -16,7 +16,7 @@ metadata:
 | `packages/auth` | `createAuth({ db, secret, baseURL, trustedOrigins })`、`verifySession(auth, headers)`（給 WS / tldraw 用）、`requireUser(auth)` Hono middleware（401 或 `c.var.user` / `c.var.session`；用 `returnHeaders: true` 把 better-auth 的滑動續期 Set-Cookie 轉回 response，2026-09-22 補的） |
 | `packages/live` | 聊天（之後計時器、反應）的 WS hub + Node 接頭，`/api/rooms/:code/live`；見 [[talk-room-state]] |
 | `packages/whiteboard` | tldraw sync 的 hub（`Map<code, TLSocketRoom>`）+ Node upgrade 接頭，auth / DB 用 authorize 回呼注入；見 [[talk-room-state]] |
-| `apps/api` | Hono + `@hono/node-server`，port 4000。`/health`、`/api/auth/*` 交給 better-auth、`routes/profile.ts` 有 `GET/PUT /api/me/profile` 與 `GET /api/avatars`、`routes/users.ts` 有 `GET /api/users`、`routes/presence.ts` 有心跳 / 離開 / 快照（2026-09-22）；`hono/logger` 每個請求印一行。`createApp(env)` 不綁執行環境，上 Workers 只換 `index.ts` |
+| `apps/api` | Hono + `@hono/node-server`，port 4000。`/health`、`/api/auth/*` 交給 better-auth、`routes/profile.ts` 有 `GET/PUT /api/me/profile` 與 `GET /api/avatars`、`routes/users.ts` 有 `GET /api/users`、`routes/presence.ts` 有心跳 / 離開 / 快照（2026-09-22）、`routes/rooms.ts` 房間全套、`routes/words.ts` 單字庫（`GET /api/me/words`、`GET/POST /api/rooms/:code/words`、`DELETE /api/me/words/:id`）；`hono/logger` 每個請求印一行。`createApp(env)` 不綁執行環境，上 Workers 只換 `index.ts` |
 | root | `docker-compose.yml`（postgres:17-alpine + Mailpit）、`.env.example`、`tsconfig.base.json`、scripts `dev:api` / `typecheck` / `db:generate` / `db:migrate` / `db:studio` |
 
 命名：表 PascalCase 複數（用 better-auth 的 `modelName` 對過去，adapter 的 `schema` map key 就是 modelName）、欄位 camelCase（better-auth 預設）。
@@ -90,7 +90,7 @@ wrangler 4.86 OAuth 已登入（`water6240@gmail.com`）；cloudflared 有憑證
 
 - ~~前端接 API~~ ~~/home 查 session、登出~~ **都做完了（2026-09-21）**，見 [[auth-pages-state]]。
   個人資料已進 DB 並接上畫面（2026-09-22，見 [[data-model-decisions]]）。登入流程剩的：已登入的人打 /login 沒有導回 /home
-- DB schema（除了 users）另開一場：個人資料欄位、房間預約、Word Bank、點數 ledger
+- DB schema：個人資料、房間、Word Bank 都建了；剩點數 ledger、通知
 - vault 的 `tech-inventory` 要改 —— **使用者說一聲才動**
 
 **How to apply:** 改 schema 一律 `db:generate` 產 migration 再 `db:migrate`，不手改 DB；secret 只放 `.env.local` / Workers secret。

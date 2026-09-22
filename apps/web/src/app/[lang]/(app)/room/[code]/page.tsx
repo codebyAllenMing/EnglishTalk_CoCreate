@@ -31,9 +31,9 @@ export async function generateMetadata(): Promise<Metadata> {
  *
  * 這一頁沒有任何一塊能留在 server：視訊、聊天、計時、白板全是即時互動。
  * 結構是「RoomGate（client，問 API 能不能進、拿成員）→ RoomProvider → server 殼 + 畫面」。
- * 成員與白板是真的；聊天、話題、單字、視訊仍是 mock，接 LiveKit / WebSocket 時只換 provider 的資料來源。
+ * 成員、白板、聊天、單字是真的；話題與視訊仍是 mock，接 LiveKit 時只換 provider 的資料來源。
  *
- * P2 的區塊（白板、反應、話題卡、單字庫）各自獨立一個檔，之後要延後是整檔拿掉。
+ * P2 的區塊（反應、話題卡）各自獨立一個檔，之後要延後是整檔拿掉。
  */
 export default async function RoomPage({ params }: PageProps<"/[lang]/room/[code]">) {
 	const { code } = await params;

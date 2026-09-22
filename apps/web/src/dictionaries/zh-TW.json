@@ -418,7 +418,7 @@
         },
         "chat": {
             "title": "聊天",
-            "hint": "點訊息可以把裡面的字存起來",
+            "hint": "點別人的訊息可以把裡面的字存起來",
             "placeholder": "輸入訊息…",
             "send": "送出",
             "emoji": "表情",
@@ -434,12 +434,15 @@
             "meaning": "意思",
             "meaningPlaceholder": "用你自己的話寫（選填）",
             "save": "存起來",
+            "duplicate": "這個字已經在你的單字庫裡了。",
+            "failed": "存不進去，請再試一次。",
             "posOptions": {
-                "n": "名詞",
-                "v": "動詞",
-                "adj": "形容詞",
-                "adv": "副詞",
+                "noun": "名詞",
+                "verb": "動詞",
+                "adjective": "形容詞",
+                "adverb": "副詞",
                 "phrase": "片語",
+                "idiom": "成語",
                 "other": "其他"
             }
         },
