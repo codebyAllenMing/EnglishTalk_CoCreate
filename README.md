@@ -6,6 +6,12 @@
 
 ---
 
+## 🚀 立即體驗
+
+**正式網址：https://talk.allenmingstudio.com**
+
+---
+
 ## 快速開始
 
 ### 發表講義
@@ -90,9 +96,6 @@ pnpm dev:api   # API 4000
 ---
 
 ## 上線環境
-
-**正式網址**  
-https://talk.allenmingstudio.com
 
 **更新流程**（Mac mini 上）
 ```bash
