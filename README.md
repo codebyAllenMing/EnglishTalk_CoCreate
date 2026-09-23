@@ -10,8 +10,8 @@
 
 ### 發表講義
 
-- **HTML 互動版** — `docs/presentation.html`（下載 repo 後雙擊用瀏覽器開啟）
-- **[Markdown 版](docs/presentation.md)** — 純文字版（GitHub 上直接看）
+- **[HTML 互動版](https://raw.githubusercontent.com/codebyAllenMing/EnglishTalk_CoCreate/main/docs/presentation.html)** — 線上直接看
+- **[Markdown 版](docs/presentation.md)** — GitHub 上純文字版
 
 ---
 
