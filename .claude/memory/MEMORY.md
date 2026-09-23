@@ -18,3 +18,4 @@
 - [dev 一律 https](feedback-dev-https.md) — 使用者習慣一開始就 https；Next --experimental-https + api 共用 mkcert 憑證
 - [API 範圍用 route 不用 query](feedback-api-routes-not-query.md) — 整本 /api/me/words、某房 /api/rooms/:code/words；query 只做篩選
 - [tldraw 授權：正式網域要金鑰](tldraw-license.md) — 沒金鑰 5 秒後編輯器消失（線上白板空白的真因）；免費 hobby / trial 金鑰、接法、Excalidraw 替代
+- [2026-09-23 發表講法與 demo 風險](presentation-2026-09-23.md) — 15 分鐘骨架（開場 / demo / 架構 / 今天的坑 / 邀請）、發表當天檢查清單
