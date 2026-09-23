@@ -39,8 +39,12 @@ function colorFor(id: string): string {
  * server 那邊一間房一個 TLSocketRoom（packages/whiteboard），握手時驗 session 與子單。
  *
  * ⚠️ 只能在瀏覽器跑（tldraw 要 window、useSync 要 WebSocket），所以由 index.tsx 用 next/dynamic 關掉 SSR 載入。
+ * ⚠️ 正式網域一定要 licenseKey：tldraw 把 https + 非 loopback host 一律當 production，沒金鑰 5 秒後編輯器整個卸掉、
+ *    Console 印「A license is required for production deployments」（2026-09-23 線上白板空白的真因）。
+ *    金鑰從 NEXT_PUBLIC_TLDRAW_LICENSE_KEY 來（build 時讀 apps/web/.env.local），tldraw.dev 的 hobby license 免費、非商業。
  * 換 Excalidraw 只動這個檔案，外面的收合、標題列不變。
  */
+const LICENSE_KEY = process.env.NEXT_PUBLIC_TLDRAW_LICENSE_KEY || undefined;
 export default function Board({ code, locale, unavailable }: Props) {
 	const { user: me } = useSession();
 	const meId = me?.id ?? "anonymous";
@@ -83,7 +87,7 @@ export default function Board({ code, locale, unavailable }: Props) {
 
 	return (
 		<div className="h-72 overflow-hidden rounded-xl border border-ink-100 sm:h-96">
-			<Tldraw store={store} user={user} />
+			<Tldraw store={store} user={user} licenseKey={LICENSE_KEY} />
 		</div>
 	);
 }

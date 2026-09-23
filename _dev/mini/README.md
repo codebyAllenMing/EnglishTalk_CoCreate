@@ -35,6 +35,12 @@ CF_REALTIME_APP_SECRET=<同 MacBook>
 # TLS_CERT / TLS_KEY 留空：origin 走 http，https 由 Cloudflare 邊緣負責
 ```
 
+白板的 tldraw 金鑰放 **`apps/web/.env.local`**（build 時內嵌，跟上面那份不同檔）：
+
+```
+NEXT_PUBLIC_TLDRAW_LICENSE_KEY=<tldraw.dev 的 hobby license>
+```
+
 ```bash
 # 4. DB
 docker compose up -d

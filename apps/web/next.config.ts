@@ -39,6 +39,9 @@ const nextConfig: NextConfig = {
 		// 靜態匯出沒有後端，給空字串（見 src/api.ts）
 		NEXT_PUBLIC_API_ORIGIN: process.env.NEXT_PUBLIC_API_ORIGIN ?? "",
 		NEXT_PUBLIC_API_PORT: isStaticExport ? "" : (process.env.NEXT_PUBLIC_API_PORT ?? "4000"),
+		// tldraw 在 localhost 以外的網域沒金鑰會在 5 秒後把編輯器收掉（2026-09-23 線上白板一片空白的真因）。
+		// 金鑰綁網域、會進瀏覽器 bundle，不是 secret，但照慣例放 apps/web/.env.local 不進 repo；dev 不用
+		NEXT_PUBLIC_TLDRAW_LICENSE_KEY: process.env.NEXT_PUBLIC_TLDRAW_LICENSE_KEY ?? "",
 	},
 };
 
