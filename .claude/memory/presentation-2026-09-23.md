@@ -1,20 +1,58 @@
 ---
 name: presentation-2026-09-23
 description: 2026-09-23 晚上發表的講法骨架與 demo 風險清單（線上站已就緒），使用者切到便宜模型討論講稿時接續用
-metadata:
+metadata: 
+  node_type: memory
   type: project
+  originSessionId: 43c6ebd9-ddfb-46cf-9585-e56f92cebdd7
+  modified: 2026-09-23T14:21:12.686Z
 ---
 
-**狀態**：2026-09-23 下午線上（talk.allenmingstudio.com，mini）功能全驗過：視訊、白板（tldraw 評估金鑰）、聊天 + 計時器（keepalive 已修）、通知、單字。
+## 發表完成（2026-09-23 已執行）
 
-**講法骨架（15 分鐘版）**，使用者還沒回答：聽眾是誰、多長、能不能 live demo。
-1. 一句話開場（不講技術）：兩個人約時間、一半中文一半英文，有視訊、白板、聊天，講到的字可以存。
-2. Live demo 5 分：手機 allen + 電腦阿銘 → home「接下來的房間」進房 → 視訊互看 → 打字 → 點對方訊息存字 → 白板兩邊同步
-   → ⇄ 看 5 秒緩衝與計時同步 → 回 home 鈴鐺看通知 → Find Monsters 打招呼對面亮。
-3. 架構與選擇 5 分：限制先講（零預算、幾天、要上線）；一張圖 Next / Hono / Postgres / 一條 WS 分流 / tldraw sync /
-   Cloudflare Realtime SFU 只轉媒體 / Tunnel 從家裡 mini 對外；三個決定：計時器 server 只送錨點、視訊代打路由藏 secret、通知只寫不刪讀時去重。
-4. 今天踩的坑 2 分：tldraw 正式網域沒金鑰 5 秒自毀；Cloudflare 閒置 WS 100 秒逾時 → ping/pong；怎麼找到的（無頭 Chrome 帶 cookie 抓 WS 事件）。
-5. 接下來 + 邀請：搬 Workers、評分代幣、找人一起做。
+### ✅ 完成
 
-**Demo 風險清單**：發表前一小時 `db:seed` + `pm2 restart monstertalk-api`；mini 別重開機（沒 pm2 startup，重開要手動起三個，
-別 `pm2 resurrect` 會起到 foodbot）；會場 Wi-Fi 先用手機測視訊，連不上開 4G 熱點；兩個帳號先登入好；tldraw 金鑰 10/7 到期。
+**講稿** — 5 分鐘版本，非技術觀眾（共創夥伴，Phoeph & Allen）
+- 聽眾：共創的夥伴，基本上都是非技術人員
+- 時間：5 分鐘
+- 無法 live demo：專案需要兩人互動（視訊、語音、白板、聊天），一人無法示範
+- 內容：開場 30 秒 → 痛點 + 解決 1 分鐘 → 故事 2.5 分鐘 → 邀請 1 分鐘
+
+**講義** — 可愛風格 HTML，完整講稿 + 8 張截圖
+- `docs/presentation.html` — HTML 版本（圖片改用絕對 URL）
+- `docs/presentation.md` — Markdown 純文字版
+- `docs/screenshots/` — 01-landing、02-login、03-signup、04-home-week、05-home-overview、06-room-overview、06-room-overview-board、07-profile-settings
+
+**README**
+- 新建 `README.md`，含專案說明、功能、技術棧、開發環境、上線流程、發表檢查清單
+- 署名：Phoeph & Allen 共創專案
+- GitHub 連結失效（raw.githubusercontent 只顯示源碼），改用本機投影
+
+**演講房間**
+- 代碼：YLSTV2
+- 名稱：專題演講-1
+- 時間：2026-09-23 20:00-21:00（台北時間）
+- Host：water6240@gmail.com
+- 已建立並修正時間（先建 20:30，再在 DB 改回 20:00）
+
+### ⚠️ 已知限制
+
+- GitHub raw.githubusercontent 無法渲染 HTML（只顯示源碼）
+- 房間開始時間不能少於 30 分鐘後（應用層驗證）
+
+### 發表流程
+
+本機投影：
+```bash
+open ~/Documents/GIT/EnglishTalk_CoCreate/docs/presentation.html
+```
+
+演講房間：YLSTV2（https://talk.allenmingstudio.com/room/YLSTV2）
+
+### 發表前檢查清單
+
+- [ ] `curl https://talk.allenmingstudio.com/health` 回 `{"ok":true}`
+- [ ] `pm2 status` 確認三服務 online
+- [ ] 若有空閒時間，發表前一小時 `db:seed` + `pm2 restart monstertalk-api`
+- [ ] tldraw 金鑰有效（10/7 前需更新）
+- [ ] 會場 Wi-Fi 先用手機測視訊（連不上改 4G 熱點）
