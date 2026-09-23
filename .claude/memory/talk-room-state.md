@@ -197,3 +197,9 @@ P2 的（白板、反應、話題卡、單字庫）各自獨立一個檔，延�
 
 **How to apply:** 接後端前先讀這份確認 provider 的邊界。後端與部署的定案（LiveKit Cloud、tldraw
 自架在 Durable Objects、自有 WS、Neon）在 [[auth-backend-plan]]；白板換 tldraw 時只動 `Whiteboard.tsx`。
+
+- **2026-09-23 上線後兩個坑**（都已修）：(1) 白板一片空白 = tldraw 授權，見 [[tldraw-license]]；
+  (2) **視訊每 131 秒「重新開啟中」** = Cloudflare 對閒置 WebSocket 的 **100 秒逾時**：live 這條進房後只有 hello 和一次 media，
+  沒人打字就沒封包 → 邊緣切線 → useLive 重連 → useSfu「WS 斷過再連上」整個重開視訊。白板的 WS 沒事是因為 tldraw 自己 ping。
+  修法：協定加 `ping` / `pong`，useLive 每 30 秒送 ping、hub 回 pong。用兩個無頭 Chrome（CDP 腳本）撐 210 秒驗過不再斷。
+  ⚠️ 之後任何經 Cloudflare 的長連線都要有 keepalive；驗證方法是兩個無頭 Chrome 帶 cookie 進房、看 Network.webSocketClosed。
