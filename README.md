@@ -10,7 +10,7 @@
 
 ### 發表講義
 
-- **[HTML 互動版](https://codebyAllenMing.github.io/EnglishTalk_CoCreate/docs/presentation.html)** — 線上直接看
+- **[HTML 互動版](https://codebyAllenMing.github.io/EnglishTalk_CoCreate/presentation.html)** — 線上直接看
 - **[Markdown 版](docs/presentation.md)** — GitHub 上純文字版
 
 ---
