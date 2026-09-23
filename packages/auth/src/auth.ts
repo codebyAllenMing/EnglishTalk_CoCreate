@@ -11,6 +11,11 @@ export type AuthOptions = {
 	baseURL: string;
 	/** 允許帶 cookie 打進來的前端 origin */
 	trustedOrigins: string[];
+	/**
+	 * 使用者建好之後（註冊那一筆 insert 完）呼叫；acceptLanguage 是註冊請求的 Accept-Language，
+	 * 個人資料這時還是預設值，要猜他看哪一語只能靠這個。這裡丟出的錯不會讓註冊失敗，呼叫端自己留痕。
+	 */
+	onUserCreated?: (user: { id: string; name: string }, request: { acceptLanguage: string | null }) => Promise<void>;
 };
 
 /**
@@ -21,11 +26,21 @@ export type AuthOptions = {
 /** 四張表都有的兩欄，better-auth 名 → DB 欄位名 */
 const TIMESTAMPS = { createdAt: "createDate", updatedAt: "updateDate" } as const;
 
-export function createAuth({ db, secret, baseURL, trustedOrigins }: AuthOptions) {
+export function createAuth({ db, secret, baseURL, trustedOrigins, onUserCreated }: AuthOptions) {
 	return betterAuth({
 		secret,
 		baseURL,
 		trustedOrigins,
+		databaseHooks: {
+			user: {
+				create: {
+					after: async (user, ctx) => {
+						if (!onUserCreated) return;
+						await onUserCreated(user, { acceptLanguage: ctx?.headers?.get("accept-language") ?? null });
+					},
+				},
+			},
+		},
 		database: drizzleAdapter(db, {
 			provider: "pg",
 			// key 要對上下面各 modelName，adapter 用 modelName 來這張表找 Drizzle table

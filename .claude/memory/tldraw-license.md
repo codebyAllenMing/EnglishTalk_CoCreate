@@ -17,6 +17,10 @@ dev（https://localhost:6531）永遠看不到，只有正式網域會炸。serv
 **100 天免費 trial 不用綁卡**（先拿這個撐發表）。金鑰綁網域，dev 不用。
 金鑰不是 secret（會進瀏覽器 bundle），但照專案慣例放 env 不進 repo。
 
+**狀態（2026-09-23 下午）**：已接 `<Tldraw licenseKey>`（env `NEXT_PUBLIC_TLDRAW_LICENSE_KEY`，next.config 內嵌；mini 放 `apps/web/.env.local`）。
+Hobby 申請已送（email water6240@gmail.com、網域 talk.allenmingstudio.com），tldraw 立刻回了一把 **14 天評估金鑰（any host，2026-10-07 到期）**，
+mini 已用它重 build、線上白板驗證正常。**Hobby 正式金鑰下來要換掉 env 那串再 build 一次**，10/7 前一定要換。
+
 **替代**：Excalidraw（MIT、沒有金鑰機制）但沒有官方 sync，要自己寫廣播；Board.tsx 註解就是為這個留的縫。
 
 **How to apply:** 換白板引擎或 tldraw 升版時先看 LicenseProvider 的 `shouldHideEditorAfterDelay`；正式站白板空白先查 Console 有沒有這段紅字。

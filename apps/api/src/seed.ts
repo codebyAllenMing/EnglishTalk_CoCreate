@@ -1,8 +1,9 @@
-import { eq, like } from "drizzle-orm";
+import { eq, inArray, like } from "drizzle-orm";
 import { createAuth, isAPIError } from "@monstertalk/auth";
 import { createDb, schema } from "@monstertalk/db";
 import type { Country, Lang, Level, RoomDuration, RoomMemberStatus, RoomTypeId } from "@monstertalk/db/schema";
 import { loadEnv } from "./env.ts";
+import { notify } from "./notify.ts";
 
 /**
  * dev 測試帳號。11 個人對應前端 mock 的 11 隻怪獸（FAKE_PROFILE 的 allen + fakeMonsters.json 的十隻），
@@ -13,6 +14,7 @@ import { loadEnv } from "./env.ts";
  * 可重複執行：帳號已存在就跳過建立，**密碼與個人資料每次都覆寫回這裡的值**，
  * 所以在設定頁亂改（或改了密碼）之後想還原就重跑一次。
  * 房間（測週曆用）是相對「本週」排的，每次重跑先刪掉自己建的 SEED* 房再建；使用者自己開的房不動。
+ * 通知：每次重跑把測試帳號的通知清掉，再寫幾則讓鈴鐺有東西（allen 三則已讀三則未讀）。
  * 建帳號走 better-auth 的 server-side API（auth.api.signUpEmail）而不是直接 insert，
  * 密碼 hash 與 Accounts 那一列才會跟真的註冊一模一樣；個人資料欄位 better-auth 不認識，用 Drizzle 直接 update。
  */
@@ -155,6 +157,9 @@ function at(day: number | "now", time: string): Date {
 	return new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + day, h, m);
 }
 
+/** code → 建好的房（通知的文案要房名與時間） */
+const seededRooms = new Map<string, { title: string; startDate: Date }>();
+
 await db.delete(schema.rooms).where(like(schema.rooms.code, "SEED%"));
 for (const r of SEED_ROOMS) {
 	const hostId = userIds.get(r.host);
@@ -166,6 +171,7 @@ for (const r of SEED_ROOMS) {
 		.values({ code: r.code, hostId, title: r.title, startDate, endDate, durationMinutes: r.duration, capacity: r.capacity, roomType: r.roomType })
 		.returning({ id: schema.rooms.id });
 	if (!room) throw new Error(`${r.code} insert 沒有回傳列`);
+	seededRooms.set(r.code, { title: r.title, startDate });
 	await db.insert(schema.roomMembers).values([
 		{ roomId: room.id, userId: hostId, role: "host", status: "approved" },
 		...r.members.map((m) => {
@@ -177,4 +183,34 @@ for (const r of SEED_ROOMS) {
 	console.log(`+ ${r.code} ${r.host.padEnd(6)} ${startDate.toLocaleString("zh-TW")}  ${r.duration} 分  ${r.title || "(無標題)"}`);
 }
 console.log(`房間 ${SEED_ROOMS.length} 間已重建（相對本週）。`);
+
+// ---- 通知（鈴鐺有東西可看）----
+
+const uid = (id: string) => {
+	const userId = userIds.get(id);
+	if (!userId) throw new Error(`SEED_USERS 沒有 ${id}`);
+	return userId;
+};
+const displayName = (id: string) => ({ name: id.charAt(0).toUpperCase() + id.slice(1) });
+const seededRoom = (code: string) => {
+	const room = seededRooms.get(code);
+	if (!room) throw new Error(`SEED_ROOMS 沒有 ${code}`);
+	return room;
+};
+
+// 只清測試帳號的，使用者自己註冊的帳號不動（註冊時 auth hook 寫的歡迎也會被這裡清掉重寫）
+await db.delete(schema.notifications).where(inArray(schema.notifications.userId, [...userIds.values()]));
+// allen：三則舊的已讀
+await notify(db, uid("allen"), "welcome");
+await notify(db, uid("allen"), "roomCreated", { room: seededRoom("SEED01") });
+await notify(db, uid("allen"), "joinApproved", { room: seededRoom("SEED02"), actor: displayName("bobby") });
+await db.update(schema.notifications).set({ isRead: true }).where(eq(schema.notifications.userId, uid("allen")));
+// allen：三則未讀（申請、招呼、要開始了）
+await notify(db, uid("allen"), "joinRequested", { room: seededRoom("SEED09"), actor: displayName("mia") });
+await notify(db, uid("allen"), "greeting", { actor: displayName("luna") });
+await notify(db, uid("allen"), "roomStarting", { room: seededRoom("SEED09") });
+// 對面的人各一則，換帳號測也有東西
+await notify(db, uid("luna"), "joinApproved", { room: seededRoom("SEED09"), actor: displayName("allen") });
+await notify(db, uid("bobby"), "joinRequested", { room: seededRoom("SEED02"), actor: displayName("mia") });
+console.log("通知已寫入：allen 3 則已讀 + 3 則未讀、luna 1 則、bobby 1 則。");
 process.exit(0);

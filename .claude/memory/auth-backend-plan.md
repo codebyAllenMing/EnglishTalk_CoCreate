@@ -90,7 +90,7 @@ wrangler 4.86 OAuth 已登入（`water6240@gmail.com`）；cloudflared 有憑證
 
 - ~~前端接 API~~ ~~/home 查 session、登出~~ **都做完了（2026-09-21）**，見 [[auth-pages-state]]。
   個人資料已進 DB 並接上畫面（2026-09-22，見 [[data-model-decisions]]）。登入流程剩的：已登入的人打 /login 沒有導回 /home
-- DB schema：個人資料、房間、Word Bank 都建了；剩點數 ledger、通知
+- DB schema：個人資料、房間、Word Bank、通知都建了；剩點數 ledger
 - vault 的 `tech-inventory` 要改 —— **使用者說一聲才動**
 
 **How to apply:** 改 schema 一律 `db:generate` 產 migration 再 `db:migrate`，不手改 DB；secret 只放 `.env.local` / Workers secret。

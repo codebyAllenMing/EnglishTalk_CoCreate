@@ -108,14 +108,20 @@ metadata:
 - 來源三期、介面不變：mock 房 = 房間路由；LiveKit Cloud = webhook `participant_joined / left`；自有 WS = hub 的連線 / 斷線。
 - 前端：第三個狀態 `inRoom`，卡片顯示「通話中」、點換主色、「線上中」篩選三個都算；「打聲招呼」對通話中的人可灰掉。
 
-### 通知（2026-09-22 討論，延後）
+### 通知（2026-09-23 定案並建好：`packages/db/src/schema/notification.ts`、migration `0006_notifications`、`apps/api/src/notify.ts`、`routes/notifications.ts`、`reminders.ts`）
 
-通知是純消費者，每一則都是房間 / 訊息 / 評分產生的事件，那些都還沒建，所以先不做；頂部列的鈴鐺與 `notifications: 2` 留假的到發表。
-到時候照這個形狀做、不用返工：
-- `Notifications(userId, type, refType, refId, payload jsonb, createDate, readDate)`，**存資料不存文案**，文案前端依 type 從字典組（雙語）。
-- 產生端統一走 `notify(userId, type, ref, payload)`，房間 / 訊息路由都呼叫它，之後加 email / push 只改這一處。
-- 送達：先 30 秒輪詢 `GET /api/notifications?unread=1`（跟 presence 同節奏），自有 WS 蓋好改推；徽章 = `readAt is null` 的 count，`PATCH /api/notifications/read`。
-- 第一則通知會是房主審核制的「申請加入 / 同意 / 拒絕」，房間路由建好時一起掛。
+使用者推翻 9/22 的多型參照設計，改成**「只是訊息」**：
+- 表 `Notifications(id, userId, type smallint, text, isRead boolean, createDate)`，**只寫不刪**、不存參照、不帶 link，點了不跳頁。
+- `text` 是寫入那一刻 server 依收件人 `Users.nativeLang` 組好的整句（模板在 `notify.ts`，zh / en 各一組，時間一律台灣時區）。
+- **允許重複寫，讀的時候用 `text` 去重**（`distinct on (text)` 留最新一列；徽章 = `count(distinct text) where isRead = false`）。
+  所以模板不能放秒數、流水號這種每次不同的東西。
+- 已讀：打開鈴鐺就整批翻 `isRead = true`（`POST /api/me/notifications/read`），不會翻回來。
+- 十種 type（`NOTIFICATION_TYPES`，id 只能往後加）：roomCreated（給房主自己）、roomStarting（開始前 5 分鐘 = 進房窗）、
+  joinRequested、joinApproved、joinRejected、roomCancelled、memberLeft（approved 的才算）、roomEnded、greeting、welcome。
+- **寫入點全在 server、前端只讀**（使用者強調「別跟我說前端多打一支 API」）：房間路由同一交易裡緊接狀態變更之後；
+  `reminders.ts` 每 60 秒掃 Rooms（窗 (上次, 現在]，重啟跳過停機期間）；better-auth `user.create.after` hook 寫歡迎
+  （語言看 Accept-Language）；`POST /api/users/:id/greet` 打招呼。
+- 送達：徽章數搭 presence 心跳（`POST /api/me/presence` 回 `{ unread }`），不另開輪詢；鈴鐺打開才拉清單。
 
 ### Word Bank（2026-09-22 定案並建好：`packages/db/src/schema/word.ts`、migration `0005_words`、`apps/api/src/routes/words.ts`、`apps/web/src/words/client.ts`）
 

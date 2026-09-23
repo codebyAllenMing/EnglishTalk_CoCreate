@@ -120,6 +120,21 @@ docker exec monstertalk-postgres-1 psql -U monstertalk -d monstertalk -c "delete
 docker exec monstertalk-postgres-1 psql -U monstertalk -d monstertalk -c 'delete from "Words";'
 ```
 
+## 通知（2026-09-23）
+
+`db:seed` 會清掉測試帳號的通知再寫幾則：allen 三則已讀（歡迎、開了 SEED01、bobby 同意 SEED02）+ 三則未讀
+（mia 申請 SEED09、luna 打招呼、SEED09 要開始了）；luna、bobby 各一則未讀。
+
+- 徽章數搭心跳（每 60 秒），登入後最多等一分鐘；鈴鐺打開就整批已讀、徽章歸零。
+- 觸發新的：另一個帳號在 Find Monsters 點你「打聲招呼」；申請加入你開的房（你收到）→ 你在卡片同意 / 拒絕（對方收到）；
+  取消你開的房（已加入的人收到）。同一句話只會顯示一則（`text` 去重）。
+- 「要開始了」「結束了」由 api 每分鐘掃：想看就用 SQL 塞一間 5 分半後開始的房，等一分多鐘。
+- 全部通知看 DB：
+
+```bash
+docker exec monstertalk-postgres-1 psql -U monstertalk -d monstertalk -c 'select u.email, n.type, n.text, n."isRead", n."createDate" from "Notifications" n join "Users" u on u.id = n."userId" order by n.id desc limit 20;'
+```
+
 ## https（2026-09-22 起 dev 一律 https）
 
 - 前端 `corepack pnpm dev` = `next dev --experimental-https`，憑證在 `apps/web/certificates/`（gitignore），

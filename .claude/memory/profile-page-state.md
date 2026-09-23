@@ -10,7 +10,7 @@ metadata:
 設計稿 `assets/design/個人主頁.jpg`（1448×1086）。骨架、側邊欄與 **My Schedule 週曆**已完成。
 
 > **2026-09-22 更新**：個人資料卡、頂部列頭像、設定頁已接真資料（`ProfileProvider` + `GET/PUT /api/me/profile`，
-> 見 [[data-model-decisions]]）。`FAKE_PROFILE` 只剩評價 / 代幣 / 線上 / 通知；`FAKE_AVATAR_CHOICES` 改名 `AVATAR_CATALOG`
+> 見 [[data-model-decisions]]）。`FAKE_PROFILE` 只剩評價 / 代幣 / 線上（通知 2026-09-23 接真的：`NotificationBell`，徽章搭心跳、打開整批已讀）；`FAKE_AVATAR_CHOICES` 改名 `AVATAR_CATALOG`
 > （鏡射 DB 的 Avatars 表，`owned` 仍是假的 `FAKE_OWNED`）。ProfileCard 已是 client 元件（載到前畫骨架）。
 > **Find Monsters 也接真資料了**（同日稍晚）：名單 `GET /api/users`、線上狀態 `GET /api/presence` 每 30 秒；
 > `fakeMonsters.json` / `FAKE_MONSTERS` 已刪。卡片藥丸與面板改顯示線上狀態，「房間最多 N 人」「下次有空」「名額」
@@ -23,7 +23,7 @@ metadata:
 | 區塊 | 內容 | 複雜度 |
 |---|---|---|
 | 左側邊欄 | Logo、個人資料卡、7 項選單、邀請卡 | 中 |
-| 頂部列 | Token 數、通知鈴鐺、頭像下拉 | 低 |
+| 頂部列 | Token 數、頭像下拉（通知鈴鐺已接 API） | 低 |
 | My Schedule | 週曆：7 天 × 時間軸、四種時段卡片、圖例、時區 | **高** |
 | Find Monsters | 篩選列 + 10 張怪獸卡 + 右側可關閉詳情面板 | 中高 |
 

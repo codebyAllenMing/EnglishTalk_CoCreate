@@ -10,6 +10,7 @@ import { attachWhiteboardServer, type UpgradeDecision } from "@monstertalk/white
 import { createApp } from "./app.ts";
 import { loadEnv } from "./env.ts";
 import { logError, logInfo } from "./log.ts";
+import { startReminders } from "./reminders.ts";
 import { ROOM_TYPES } from "@monstertalk/db/schema";
 import { roomAccess, roomUser } from "./rooms/access.ts";
 
@@ -99,8 +100,15 @@ attachLiveServer(server, {
 	},
 });
 
+// 時間到的通知（要開始了 / 結束了）：每分鐘掃一次 Rooms。搬 Workers 時換 Cron Trigger
+const stopReminders = startReminders(db, {
+	log: (m) => logInfo("reminders", m),
+	onError: (error, context) => logError("reminders", error, context),
+});
+
 for (const signal of ["SIGINT", "SIGTERM"] as const) {
 	process.on(signal, () => {
+		stopReminders();
 		live.closeAll();
 		whiteboard.closeAll();
 		server.close();

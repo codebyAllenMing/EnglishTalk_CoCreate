@@ -1,9 +1,8 @@
-import { Bell } from "lucide-react";
 import LocaleSwitch from "@/Components/LocaleSwitch";
-import CountBadge from "@/Components/UI/CountBadge";
 import TokenCount from "@/Components/UI/TokenCount";
 import { getDictionary, getLocale, locales } from "@/dictionaries";
 import AccountMenu from "./AccountMenu";
+import NotificationBell from "./NotificationBell";
 import { FAKE_PROFILE } from "./profileData";
 
 /**
@@ -12,7 +11,8 @@ import { FAKE_PROFILE } from "./profileData";
  * 語言切換放最左而不是最右：頭像留在最右角是通用慣例，使用者找帳號選單會往那裡看。
  *
  * 帳號選單（AccountMenu，client）目前只有登出，頭像從 ProfileProvider 來。
- * ⚠️ 代幣與通知數仍是 FAKE_PROFILE。通知還沒有內容，等真的有東西可展開再說。
+ * 通知（NotificationBell，client）走 /api/me/notifications，徽章數搭心跳。
+ * ⚠️ 代幣仍是 FAKE_PROFILE。
  */
 export default async function TopBar() {
 	const dict = await getDictionary();
@@ -32,17 +32,7 @@ export default async function TopBar() {
 				<TokenCount count={p.tokens} label={topBar.tokens} />
 			</span>
 
-			<button
-				type="button"
-				aria-label={topBar.notifications}
-				className="relative rounded-full p-1.5 text-ink-600 transition-colors hover:text-primary-600"
-			>
-				<Bell aria-hidden="true" className="size-5" />
-				{/* badge 疊在鈴鐺右上角，超出按鈕範圍是刻意的 */}
-				<span className="absolute -top-0.5 -right-1">
-					<CountBadge count={p.notifications} label={topBar.notifications} />
-				</span>
-			</button>
+			<NotificationBell locale={locale} dict={dict.profile.notifications} />
 
 			<AccountMenu locale={locale} label={topBar.account} logoutLabel={topBar.logout} />
 		</div>

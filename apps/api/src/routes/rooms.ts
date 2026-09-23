@@ -15,6 +15,7 @@ import {
 	type RoomDuration,
 	type RoomTypeId,
 } from "@monstertalk/db/schema";
+import { notify } from "../notify.ts";
 import { roomAccess } from "../rooms/access.ts";
 
 export type ScheduleKind = "hosted" | "session";
@@ -105,7 +106,9 @@ const CODE_ATTEMPTS = 5;
  *
  * 規則放 app 層的交易裡：同一人 approved 的房不重疊（申請時查、同意時再查一次）、名額只算 approved
  * （申請時查、同意時再查一次）。不做 DB 的 exclusion constraint（drizzle 要 raw SQL，發表前不值得）。
- * 通知還沒有：房主要點開卡片才看得到申請。
+ *
+ * 通知（notify）寫在**同一個交易裡**、緊接在狀態改完之後：開房給房主自己、申請給房主、審核給申請者、
+ * 取消給已加入的成員、退出（approved 的才算）給房主。前端不另外打，狀態改了通知一定有。
  */
 export function roomsRoutes(auth: Auth, db: Db) {
 	const app = new Hono();
@@ -298,6 +301,7 @@ export function roomsRoutes(auth: Auth, db: Db) {
 			await tx
 				.insert(schema.roomMembers)
 				.values({ roomId: created.id, userId: me, role: "host", status: "approved" });
+			await notify(tx, me, "roomCreated", { room: created });
 			return created;
 		});
 		if (!room) return c.json({ error: "overlap" }, 409);
@@ -332,6 +336,7 @@ export function roomsRoutes(auth: Auth, db: Db) {
 			} else {
 				await tx.insert(schema.roomMembers).values({ roomId: room.id, userId: me, role: "member", status: "requested" });
 			}
+			await notify(tx, room.hostId, "joinRequested", { room, actor: c.var.user });
 			return { taken };
 		});
 		if ("error" in result) return c.json({ error: result.error }, 409);
@@ -355,10 +360,14 @@ export function roomsRoutes(auth: Auth, db: Db) {
 		if (row.member.role === "host") return c.json({ error: "host" }, 409);
 		if (row.member.status !== "requested" && row.member.status !== "approved") return c.json({ error: "notMember" }, 409);
 
-		await db
-			.update(schema.roomMembers)
-			.set({ status: "left", updateDate: new Date() })
-			.where(eq(schema.roomMembers.id, row.member.id));
+		await db.transaction(async (tx) => {
+			await tx
+				.update(schema.roomMembers)
+				.set({ status: "left", updateDate: new Date() })
+				.where(eq(schema.roomMembers.id, row.member.id));
+			// 申請中就收回的不算退出，房主不用知道
+			if (row.member.status === "approved") await notify(tx, row.room.hostId, "memberLeft", { room: row.room, actor: c.var.user });
+		});
 		return c.body(null, 204);
 	});
 
@@ -391,6 +400,7 @@ export function roomsRoutes(auth: Auth, db: Db) {
 				.update(schema.roomMembers)
 				.set({ status: decision === "approve" ? "approved" : "rejected", updateDate: new Date() })
 				.where(eq(schema.roomMembers.id, member.id));
+			await notify(tx, applicant, decision === "approve" ? "joinApproved" : "joinRejected", { room, actor: c.var.user });
 			return {};
 		});
 		if ("error" in result) return c.json({ error: result.error }, 409);
@@ -406,10 +416,28 @@ export function roomsRoutes(auth: Auth, db: Db) {
 		if (room.startDate.getTime() <= Date.now()) return c.json({ error: "started" }, 409);
 
 		const now = new Date();
-		await db
-			.update(schema.rooms)
-			.set({ cancelDate: now, updateDate: now })
-			.where(and(eq(schema.rooms.id, room.id), isNull(schema.rooms.cancelDate)));
+		await db.transaction(async (tx) => {
+			await tx
+				.update(schema.rooms)
+				.set({ cancelDate: now, updateDate: now })
+				.where(and(eq(schema.rooms.id, room.id), isNull(schema.rooms.cancelDate)));
+			const members = await tx
+				.select({ userId: schema.roomMembers.userId })
+				.from(schema.roomMembers)
+				.where(
+					and(
+						eq(schema.roomMembers.roomId, room.id),
+						eq(schema.roomMembers.status, "approved"),
+						ne(schema.roomMembers.userId, room.hostId),
+					),
+				);
+			await notify(
+				tx,
+				members.map((m) => m.userId),
+				"roomCancelled",
+				{ room, actor: c.var.user },
+			);
+		});
 		return c.body(null, 204);
 	});
 

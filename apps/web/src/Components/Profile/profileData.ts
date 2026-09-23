@@ -11,7 +11,6 @@ export const FAKE_PROFILE = {
 	reputation: 4.8,
 	tokens: 320,
 	online: true,
-	notifications: 2,
 } as const;
 
 export type LangCode = keyof Dictionary["profile"]["lang"];

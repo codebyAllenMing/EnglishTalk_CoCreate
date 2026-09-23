@@ -1,4 +1,4 @@
-import { BarChart3, CalendarDays, MessageCircle } from "lucide-react";
+import { BarChart3, CalendarDays, Check, MessageCircle } from "lucide-react";
 import Avatar from "@/Components/UI/Avatar";
 import LangBadge from "@/Components/UI/LangBadge";
 import type { Dictionary } from "@/dictionaries";
@@ -10,6 +10,9 @@ type Props = {
 	locale: string;
 	dict: Dictionary["profile"]["monsters"];
 	levelDict: Dictionary["profile"]["level"];
+	/** 「打聲招呼」：沒給就是純視覺（設定頁的預覽） */
+	onGreet?: () => void;
+	greet?: "idle" | "sending" | "sent";
 };
 
 /**
@@ -20,9 +23,10 @@ type Props = {
  * 外框（右欄 / 底部浮層 / 對話框）由呼叫端決定，這裡只管內容。
  *
  * 設計稿還有「房間最多 4 人」與「下次有空」兩塊，資料要等房間與空檔的表，先拿掉不擺假的。
- * 兩顆按鈕（查看行程、打聲招呼）目前都是純視覺 —— 對應的頁面與 API 都還不存在。
+ * 「查看行程」仍是純視覺（別人的行程頁還沒有）；「打聲招呼」給對方一則通知（POST /api/users/:id/greet），
+ * 送過一次就鎖住，免得連點變成騷擾。
  */
-export default function MonsterDetails({ monster, locale, dict, levelDict }: Props) {
+export default function MonsterDetails({ monster, locale, dict, levelDict, onGreet, greet = "idle" }: Props) {
 	const status = describePresence(monster, locale, dict);
 
 	return (
@@ -68,10 +72,16 @@ export default function MonsterDetails({ monster, locale, dict, levelDict }: Pro
 				</button>
 				<button
 					type="button"
-					className="flex items-center justify-center gap-2 rounded-xl border border-ink-100 px-4 py-3 font-extrabold text-primary-600 transition-colors hover:border-primary-300 hover:bg-primary-50"
+					onClick={onGreet}
+					disabled={!!onGreet && greet !== "idle"}
+					className="flex items-center justify-center gap-2 rounded-xl border border-ink-100 px-4 py-3 font-extrabold text-primary-600 transition-colors hover:border-primary-300 hover:bg-primary-50 disabled:cursor-default disabled:opacity-60 disabled:hover:border-ink-100 disabled:hover:bg-transparent"
 				>
-					<MessageCircle aria-hidden="true" className="size-4" />
-					{dict.panel.sayHello}
+					{greet === "sent" ? (
+						<Check aria-hidden="true" className="size-4" strokeWidth={3} />
+					) : (
+						<MessageCircle aria-hidden="true" className="size-4" />
+					)}
+					{greet === "sent" ? dict.panel.helloDone : dict.panel.sayHello}
 				</button>
 			</div>
 		</>

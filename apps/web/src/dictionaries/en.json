@@ -191,6 +191,12 @@
             "title": "Invite friends, get tokens!",
             "cta": "Invite Now"
         },
+        "notifications": {
+            "title": "Notifications",
+            "empty": "No notifications yet",
+            "failed": "Could not load, try again later",
+            "justNow": "just now"
+        },
         "topBar": {
             "notifications": "Notifications",
             "account": "Account menu",
@@ -331,7 +337,10 @@
             "panel": {
                 "close": "Close details",
                 "viewSchedule": "View schedule",
-                "sayHello": "Say hello"
+                "sayHello": "Say hello",
+            "helloDone": "Hello sent",
+            "helloSent": "You said hi to {name}",
+            "helloFailed": "Could not send, try again later"
             },
             "idle": "Away",
             "lastSeen": "Last seen {time}",

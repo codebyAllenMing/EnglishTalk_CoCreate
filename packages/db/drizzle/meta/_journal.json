@@ -43,6 +43,13 @@
       "when": 1790085203262,
       "tag": "0005_words",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790140488661,
+      "tag": "0006_notifications",
+      "breakpoints": true
     }
   ]
 }

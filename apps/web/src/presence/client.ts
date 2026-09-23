@@ -4,14 +4,24 @@ export type PresenceState = "active" | "idle";
 /** userId → 狀態，只有還在線上的人會出現 */
 export type PresenceMap = Record<string, PresenceState>;
 
-/** 心跳。失敗（401、網路）不丟出去 —— 心跳掉一次沒關係，下一次會補上；真過期了 SessionProvider 會處理 */
-export async function sendHeartbeat(state: PresenceState): Promise<void> {
-	await fetch(apiUrl("/api/me/presence"), {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		credentials: "include",
-		body: JSON.stringify({ state }),
-	}).catch(() => undefined);
+/**
+ * 心跳。回應帶未讀通知數（鈴鐺的徽章搭這班車，不另開輪詢）；
+ * 失敗（401、網路）回 null 不丟出去 —— 心跳掉一次沒關係，下一次會補上；真過期了 SessionProvider 會處理
+ */
+export async function sendHeartbeat(state: PresenceState): Promise<number | null> {
+	try {
+		const response = await fetch(apiUrl("/api/me/presence"), {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			credentials: "include",
+			body: JSON.stringify({ state }),
+		});
+		if (!response.ok) return null;
+		const data: unknown = await response.json();
+		return typeof data === "object" && data !== null && "unread" in data && typeof data.unread === "number" ? data.unread : null;
+	} catch {
+		return null;
+	}
 }
 
 /**

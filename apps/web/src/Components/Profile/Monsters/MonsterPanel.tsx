@@ -1,7 +1,12 @@
+"use client";
+
 import { X } from "lucide-react";
+import { useState } from "react";
 import Card from "@/Components/UI/Card";
+import { useToast } from "@/Components/UI/ToastProvider";
 import { Monster as MonsterIcon } from "@/Components/UI/MonsterIcon";
 import type { Dictionary } from "@/dictionaries";
+import { greetUser } from "@/notifications/client";
 import MonsterDetails from "./MonsterDetails";
 import type { Monster } from "./monstersData";
 
@@ -28,9 +33,27 @@ type Props = {
  *    代價是少了 `<dialog>` 的焦點鎖與 inert，Esc 關閉由 MonstersBoard 補上。
  *
  * 內容本身在 MonsterDetails —— 設定頁的「預覽個人頁」也是同一塊，
- * 這裡只負責外框、遮罩與 ✕。
+ * 這裡只負責外框、遮罩、✕，以及「打聲招呼」的呼叫（成功 toast、同一個人只送一次）。
  */
 export default function MonsterPanel({ monster, onClose, locale, dict, levelDict }: Props) {
+	const { toast } = useToast();
+	const [sending, setSending] = useState(false);
+	// 這一頁裡已經打過招呼的人；換頁就忘，server 那邊重複的也會被去重
+	const [greeted, setGreeted] = useState<string[]>([]);
+
+	const greet = async () => {
+		if (!monster || sending) return;
+		setSending(true);
+		const ok = await greetUser(monster.id);
+		setSending(false);
+		if (ok) {
+			setGreeted((ids) => [...ids, monster.id]);
+			toast(dict.panel.helloSent.replace("{name}", monster.name));
+		} else {
+			toast(dict.panel.helloFailed);
+		}
+	};
+
 	return (
 		<>
 			{/* 遮罩只在窄版存在。桌機的面板是版面的一部分，不該把後面壓暗。
@@ -70,7 +93,14 @@ export default function MonsterPanel({ monster, onClose, locale, dict, levelDict
 								<X aria-hidden="true" className="size-4" />
 							</button>
 
-							<MonsterDetails monster={monster} locale={locale} dict={dict} levelDict={levelDict} />
+							<MonsterDetails
+								monster={monster}
+								locale={locale}
+								dict={dict}
+								levelDict={levelDict}
+								onGreet={() => void greet()}
+								greet={greeted.includes(monster.id) ? "sent" : sending ? "sending" : "idle"}
+							/>
 						</>
 					) : (
 						<div className="flex flex-col items-center justify-center gap-2 py-16 text-center">

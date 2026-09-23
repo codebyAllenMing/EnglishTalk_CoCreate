@@ -191,6 +191,12 @@
             "title": "邀請朋友，賺取代幣！",
             "cta": "立即邀請"
         },
+        "notifications": {
+            "title": "通知",
+            "empty": "還沒有通知",
+            "failed": "載入失敗，稍後再試",
+            "justNow": "剛剛"
+        },
         "topBar": {
             "notifications": "通知",
             "account": "帳號選單",
@@ -331,7 +337,10 @@
             "panel": {
                 "close": "關閉詳情",
                 "viewSchedule": "查看行程",
-                "sayHello": "打聲招呼"
+                "sayHello": "打聲招呼",
+            "helloDone": "已打過招呼",
+            "helloSent": "已跟 {name} 打了聲招呼",
+            "helloFailed": "招呼沒送出去，稍後再試"
             },
             "idle": "閒置中",
             "lastSeen": "最後上線 {time}",

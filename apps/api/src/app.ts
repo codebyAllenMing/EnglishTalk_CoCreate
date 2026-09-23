@@ -7,8 +7,10 @@ import { createAuth } from "@monstertalk/auth";
 import { createDb, schema } from "@monstertalk/db";
 import type { Env } from "./env.ts";
 import { logError } from "./log.ts";
+import { notify } from "./notify.ts";
 import { createMemoryPresence } from "./presence/store.ts";
 import { clientLogRoutes } from "./routes/clientLog.ts";
+import { notificationsRoutes } from "./routes/notifications.ts";
 import { presenceRoutes } from "./routes/presence.ts";
 import { profileRoutes } from "./routes/profile.ts";
 import { roomsRoutes } from "./routes/rooms.ts";
@@ -28,6 +30,13 @@ export function createApp(env: Env) {
 		secret: env.BETTER_AUTH_SECRET,
 		baseURL: env.API_ORIGIN,
 		trustedOrigins: env.WEB_ORIGINS,
+		// 第一則通知：歡迎。語言照註冊請求的 Accept-Language（個人資料還是預設值），沒有就 en（跟 proxy 的預設一致）
+		onUserCreated: async (user, { acceptLanguage }) => {
+			const lang = acceptLanguage?.trim().toLowerCase().startsWith("zh") ? "zh" : "en";
+			await notify(db, user.id, "welcome", { lang }).catch((error: unknown) =>
+				logError("notify.welcome", error, { userId: user.id }),
+			);
+		},
 	});
 
 	// 線上狀態的 cache（dev：行程內；prod：換 Durable Object）。某人真的離線時才寫一次 lastSeenDate
@@ -78,13 +87,15 @@ export function createApp(env: Env) {
 	app.route("/api", profileRoutes(auth, db));
 	// 別人的名單與線上狀態，兩支分開：名單變動少、狀態每 30 秒被拉一次
 	app.route("/api", usersRoutes(auth, db));
-	app.route("/api", presenceRoutes(auth, presence));
+	app.route("/api", presenceRoutes(auth, presence, db));
 	// 房間：GET /api/me/schedule（週曆）、POST /api/rooms（開房）
 	app.route("/api", roomsRoutes(auth, db));
 	// 單字庫：GET /api/me/words（整本）、GET / POST /api/rooms/:code/words（這場）、DELETE /api/me/words/:id
 	app.route("/api", wordsRoutes(auth, db));
 	// 視訊：Cloudflare Realtime SFU 的代打（開 session、推 / 拉 track、renegotiate、關 track）
 	app.route("/api", videoRoutes(auth, db, env.REALTIME));
+	// 通知：GET /api/me/notifications（去重後的清單 + 未讀數）、POST /api/me/notifications/read（打開鈴鐺整批已讀）
+	app.route("/api", notificationsRoutes(auth, db));
 	// 前端的例外丟過來一起留痕
 	app.route("/api", clientLogRoutes(auth));
 
