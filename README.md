@@ -10,7 +10,7 @@
 
 ### 發表講義
 
-- **[查看完整講義](docs/presentation.html)** — HTML 互動版
+- **[查看完整講義](https://htmlpreview.github.io/?https://github.com/AllenBo/EnglishTalk_CoCreate/blob/main/docs/presentation.html)** — HTML 互動版
 - **[Markdown 版](docs/presentation.md)** — 純文字版
 
 ---
