@@ -29,6 +29,8 @@ type ServerMessage =
 
 const MAX_FAILURES = 5;
 const BACKOFF_MS = [1000, 2000, 4000, 8000];
+/** keepalive：Cloudflare 對閒置 WebSocket 有 100 秒逾時（2026-09-23 上線後每 130 秒被切一次、視訊跟著重開），30 秒送一次 ping */
+const PING_MS = 30_000;
 
 /**
  * 房間的即時通道（聊天 + 在線名單 + 計時器）。連 `/api/rooms/:code/live`，握手用 cookie，server 那邊查子單與時間窗。
@@ -36,6 +38,7 @@ const BACKOFF_MS = [1000, 2000, 4000, 8000];
  * - 送出不先塞本地，等 server 廣播回來才出現：一份來源，順序跟大家一致。
  * - 斷線退避重連（1、2、4、8 秒），重連後再收一次 hello，歷史整份換掉；連續失敗五次就放棄，status = error。
  * - 收到 `hello` 之前 status 是 connecting，輸入框鎖著。
+ * - 連上後每 30 秒送 `ping`（server 回 `pong`，這裡不理）：沒人打字這條線也要有封包，不然經 Cloudflare 100 秒就被切。
  * - 計時器：server 是權威時鐘，這裡只存它最後一次廣播的狀態（timer）與時差（offset = server now − 本機 now）。
  *   剩幾秒由 RoomProvider 用 settle() 從 `Date.now() + offset` 推，server 平常不送任何東西。
  * - 視訊狀態（media）：誰的 SFU session 是哪個、mic / cam 開關；媒體本身在 Cloudflare，useSfu 照這份去拉。
@@ -56,6 +59,11 @@ export function useLive(code: string) {
 		let failures = 0;
 		let timer: ReturnType<typeof setTimeout> | null = null;
 		let socket: WebSocket | null = null;
+		let pinger: ReturnType<typeof setInterval> | null = null;
+		const stopPinger = () => {
+			if (pinger) clearInterval(pinger);
+			pinger = null;
+		};
 
 		const connect = () => {
 			if (disposed) return;
@@ -63,6 +71,14 @@ export function useLive(code: string) {
 			socket = new WebSocket(wsUrl(`/api/rooms/${encodeURIComponent(code)}/live`));
 			socketRef.current = socket;
 			let gotHello = false;
+
+			socket.onopen = () => {
+				const s = socket;
+				stopPinger();
+				pinger = setInterval(() => {
+					if (s?.readyState === WebSocket.OPEN) s.send(JSON.stringify({ type: "ping" }));
+				}, PING_MS);
+			};
 
 			socket.onmessage = (event) => {
 				let data: ServerMessage;
@@ -95,6 +111,7 @@ export function useLive(code: string) {
 				// ⚠️ 只清掉自己：dev 的 StrictMode 會把 effect 跑兩次，第一條 socket 的 onclose 是在第二條已經接上之後
 				//    才觸發的，無條件清成 null 會把活著的那條蓋掉 —— 畫面顯示已連線、送出卻沒反應（2026-09-22 踩到）
 				if (socketRef.current === socket) socketRef.current = null;
+				if (socketRef.current === null) stopPinger();
 				if (disposed) return;
 				// 握手被拒（401 / 403 / 404 / 410）也會走到這裡，跟斷線一樣退避重試，五次就放棄
 				failures = gotHello ? 1 : failures + 1;
@@ -111,6 +128,7 @@ export function useLive(code: string) {
 
 		return () => {
 			disposed = true;
+			stopPinger();
 			if (timer) clearTimeout(timer);
 			socket?.close();
 			if (socketRef.current === socket) socketRef.current = null;

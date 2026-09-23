@@ -174,6 +174,9 @@ export function createLiveHub(options: LiveHubOptions = {}): LiveHub {
 				} else if (msg.type === "media") {
 					client.media = msg.media;
 					broadcast(room, { type: "media", user: user.id, media: msg.media });
+				} else if (msg.type === "ping") {
+					// keepalive：只回給送的人，不廣播
+					socket.send(JSON.stringify({ type: "pong" } satisfies ServerMessage));
 				}
 			};
 
@@ -223,6 +226,7 @@ function parseMessage(data: unknown, textLimit: number): ClientMessage | null {
 	}
 	if (typeof parsed !== "object" || parsed === null || !("type" in parsed)) return null;
 	if (parsed.type === "swap") return { type: "swap" };
+	if (parsed.type === "ping") return { type: "ping" };
 	if (parsed.type === "media") return parseMedia("media" in parsed ? parsed.media : undefined);
 	if (parsed.type !== "chat") return null;
 	const text = "text" in parsed && typeof parsed.text === "string" ? parsed.text.trim() : "";
